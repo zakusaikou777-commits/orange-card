@@ -1160,19 +1160,6 @@ async function initGoogleDriveClient() {
   updateDriveButtons();
 }
 
-function openPicker() {
-  if (!pickerReady) {
-    setDriveStatus('Picker未準備（initGoogleDriveClient待ち）');
-    return;
-  }
-  if (!accessToken) {
-    setDriveStatus('ログインが必要です');
-    requestAccessToken(true);
-    return;
-  }
-
-  const view = new google.picker.View(google.picker.ViewId.DOCS);
-  view.setMimeTypes('application/json');
 
 function openPicker() {
   if (!pickerReady) return;
@@ -1221,9 +1208,10 @@ async function driveLoad() {
 
   try {
     const resp = await gapi.client.drive.files.get({
-      fileId: pickedFileId,
-      alt: 'media',
-    });
+       fileId: pickedFileId,
+  alt: 'media',
+  supportsAllDrives: true,
+});
 
     // alt=media は body に生JSONが入る
     const raw = resp.body;
@@ -1265,7 +1253,8 @@ async function driveSave() {
     };
     const payload = JSON.stringify(payloadObj, null, 2);
 
-    const url = `https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(pickedFileId)}?uploadType=media`;
+    const url =   `https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(pickedFileId)}` +
+  `?uploadType=media&supportsAllDrives=true`;
     const r = await fetch(url, {
       method: 'PATCH',
       headers: {
