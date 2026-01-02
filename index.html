@@ -1,0 +1,2258 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>Orange Card v8.1 - 脳トレーニング</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --text: #e7e7e7;
+      --muted: #a8b0bf;
+      --accent: #ff9800;
+      --danger: #e91e63;
+      --line: #2a2f3a;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ========== TOPBAR ========== */
+    .topbar {
+      background: #11141b;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.75rem 1rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+    .nav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .tab {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .tab:hover {
+      background: rgba(255, 152, 0, 0.1);
+    }
+    .tab.active {
+      border-color: transparent;
+      background: var(--accent);
+      color: #111;
+      font-weight: 850;
+    }
+
+    /* ========== CONTAINER ========== */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    .view.hidden {
+      display: none !important;
+    }
+    .title {
+      font-size: 1.35rem;
+      margin: 0.2rem 0 1rem;
+      font-weight: 700;
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin: 0 0 0.75rem;
+      font-weight: 700;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ========== INFO / DETAILS ========== */
+    .info-banner {
+      background: rgba(229, 57, 53, 0.15);
+      border: 2px solid #e53935;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .info-banner strong {
+      color: #ff6b6b;
+    }
+    .science-details {
+      background: rgba(255, 152, 0, 0.08);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 0;
+      margin: 1rem 0;
+    }
+    .science-details summary {
+      padding: 1rem;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .science-details summary:hover {
+      background: rgba(255, 152, 0, 0.1);
+    }
+    .science-details[open] summary {
+      border-bottom: 1px solid var(--line);
+    }
+    .science-details-content {
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      font-size: 0.9rem;
+      font-family: Monaco, "Courier New", monospace;
+      overflow-x: auto;
+    }
+    .science-details-content pre {
+      margin: 0;
+      color: #90caf9;
+      line-height: 1.5;
+    }
+    .brain-explanation {
+      background: rgba(255, 152, 0, 0.05);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem;
+      margin: 0.75rem 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .brain-explanation strong {
+      color: var(--accent);
+    }
+
+    /* ========== FORM ========== */
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    select,
+    input[type="number"] {
+      padding: 0.6rem 0.7rem;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #0d0f14;
+      color: var(--text);
+      min-width: 5rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    button {
+      padding: 0.6rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      background: var(--accent);
+      color: #111;
+      cursor: pointer;
+      font-weight: 850;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      background: #ff8c00;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    }
+    button:active {
+      transform: scale(0.95);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    button.secondary:hover {
+      background: rgba(255, 152, 0, 0.15);
+      border-color: var(--accent);
+    }
+    button.danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    button.danger:hover {
+      background: #d81b60;
+    }
+    .row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* ========== STAGE ========== */
+    .stage {
+      margin-top: 1rem;
+      position: relative;
+      width: 100%;
+      max-width: 720px;
+      height: 360px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .orange-card {
+      width: 400px;
+      height: 250px;
+      background: linear-gradient(135deg, #ff9800 0%, #ff8c00 50%, #ff9800 100%);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow:
+        0 0 60px rgba(255, 152, 0, 0.8),
+        0 0 20px rgba(255, 100, 0, 0.6);
+      z-index: 10;
+    }
+    .orange-card::before {
+      content: "";
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      background: #1e88e5;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 11;
+    }
+    .orange-card::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #000;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 12;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    }
+
+    /* ========== FULLSCREEN OVERLAY ========== */
+    .fullscreen-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 99999;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .fullscreen-overlay.show {
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    .fullscreen-overlay.hidden {
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+    .fullscreen-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      width: 100%;
+      height: 100%;
+    }
+    .fullscreen-timer {
+      font-size: 4rem;
+      font-weight: 1000;
+      color: var(--accent);
+      text-shadow: 0 0 20px rgba(255, 152, 0, 0.8);
+      font-family: "Courier New", monospace;
+      letter-spacing: 0.1em;
+      animation: pulse 1s ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .fullscreen-label {
+      font-size: 1.5rem;
+      color: var(--accent);
+      text-align: center;
+      animation: fadeInUp 0.6s ease-out;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .fullscreen-instruction {
+      position: absolute;
+      bottom: 2rem;
+      color: var(--muted);
+      font-size: 1rem;
+      text-align: center;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 49%, 100% { opacity: 0.5; }
+      50%, 99% { opacity: 1; }
+    }
+    .orange-card-fullscreen {
+      width: 80vw;
+      height: 60vh;
+      max-width: 600px;
+      max-height: 450px;
+      background: linear-gradient(135deg, #ff9800 0%, #ff8c00 50%, #ff9800 100%);
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow:
+        0 0 100px rgba(255, 152, 0, 1),
+        0 0 40px rgba(255, 100, 0, 0.8);
+      animation: cardEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes cardEnter {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    .orange-card-fullscreen::before {
+      content: "";
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background: #1e88e5;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 11;
+    }
+    .orange-card-fullscreen::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #000;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 12;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+    }
+
+    /* ========== AFTER IMAGE OVERLAY ========== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 99998;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.15s ease;
+    }
+    .overlay.show {
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    .overlay.hidden {
+      visibility: hidden !important;
+      opacity: 0 !important;
+      display: none !important;
+    }
+    .overlay-inner {
+      text-align: center;
+      max-width: 540px;
+    }
+    .big {
+      font-size: 1.4rem;
+      font-weight: 950;
+      margin-bottom: 0.25rem;
+    }
+    .small {
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+    }
+    .timer {
+      font-size: 2.2rem;
+      font-weight: 1000;
+      margin: 0.5rem 0 1rem;
+      color: var(--accent);
+    }
+
+    /* ========== SHARPNESS OVERLAY ========== */
+    .sharpness-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 99997;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.15s ease;
+    }
+    .sharpness-overlay.show {
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    .sharpness-overlay.hidden {
+      visibility: hidden !important;
+      opacity: 0 !important;
+      display: none !important;
+    }
+    .sharpness-inner {
+      text-align: center;
+      max-width: 540px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 2rem;
+      z-index: 100000;
+    }
+    .sharpness-title {
+      font-size: 1.3rem;
+      font-weight: 900;
+      margin-bottom: 1.5rem;
+    }
+    .sharpness-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+    .sharpness-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0.75rem 1.5rem;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      transition: all 0.2s;
+      width: 100%;
+      max-width: 300px;
+    }
+    .sharpness-option:hover {
+      border-color: var(--accent);
+      background: rgba(255, 152, 0, 0.05);
+    }
+    .sharpness-option input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+    .sharpness-option.selected {
+      border-color: var(--accent);
+      background: rgba(255, 152, 0, 0.1);
+    }
+    .sharpness-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    /* ========== BRAIN SECTION ========== */
+    .brain-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+      margin: 1.5rem 0;
+    }
+    .brain-visual {
+      display: flex;
+      justify-content: center;
+      grid-column: 1 / -1;
+    }
+    .brain-visual svg {
+      max-width: 100%;
+      height: auto;
+    }
+    .gauge-bar {
+      background: var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      height: 24px;
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .gauge-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    .gauge-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .quality-score {
+      background: rgba(255, 152, 0, 0.1);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+    .score-val {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffb300, #ff9800, #ff6b00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .score-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .kpi {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.55rem 0.7rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(0,0,0,0.15);
+    }
+    .kpi-val {
+      color: var(--text);
+      font-weight: 950;
+    }
+    .score-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-left: 0.5rem;
+    }
+    .score-badge.excellent {
+      background: rgba(46, 125, 50, 0.3);
+      color: #66bb6a;
+    }
+    .score-badge.good {
+      background: rgba(255, 179, 0, 0.3);
+      color: #ffc107;
+    }
+    .score-badge.improving {
+      background: rgba(229, 57, 53, 0.3);
+      color: #ef5350;
+    }
+
+    /* ========== TABLE ========== */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .pattern-table {
+      width: 100%;
+      min-width: 800px;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .pattern-table thead {
+      background: rgba(255, 152, 0, 0.15);
+      border-bottom: 2px solid var(--accent);
+    }
+    .pattern-table th {
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 700;
+      color: var(--accent);
+      border: 1px solid var(--line);
+    }
+    .pattern-table td {
+      padding: 0.75rem;
+      border: 1px solid var(--line);
+      border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+    }
+    .pattern-table tbody tr:hover {
+      background: rgba(255, 152, 0, 0.05);
+    }
+    .star-rating {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+    }
+    .pattern-name {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 900px) {
+      .brain-section {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .nav {
+        width: 100%;
+      }
+      .stage {
+        width: 100%;
+      }
+      .orange-card {
+        width: 300px;
+        height: 200px;
+      }
+      .fullscreen-timer {
+        font-size: 3rem;
+      }
+      .fullscreen-label {
+        font-size: 1.2rem;
+      }
+      
+      /* テーブルのスマホ最適化 */
+      .pattern-table {
+        font-size: 0.7rem;
+        min-width: 750px;
+      }
+      .pattern-table th,
+      .pattern-table td {
+        padding: 0.4rem;
+      }
+      .star-rating {
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
+      }
+    }
+
+    .section-subtitle {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--accent);
+    }
+    .explanation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .explanation-box {
+      background: rgba(255, 152, 0, 0.08);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.75rem;
+    }
+    .explanation-box h4 {
+      margin: 0 0 0.5rem;
+      color: var(--accent);
+      font-size: 0.95rem;
+    }
+    .explanation-box p {
+      margin: 0;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .explanation-box p + p {
+      margin-top: 0.5rem;
+    }
+    @media (max-width: 900px) {
+      .explanation-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ========== TOPBAR ========== -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">🟠 オレンジゲートトレーニング</div>
+      <nav class="nav">
+        <button class="tab active" data-tab="training">トレーニング</button>
+        <button class="tab" data-tab="dashboard">ダッシュボード</button>
+        <button class="tab" data-tab="analysis">分析</button>
+        <button class="tab" data-tab="settings">設定</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ========== INFO BANNER ========== -->
+    <div class="info-banner">
+      <strong>⚠️ 重要な注意事項</strong><br>
+      このトレーニングは脳の視覚機能を刺激するため、fMRIなどの脳画像研究を参考にしています。<br>
+      ただし、<strong>脳領域の%値は推定値であり、実測の脳画像ではありません</strong>。<br>
+      医療的な診断・治療には使用しないでください。 不快感や違和感がある場合は、直ちに中止してください。本アプリはHOKR（水平視運動性眼振）などの研究をもとに設計されています。<br>
+      脳領域の活性化は、fMRIなどで計測される血流変化（機能的充血）を指標としており、神経活動そのものではありません。<br>
+    </div>
+
+    <!-- ========== TRAINING VIEW ========== -->
+    <section id="training" class="view">
+      <h1 class="title">🟠 オレンジカードトレーニング</h1>
+      <div class="card">
+        <div class="row">
+          <label>
+            凝視時間
+            <select id="stareSec">
+              <option value="3">3秒</option>
+              <option value="5">5秒</option>
+              <option value="10" selected>10秒</option>
+              <option value="15">15秒</option>
+              <option value="20">20秒</option>
+              <option value="30">30秒</option>
+              <option value="60">60秒</option>
+            </select>
+          </label>
+          <button id="startBtn" onclick="handleStartClick()">🚀 開始</button>
+        </div>
+      </div>
+
+      <!-- ========== SCIENCE DETAILS ========== -->
+      <details class="science-details">
+        <summary>🔬 スコアはどう計算されていますか？</summary>
+        <div class="science-details-content">
+          <pre>【品質スコア計算式】（v8.0改善版）
+視覚負荷 = min(100, 残像時間秒 × 10)
+  └─ 残像が長いほど視覚野の活動度が高い
+認知負荷 = min(100, 注視時間秒 × 3)
+  └─ 注視が長いほど前頭葉の注意制御が高い
+時間統合 = min(100, log(注視×残像+1) × 15)
+  └─ 注視と残像の時間的統合が側頭葉を活性化
+
+品質スコア = (視覚負荷 + 認知負荷 + 時間統合) / 3
+
+【神経科学的根拠】
+✓ 視覚刺激→視覚野活性化:主に血流などの変化（機能的充血）を指標にして神経活動を推測している
+✓ 眼球運動学習→小脳可塑化: 小脳可塑性が関与する学習（HOKR）と、血管運動の増幅が並行して観察された
+✓ 脳血管運動の増幅: 低周波刺激で実証。東北大の資料では、0.25 Hz（4秒に1回）の水平方向に振動する縦縞模様を繰り返し提示すると、視覚刺激の周波数に一致した血管運動が観察され、繰り返しでその振幅が徐々に増幅。また、その同調した血管運動が一次視覚野だけでなく、大脳皮質や小脳の広い領域にも誘導された
+
+【注意】
+⚠ 脳領域の%値は推定値です
+⚠ 実測の脳画像ではありません
+⚠ 相対的な活動度の指標です</pre>
+        </div>
+      </details>
+
+      <div class="brain-explanation">
+        <strong>💡 脳領域について</strong><br>
+        <strong>後頭葉</strong>: 色・形・動きなど視覚情報の基本処理<br>
+        <strong>前頭葉</strong>: 注意力・集中力の維持と制御<br>
+        <strong>頭頂葉</strong>: 空間認識・奥行き知覚<br>
+        <strong>側頭葉</strong>: 記憶形成・視覚情報の統合保存<br>
+        <strong>小脳</strong>: 眼球運動の学習と協調
+      </div>
+
+      <div class="stage" id="stage" style="display:none">
+        <div class="orange-card" id="orangeCard"></div>
+      </div>
+
+      <!-- ========== FULLSCREEN OVERLAY ========== -->
+      <div id="fullscreenOverlay" class="fullscreen-overlay">
+        <div class="fullscreen-inner">
+          <div class="orange-card-fullscreen" id="orangeCardFullscreen"></div>
+          <div class="fullscreen-timer" id="fullscreenTimer">10</div>
+          <div class="fullscreen-label">🎯 カードの中心を凝視してください</div>
+          <div class="fullscreen-instruction">👁 黒い点をしっかり見つめてください</div>
+        </div>
+      </div>
+
+      <div id="afterImageOverlay" class="overlay">
+        <div class="overlay-inner">
+          <div class="big">✨ 残像を確認してください</div>
+          <div class="small">目を閉じるか、壁を見つめてください</div>
+          <div class="timer"><span id="afterSec">0.0</span>秒</div>
+          <div class="small">残像が消えたらクリック</div>
+        </div>
+      </div>
+
+      <div id="sharpnessOverlay" class="sharpness-overlay">
+        <div class="sharpness-inner">
+          <div class="sharpness-title">残像の鮮明さを選択してください</div>
+          <div class="sharpness-options">
+            <label class="sharpness-option">
+              <input type="radio" name="sharpness" value="3" checked>
+              <span>3 - 非常に鮮明（色・形がはっきり見えた）</span>
+            </label>
+            <label class="sharpness-option">
+              <input type="radio" name="sharpness" value="2">
+              <span>2 - ぼんやり見えた（色や形がうっすら）</span>
+            </label>
+            <label class="sharpness-option">
+              <input type="radio" name="sharpness" value="1">
+              <span>1 - ほぼ見えなかった</span>
+            </label>
+          </div>
+          <div class="sharpness-buttons">
+            <button id="confirmBtn" onclick="handleConfirmClick()">✅ 確定</button>
+            <button id="retryBtn" class="secondary" onclick="handleRetryClick()">🔁 もう一度</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="resultCard" style="display:none">
+        <h3 style="margin: 0 0 0.5rem 0">📊 トレーニング結果</h3>
+        <div id="resultText" style="color: var(--muted); font-size: 0.9rem; line-height: 1.6;"></div>
+      </div>
+
+      <div class="card">
+        <h2>🧠 脳活動ビジュアル</h2>
+        <div class="brain-explanation">
+          <strong>脳領域活性化指標（現状で分かっている範囲）</strong><br>
+          <ul style="margin:0.5rem 0 0; padding-left:1.2rem; line-height:1.7;">
+            <li><strong>後頭葉</strong>：注視時間。オレンジカードを見つめる → V1視覚野で視覚処理。</li>
+            <li><strong>側頭葉</strong>：残像時間 × シャープネス。残像を認識する → IT皮質で視覚イメージング。</li>
+            <li><strong>前頭葉</strong>：注視時間。カードをずっと見つめ続ける → 注視注意制御。</li>
+            <li><strong>頭頂葉</strong>：注視＋残像の複合。眼球運動と空間認識。</li>
+          </ul>
+          <div style="margin-top:0.5rem; color:var(--muted); font-size:0.85rem;">
+            ※この表示はfMRI等の実測ではなく、トレーニング内容（注視・残像・鮮明さ）からの推定モデルです。
+          </div>
+        </div>
+        <div style="margin-top:0.5rem; color:var(--muted); font-size:0.85rem;">
+          <strong>💡 使い方：</strong>トレーニングを実行すると、あなたの脳活動の推定度が表示されます。
+          これはアプリが計算した相対的な活動指標であり、実測ではありません。
+        </div>
+      </div>
+
+      <div id="sessionHint" class="muted" style="margin-bottom: 1rem;">
+        <strong>🎯 トレーニングを実行してください</strong>
+      </div>
+
+      <div class="brain-visual">
+        <svg id="brainSvg" viewBox="0 0 800 420" role="img" aria-label="脳の活動ビジュアル" style="background: transparent;">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- 前頭葉 -->
+          <path id="lobeFrontal" class="lobe" d="M150,120 Q165,105 225,110 Q255,120 255,210 Q248,225 210,232 Q165,225 150,195 Z" stroke="#fff" stroke-width="2" fill="#2e7d32" opacity="0.8"/>
+          <text id="pctFrontalText" x="195" y="180" fill="#fff" font-size="18" font-weight="700" text-anchor="middle" pointer-events="none">-</text>
+          <text x="195" y="260" fill="#e7e7e7" font-size="12" text-anchor="middle" pointer-events="none">前頭葉</text>
+          <text x="195" y="275" fill="#a8b0bf" font-size="10" text-anchor="middle" pointer-events="none">注意制御</text>
+
+          <!-- 頭頂葉 -->
+          <path id="lobeParietal" class="lobe" d="M255,110 Q310,95 420,105 Q450,120 435,210 Q405,225 315,220 Q260,215 255,150 Z" stroke="#fff" stroke-width="2" fill="#ffb300" opacity="0.8"/>
+          <text id="pctParietalText" x="350" y="160" fill="#fff" font-size="18" font-weight="700" text-anchor="middle" pointer-events="none">-</text>
+          <text x="350" y="85" fill="#e7e7e7" font-size="12" font-weight="700" text-anchor="middle" pointer-events="none">頭頂葉</text>
+          <text x="350" y="100" fill="#e7e7e7" font-size="10" text-anchor="middle" pointer-events="none">空間認識</text>
+
+          <!-- 側頭葉 -->
+          <path id="lobeTemporal" class="lobe" d="M225,210 Q255,235 330,250 Q360,260 360,320 Q330,345 270,335 Q225,320 225,270 Z" stroke="#fff" stroke-width="2" fill="#e53935" opacity="0.8"/>
+          <text id="pctTemporalText" x="295" y="285" fill="#fff" font-size="18" font-weight="700" text-anchor="middle" pointer-events="none">-</text>
+          <text x="295" y="375" fill="#e7e7e7" font-size="12" text-anchor="middle" pointer-events="none">側頭葉</text>
+          <text x="295" y="390" fill="#a8b0bf" font-size="10" text-anchor="middle" pointer-events="none">視覚記憶</text>
+
+          <!-- 後頭葉 -->
+          <path id="lobeOccipital" class="lobe" d="M435,105 Q500,120 545,150 Q570,190 545,280 Q500,315 435,305 Q435,200 435,150 Z" stroke="#fff" stroke-width="2" fill="#0078d4" opacity="0.8"/>
+          <text id="pctOccipitalText" x="500" y="215" fill="#fff" font-size="18" font-weight="700" text-anchor="middle" pointer-events="none">-</text>
+          <text x="500" y="260" fill="#e7e7e7" font-size="12" text-anchor="middle" pointer-events="none">後頭葉</text>
+          <text x="500" y="275" fill="#a8b0bf" font-size="10" text-anchor="middle" pointer-events="none">視覚処理</text>
+        </svg>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <div class="gauge-label">📊 視覚負荷</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="gaugeVisual" style="width: 0%; background: linear-gradient(90deg, #0078d4, #2e7d32, #ffb300, #e53935);">
+            <span id="gaugeVisualText">-</span>
+          </div>
+        </div>
+
+        <div class="gauge-label">🧠 認知負荷</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="gaugeCog" style="width: 0%; background: linear-gradient(90deg, #2e7d32, #ffb300, #ff8c00);">
+            <span id="gaugeCogText">-</span>
+          </div>
+        </div>
+
+        <div class="gauge-label">⏱️ 時間統合</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: var(--text);">
+          <span id="temporalVal">-</span>
+        </div>
+      </div>
+
+      <div class="quality-score">
+        <div class="score-val" id="qualityScore">-</div>
+        <div class="score-label" id="qualityLabel">トレーニングを実行してください</div>
+      </div>
+    </section>
+
+    <!-- ========== DASHBOARD VIEW ========== -->
+    <section id="dashboard" class="view hidden">
+      <h1 class="title">📊 ダッシュボード</h1>
+      <div class="card">
+        <div class="row">
+          <div class="kpi">
+            <span>今日：</span>
+            <span class="kpi-val" id="todayCount">0</span>
+          </div>
+          <div class="kpi">
+            <span>合計：</span>
+            <span class="kpi-val" id="totalCount">0</span>
+          </div>
+          <div class="kpi">
+            <span>平均残像：</span>
+            <span class="kpi-val" id="avgAfterImage">-</span>
+            <span class="score-badge" id="avgBadge"></span>
+          </div>
+          <div class="kpi">
+            <span>安定性（SD）：</span>
+            <span class="kpi-val" id="stability">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📈 残像時間の推移</h2>
+        <canvas id="afterImageChart" style="max-height: 300px; margin-bottom: 1rem;"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>🎯 鮮明度の分布</h2>
+        <canvas id="sharpnessChart" style="max-height: 250px; margin-bottom: 1rem;"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>🕐 最近10回のトレーニング</h2>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--line);">
+                <th style="padding: 0.5rem; text-align: left;">時刻</th>
+                <th style="padding: 0.5rem; text-align: left;">凝視</th>
+                <th style="padding: 0.5rem; text-align: left;">残像</th>
+                <th style="padding: 0.5rem; text-align: left;">鮮明度</th>
+              </tr>
+            </thead>
+            <tbody id="recentTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ANALYSIS VIEW ========== -->
+    <section id="analysis" class="view hidden">
+      <h1 class="title">🧪 分析</h1>
+
+      <!-- ========== 脳の状態評価表 ========== -->
+      <div class="card">
+        <h2>🧠 脳の状態評価表</h2>
+        <p class="description">
+          凝視時間と残像時間の組み合わせて、4つの脳領域（前頭葉・側頭葉・後頭葉・頭頂葉）の活動レベルを評価した表です。
+        </p>
+        <div class="table-wrapper">
+          <table class="pattern-table">
+            <thead>
+              <tr>
+                <th>パターン</th>
+                <th>凝視秒</th>
+                <th>残像秒</th>
+                <th>効率比</th>
+                <th>前頭葉（維持）</th>
+                <th>側頭葉（生成）</th>
+                <th>後頭葉（受容）</th>
+                <th>頭頂葉（空間）</th>
+                <th>脳の状態解説</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="pattern-name">A</td>
+                <td>5</td>
+                <td>30</td>
+                <td>6.0倍</td>
+                <td class="star-rating">★★★★★</td>
+                <td class="star-rating">★★★★★</td>
+                <td class="star-rating">★</td>
+                <td class="star-rating">★★★★★</td>
+                <td><span class="description">超高効率イメージ型：最小の刺激で脳が知覚を自給自足している。</span></td>
+              </tr>
+              <tr>
+                <td class="pattern-name">B</td>
+                <td>10</td>
+                <td>30</td>
+                <td>3.0倍</td>
+                <td class="star-rating">★★★★</td>
+                <td class="star-rating">★★★★★</td>
+                <td class="star-rating">★★</td>
+                <td class="star-rating">★★★★</td>
+                <td><span class="description">高効率イメージ型：側頭葉のイメージ生成力が非常に高い状態。</span></td>
+              </tr>
+              <tr>
+                <td class="pattern-name">C</td>
+                <td>15</td>
+                <td>30</td>
+                <td>2.0倍</td>
+                <td class="star-rating">★★★★</td>
+                <td class="star-rating">★★★★</td>
+                <td class="star-rating">★★★</td>
+                <td class="star-rating">★★</td>
+                <td><span class="description">バランス型：脳内ネットワークと物理的連動が程よく連動。</span></td>
+              </tr>
+              <tr>
+                <td class="pattern-name">D</td>
+                <td>20</td>
+                <td>30</td>
+                <td>1.5倍</td>
+                <td class="star-rating">★★</td>
+                <td class="star-rating">★★★★</td>
+                <td class="star-rating">★★★★</td>
+                <td class="star-rating">★★</td>
+                <td><span class="description">標準型：適度な刺激入力を脳が補正して維持している。</span></td>
+              </tr>
+              <tr>
+                <td class="pattern-name">E</td>
+                <td>30</td>
+                <td>30</td>
+                <td>1.0倍</td>
+                <td class="star-rating">★★</td>
+                <td class="star-rating">★★★</td>
+                <td class="star-rating">★★★★</td>
+                <td class="star-rating">★★</td>
+                <td><span class="description">生理的適応型：網膜の疲れ（物理現象）への依存度が高い。</span></td>
+              </tr>
+              <tr>
+                <td class="pattern-name">F</td>
+                <td>30</td>
+                <td>60</td>
+                <td>2.0倍</td>
+                <td class="star-rating">★★★★★</td>
+                <td class="star-rating">★★★★</td>
+                <td class="star-rating">★★★★★</td>
+                <td class="star-rating">★★★★★</td>
+                <td><span class="description">高負荷持久型：強い刺激入力を長時間維持する全脳的な持久力。</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== 脳領城別詳細評価 ========== -->
+      <div class="card">
+        <h2>脳領域別の詳細評価</h2>
+        <div class="explanation-grid">
+          <div class="explanation-box" style="border-left: 3px solid #ff9800;">
+            <h4>前頭葉（実行機能・注意維持）</h4>
+            <p><strong>5秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★★★</span></p>
+            <p>イメージを意識に強く保持する必要があり、最大の負荷がかかっています。</p>
+            <p><strong>10秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★★</span></p>
+            <p>前頭葉の適度な負荷。あなたの現在の状態です。</p>
+            <p><strong>30秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★</span></p>
+            <p>外部入力が長いため負荷が低く、脳が受動的に機能しています。</p>
+          </div>
+          <div class="explanation-box" style="border-left: 3px solid #ff9800;">
+            <h4>側頭葉（イメージ生成・色処理）</h4>
+            <p><strong>5秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★★★</span></p>
+            <p>短い刺激から最大限のイメージを生成する能力を発揮。</p>
+            <p><strong>10秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★★★</span></p>
+            <p>最高レベルのイメージ力。あなたはこのレベルにあります！</p>
+            <p><strong>30秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★</span></p>
+            <p>長い刺激に頼るため、生成力が目立たない状態。</p>
+          </div>
+          <div class="explanation-box" style="border-left: 3px solid #ff9800;">
+            <h4>後頭葉（視覚入力・網膜適応）</h4>
+            <p><strong>5秒凝視 → 30秒残像：</strong> <span class="star-rating">★</span></p>
+            <p>外部刺激に依存しない（最小負荷）＝ 脳の自立度が最高</p>
+            <p><strong>10秒凝視 → 30秒残像：</strong> <span class="star-rating">★★</span></p>
+            <p>あなたの現在の状態。物理的依存が少ないです。</p>
+            <p><strong>30秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★★</span></p>
+            <p>基準：網膜の物理的疲れに最も依存する状態。</p>
+          </div>
+          <div class="explanation-box" style="border-left: 3px solid #ff9800;">
+            <h4>頭頂葉（空間注意・統合）</h4>
+            <p><strong>5秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★★★</span></p>
+            <p>イメージを同じ位置に安定させる力が最大必要。</p>
+            <p><strong>10秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★★</span></p>
+            <p>あなたの現在の状態。空間的安定性が良好。</p>
+            <p><strong>30秒凝視 → 30秒残像：</strong> <span class="star-rating">★★★</span></p>
+            <p>外部視覚入力で固定されやすい状態。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 評価の読み方 ========== -->
+      <div class="card">
+        <h2>★評価の読み方</h2>
+        <p class="description">
+          各脳領域の★の数は、その領域がそのパターンで「どれだけ主役として、または効率的に機能しているか」を示しています。
+        </p>
+
+        <div class="section-subtitle" style="border-left: 4px solid var(--accent); padding-left: 0.75rem;">後頭葉（受容・入力依存）</div>
+        <div class="brain-explanation">
+          <p>凝視時間が長いほど、網膜の物理的な疲れ（適応）に頼るため、星が増えます。</p>
+          <p>凝視時間が短いほど、外部刺激に頼っていないため、星が減ります。</p>
+          <p><strong>意味：</strong> この値が低いほど、脳の自立度が高い（外部刺激に依存していない）ことを示します。</p>
+        </div>
+
+        <div class="section-subtitle" style="border-left: 4px solid var(--accent); padding-left: 0.75rem;">側頭葉（知覚生成・鮮明度）</div>
+        <div class="brain-explanation">
+          <p>「短い凝視で長く・鮮明に見える」ほど、星が増えます。</p>
+          <p>側頭葉（紡錘状回）が、外部刺激がない状態でどれだけ色や形を再現できているかを示します。</p>
+          <p><strong>意味：</strong> この値が高いほど、イメージ処理能力が優秀です。</p>
+        </div>
+
+        <div class="section-subtitle" style="border-left: 4px solid var(--accent); padding-left: 0.75rem;">前頭葉（注意制御・維持）</div>
+        <div class="brain-explanation">
+          <p>残像の絶対的な持続時間が長いほど、イメージを意識に留めるために多くの星を必要とします。</p>
+          <p>30秒以上の維持には、前頭葉と頭頂葉のネットワークによる強いトップダウン信号が必要です。</p>
+          <p><strong>意味：</strong> この値が高いほど、集中力と意識の維持力が優れています。</p>
+        </div>
+
+        <div class="section-subtitle" style="border-left: 4px solid var(--accent); padding-left: 0.75rem;">頭頂葉（空間注意・統合）</div>
+        <div class="brain-explanation">
+          <p>残像を「同じ場所」に安定して固定する能力に関わります。</p>
+          <p>長時間の維持や、非常に短い刺激からの生成時に、空間情報を補完するために働きます。</p>
+          <p><strong>意味：</strong> この値が高いほど、空間的な安定性とイメージの固定力が強いです。</p>
+        </div>
+      </div>
+
+      <!-- ========== 各パターンの解説 ========== -->
+      <div class="card">
+        <h2>📊 各パターンの解説</h2>
+        <p class="description">
+          2025年の最新の神経科学研究をもとに、脳活動の推定モデルを構築しています。
+        </p>
+
+        <div class="section-subtitle">🔬 脳領域ごとの役割</div>
+        <div class="brain-explanation">
+          <strong>前頭葉（維持）：</strong>視覚情報の維持と注意の持続力<br>
+          <strong>側頭葉（生成）：</strong>残像の鮮明さと視覚記憶の生成力<br>
+          <strong>後頭葉（受容）：</strong>視覚刺激の受容と処理
+        </div>
+
+        <div class="section-subtitle">🧪 効率比とは？</div>
+        <div class="brain-explanation">
+          <strong>効率比</strong>は、凝視時間に対する残像時間の比率です。<br>
+          高いほど、少ない刺激で長い残像を生成できる「脳の内部生成能力」が優れています。<br>
+          <strong>例：</strong>5秒凝視で30秒残像 → 効率比 6.0倍
+        </div>
+
+        <div class="section-subtitle">💡 トレーニングの目標</div>
+        <div class="brain-explanation">
+          <strong>初心者：</strong>まずは30秒凝視で30秒残像（パターンE）を目指す<br>
+          <strong>中級者：</strong>10～15秒凝視で30秒残像（パターンB・C）を目指す<br>
+          <strong>上級者：</strong>5秒凝視で30秒残像（パターンA）や、30秒凝視で60秒残像（パターンF）に挑戦
+        </div>
+      </div>
+
+      <!-- ========== 推奨トレーニングプラン ========== -->
+      <div class="card">
+        <h2>🎯 推奨トレーニングプラン</h2>
+        <div class="explanation-grid">
+          <div class="explanation-box">
+            <h4>1週目：基礎固め</h4>
+            <p><strong>目標：5～30秒凝視で30秒残像</strong></p>
+            <p>毎日1～2セット、凝視時間は短めでOK。</p>
+            <p>残像が見えることに慣れる段階です。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>2週目：効率化</h4>
+            <p><strong>目標：10～30秒凝視で30秒残像</strong></p>
+            <p>凝視時間を徐々に短くして、残像時間を維持。</p>
+            <p>脳の内部生成力を高める段階です。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>3週目以降：挑戦</h4>
+            <p><strong>目標：5～30秒凝視で30秒残像</strong></p>
+            <p>効率比6.0倍以上を目指す。</p>
+            <p>または、30秒凝視で60秒残像に挑戦。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>継続のコツ</h4>
+            <p>無理せず、毎日続けることが大切です。</p>
+            <p>残像が見えにくい日もあるので、焦らずに。</p>
+            <p>長期的には、脳の可塑性が高まります。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== パターン別アドバイス ========== -->
+      <div class="card">
+        <h2>💊 パターン別アドバイス</h2>
+        <div class="explanation-grid">
+          <div class="explanation-box">
+            <h4>パターンA～Cの方へ</h4>
+            <p>短時間の凝視で長い残像を生成できる「高効率型」です。</p>
+            <p>脳の内部生成力が優れているので、30秒凝視で60秒残像に挑戦してみましょう。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>パターンD～Eの方へ</h4>
+            <p>標準的な脳活動パターンです。</p>
+            <p>まずは10～15秒凝視で30秒残像を目指しましょう。</p>
+            <p>徐々に凝視時間を短くして、効率比を高めていきます。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>パターンFの方へ</h4>
+            <p>長時間の凝視と残像を維持できる「持久型」です。</p>
+            <p>全脳的な持久力が高いので、さらに長時間のトレーニングに挑戦できます。</p>
+            <p>または、凝視時間を短くして効率比を高める方向も有効です。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>残像が見えない方へ</h4>
+            <p>まずは30秒凝視から始めてください。</p>
+            <p>目を閉じて暗い場所で確認すると、残像が見えやすくなります。</p>
+            <p>個人差が大きいので、焦らず続けることが大切です。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 次のステップ (NEW) ========== -->
+      <div class="card">
+        <h2>次のステップ</h2>
+        <div class="explanation-grid">
+          <div class="explanation-box">
+            <h4>目標1：凝視時間の短縮</h4>
+            <p>「30秒凝視 → 30秒残像」から「10秒凝視 → 30秒残像」への挑戦、そして「5秒凝視 → 30秒残像」への挑戦</p>
+            <p>これは側頭葉のイメージ生成力が星5つになることを意味します。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>目標2：応用トレーニング</h4>
+            <p>残像の色を意志で変える（赤 → 緑など）トレーニング</p>
+            <p>形を動かす、サイズを変えるなど、イメージ操作能力を高める</p>
+          </div>
+          <div class="explanation-box">
+            <h4>測定基準の統一</h4>
+            <p>「輪郭がはっきり見えている状態」で終了を判定</p>
+            <p>毎回同じ基準で測定することで、進歩が正確に追跡できます</p>
+          </div>
+          <div class="explanation-box">
+            <h4>継続性</h4>
+            <p>週3～5回のトレーニング継続で、さらなる脳の効率化が期待できます</p>
+            <p>あなたの脳は既に優秀な段階にあります。次のレベルへ！</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📚 参考文献</h2>
+        <p class="description">
+          このアプリは、2025年の最新研究をもとに設計されています。
+        </p>
+        <div class="brain-explanation">
+          <strong>主な参考文献：</strong>
+          <ul style="margin: 0.5rem 0 0; padding-left: 1.5rem;">
+            <li>Kronemer et al. (2025) - 7T MRIによる脳活動とfMRI信号の関係</li>
+            <li>Spagna et al. (2021) - 視覚残像と注意の神経メカニズム（46ページの文献レビュー）</li>
+            <li>Tsuchiya &amp; Koch (2005) - 連続フラッシュ抑制と視覚意識</li>
+            <li>Brascamp et al. (2010) - 負の残像の視覚特性と神経基盤</li>
+          </ul>
+        </div>
+        <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255, 152, 0, 0.1); border-radius: 8px; border-left: 3px solid var(--accent);">
+          <p style="margin: 0; font-size: 0.85rem; line-height: 1.6;">
+            <strong>⚠ 免責事項：</strong>
+            このアプリは研究論文を参考に設計されていますが、医療機器ではありません。脳活動の推定値は参考情報であり、診断・治療には使用できません。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SETTINGS VIEW ========== -->
+    <section id="settings" class="view hidden">
+      <h1 class="title">⚙ 設定</h1>
+      <div class="card">
+        <h2>💾 データ管理</h2>
+        <div class="row">
+          <button id="backupBtn" onclick="handleBackupClick()">📦 バックアップ</button>
+        </div>
+        <div class="row" style="margin-top:0.75rem;">
+          <div class="muted" id="driveStatus" style="margin-top:0.5rem;"></div>
+          <button id="gAuthBtn" class="secondary">🔐 Googleでログイン</button>
+          <button id="pickDriveFileBtn" class="secondary" disabled>📂 DriveのJSONを選択</button>
+          <button id="driveLoadBtn" class="secondary" disabled>☁ Driveから読込</button>
+          <button id="driveSaveBtn" disabled>💾 Driveへ保存</button>
+          <button id="driveSaveAsBtn" class="secondary" disabled>💾 Driveへ別名保存</button>
+        </div>
+        <button id="importBtn" onclick="document.getElementById('importFile').click()">📥 インポート</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none;">
+        <button id="deleteBtn" class="danger" onclick="handleDeleteClick()">🗑 全削除</button>
+      </div>
+
+      <p class="muted" style="margin-top:0.75rem; line-height:1.7;">
+        <strong>💡 データについて：</strong><br>
+        すべてのデータはブラウザ内（LocalStorage）に保存されます。Google Driveにバックアップすると、他の端末でも同期できます。
+      </p>
+
+      <div class="card" style="border: 2px solid var(--accent); background: rgba(255,152,0,0.05);">
+        <h3>Driveボタンの使い方（作者のみ使用可能）</h3>
+        <p class="muted">
+          ※データはこの端末のブラウザ（ローカル）に保存されます。ブラウザのキャッシュ/サイトデータ削除等で消える可能性があるため、定期的に「バックアップをダウンロード」を行ってください。<br>
+          ※Googleログイン/Google Drive関連の機能は作成者向けです。通常は「バックアップをダウンロード」「データをインポート」「すべてのデータ削除」を使用してください。
+        </p>
+      </div>
+
+      <details class="science-details" style="margin-top:0.75rem;">
+        <summary>📖 Google Driveの使い方</summary>
+        <div class="science-details-content">
+          <pre>【Google Drive連携の手順】
+1. 「Googleでログイン」をクリック
+2. Googleアカウントでログイン
+3. 「DriveのJSONを選択」で既存ファイルを選択（初回は不要）
+4. 「Driveへ保存」でアップロード
+
+【注意】
+- Drive連携時は、ファイルIDがLocalStorageに保存されます
+- 別のブラウザやデバイスでは、再度「DriveのJSONを選択」が必要です
+- 「Driveから読込」は既存のJSONファイルを上書きします
+- 「Driveへ別名保存」は新しいJSONファイルを作成します</pre>
+        </div>
+      </details>
+
+      <div class="card">
+        <h2>ℹ️ アプリについて</h2>
+        <div class="muted" style="line-height: 1.8;">
+          <p style="margin: 0 0 0.75rem 0;">
+            <strong>Orange Card v8.1</strong>
+          </p>
+          <p style="margin: 0 0 1rem 0;">
+            脳の視覚機能をトレーニングするアプリです。
+          </p>
+
+          <p style="margin: 0.75rem 0 0.25rem 0;">
+            <strong>💡 このアプリの特徴</strong>
+          </p>
+          <ul style="margin: 0 0 1rem 0; padding-left: 1.5rem;">
+            <li>最新のfMRI研究をもとにした脳活動推定</li>
+            <li>残像トレーニングで視覚記憶を強化</li>
+            <li>ダッシュボードで進捗を可視化</li>
+            <li>ローカルストレージで完全オフライン動作</li>
+          </ul>
+
+          <p style="margin: 0.75rem 0 0.25rem 0;">
+            <strong>⚠ 注意事項</strong>
+          </p>
+          <ul style="margin: 0 0 1rem 0; padding-left: 1.5rem;">
+            <li>医療機器ではありません</li>
+            <li>脳活動の推定値は参考情報です</li>
+            <li>不快感がある場合は直ちに中止してください</li>
+            <li>3歳未満のお子様は使用しないでください</li>
+          </ul>
+
+          <p style="margin: 0.75rem 0 0.25rem 0;">
+            <strong>📧 お問い合わせ</strong>
+          </p>
+          <ul style="margin: 0; padding-left: 1.5rem;">
+            <li>バグ報告や機能要望は、GitHubのIssuesへお願いします</li>
+            <li>このアプリはオープンソースではありません</li>
+            <li>fMRI研究の詳細は、参考文献をご覧ください</li>
+            <li>個人情報は一切収集していません</li>
+            <li>JSONバックアップとGoogle Drive連携のみ利用可能です</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- Google APIs -->
+  <script defer src="https://apis.google.com/js/api.js"></script>
+  <script defer src="https://accounts.google.com/gsi/client"></script>
+
+  <script>
+    "use strict";
+
+    // ========== DASHBOARD ==========
+    function refreshDashboard() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todaySessions = sessions.filter(s => {
+        const d = new Date(s.timestamp);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() === today.getTime();
+      });
+
+      const todayCountEl = document.getElementById("todayCount");
+      const totalCountEl = document.getElementById("totalCount");
+      if (todayCountEl) todayCountEl.textContent = todaySessions.length;
+      if (totalCountEl) totalCountEl.textContent = sessions.length;
+
+      const avgEl = document.getElementById("avgAfterImage");
+      const stabilityEl = document.getElementById("stability");
+      const badgeEl = document.getElementById("avgBadge");
+
+      if (!sessions.length) {
+        if (avgEl) avgEl.textContent = "-";
+        if (stabilityEl) stabilityEl.textContent = "-";
+        if (badgeEl) badgeEl.textContent = "";
+        return;
+      }
+
+      const afterValues = sessions.map(s => Number(s.afterSec) || 0);
+      const avgAfter = afterValues.reduce((sum, v) => sum + v, 0) / afterValues.length;
+      const variance = afterValues.reduce((sum, v) => sum + Math.pow(v - avgAfter, 2), 0) / afterValues.length;
+      const stdDev = Math.sqrt(variance);
+
+      if (avgEl) avgEl.textContent = avgAfter.toFixed(2);
+      if (stabilityEl) stabilityEl.textContent = stdDev.toFixed(2);
+
+      if (badgeEl) {
+        if (avgAfter >= 8) {
+          badgeEl.textContent = "優秀";
+          badgeEl.className = "score-badge excellent";
+        } else if (avgAfter >= 5) {
+          badgeEl.textContent = "良好";
+          badgeEl.className = "score-badge good";
+        } else {
+          badgeEl.textContent = "改善中";
+          badgeEl.className = "score-badge improving";
+        }
+      }
+
+      const recentTable = document.getElementById("recentTable");
+      if (recentTable) {
+        recentTable.innerHTML = "";
+        const recent = sessions.slice(-10).reverse();
+        recent.forEach(s => {
+          const row = document.createElement("tr");
+          row.style.borderBottom = "1px solid var(--line)";
+          const date = new Date(s.timestamp);
+          const sharpnessText = s.sharpness === 3 ? "3 - 鮮明" : s.sharpness === 2 ? "2 - ぼんやり" : "1 - 見えない";
+          row.innerHTML = `
+            <td style="padding: 0.5rem">${date.toLocaleTimeString("ja-JP")}</td>
+            <td style="padding: 0.5rem">${s.stareSec}秒</td>
+            <td style="padding: 0.5rem">${Number(s.afterSec).toFixed(2)}秒</td>
+            <td style="padding: 0.5rem">${sharpnessText}</td>
+          `;
+          recentTable.appendChild(row);
+        });
+      }
+
+      updateCharts();
+    }
+
+    // ========== GOOGLE DRIVE ==========
+    const CLIENTID = "312868081144-1c6gjkal8rgllhi8iqgblbgjarc058jc.apps.googleusercontent.com";
+    const APIKEY = "AIzaSyDhw-1p83aMURAZqPGrrmTe8EJU68Dj82I";
+    const APPID = "312868081144";
+    const DRIVESCOPES = "https://www.googleapis.com/auth/drive.file";
+    const DRIVEDISCOVERY = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
+
+    let tokenClient = null;
+    let accessToken;
+    let pickedFileId;
+    let pickerReady = false;
+
+    function setDriveStatus(msg) {
+      const el = document.getElementById("driveStatus");
+      if (el) el.textContent = msg;
+    }
+
+    function updateDriveButtons() {
+      const pickBtn = document.getElementById("pickDriveFileBtn");
+      const loadBtn = document.getElementById("driveLoadBtn");
+      const saveBtn = document.getElementById("driveSaveBtn");
+      const saveAsBtn = document.getElementById("driveSaveAsBtn");
+
+      const hasToken = !!accessToken;
+      const hasFile = !!pickedFileId;
+
+      if (pickBtn) pickBtn.disabled = !hasToken;
+      if (loadBtn) loadBtn.disabled = !(hasToken && hasFile);
+      if (saveBtn) saveBtn.disabled = !(hasToken && hasFile);
+      if (saveAsBtn) saveAsBtn.disabled = !(hasToken && hasFile);
+    }
+
+    function loadDriveFileId() {
+      pickedFileId = localStorage.getItem("driveFileId");
+    }
+
+    function wireDriveUi() {
+      const gAuthBtn = document.getElementById("gAuthBtn");
+      const pickBtn = document.getElementById("pickDriveFileBtn");
+      const loadBtn = document.getElementById("driveLoadBtn");
+      const saveBtn = document.getElementById("driveSaveBtn");
+      const saveAsBtn = document.getElementById("driveSaveAsBtn");
+
+      if (gAuthBtn) gAuthBtn.onclick = () => requestAccessToken(true);
+      if (pickBtn) pickBtn.onclick = openPicker;
+      if (loadBtn) loadBtn.onclick = driveLoad;
+      if (saveBtn) saveBtn.onclick = driveSave;
+      if (saveAsBtn) saveAsBtn.onclick = driveSaveAsNewSameFolder;
+
+      setDriveStatus(pickedFileId ? `DriveファイルID: ${pickedFileId}` : "DriveファイルID: 未選択");
+      updateDriveButtons();
+    }
+
+    function requestAccessToken(interactive) {
+      if (!tokenClient) {
+        setDriveStatus("OAuthクライアント未初期化。initGoogleDriveClient()を実行してください。");
+        return;
+      }
+      tokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" });
+    }
+
+    async function initGoogleDriveClient() {
+      if (!window.gapi) throw new Error("gapi未ロード。api.jsを確認してください。");
+      if (!window.google?.accounts?.oauth2) throw new Error("GIS未ロード。gsiclientを確認してください。");
+
+      await new Promise((resolve, reject) => {
+        gapi.load("client:picker", async () => {
+          try {
+            await gapi.client.init({
+              apiKey: APIKEY,
+              discoveryDocs: [DRIVEDISCOVERY],
+            });
+            pickerReady = true;
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
+
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENTID,
+        scope: DRIVESCOPES,
+        callback: (resp) => {
+          if (resp?.error) {
+            setDriveStatus(`OAuth失敗: ${resp.error}`);
+            return;
+          }
+          accessToken = resp.access_token;
+          gapi.client.setToken({ access_token: accessToken });
+          setDriveStatus("OAuthトークン取得成功。Driveへのアクセスが可能です。");
+          updateDriveButtons();
+        },
+      });
+
+      setDriveStatus("DriveCl初期化完了。OKボタンでログインしてください。");
+      updateDriveButtons();
+    }
+
+    function openPicker() {
+      if (!pickerReady) return;
+      if (!accessToken) {
+        requestAccessToken(true);
+        return;
+      }
+
+      const view = new google.picker.View(google.picker.ViewId.DOCS);
+      view.setMimeTypes("application/json");
+
+      const picker = new google.picker.PickerBuilder()
+        .addView(view)
+        .setOAuthToken(accessToken)
+        .setDeveloperKey(APIKEY)
+        .setAppId(APPID)
+        .setCallback(pickerCallback)
+        .build();
+      picker.setVisible(true);
+    }
+
+    function pickerCallback(data) {
+      if (data.action === google.picker.Action.PICKED) {
+        const doc = data.docs?.[0];
+        pickedFileId = doc?.id;
+        if (pickedFileId) {
+          localStorage.setItem("driveFileId", pickedFileId);
+          setDriveStatus(`選択: ${doc.name} (ID: ${pickedFileId})`);
+        } else {
+          setDriveStatus("ファイルID取得失敗");
+        }
+        updateDriveButtons();
+      }
+      if (data.action === google.picker.Action.CANCEL) {
+        setDriveStatus("キャンセルされました");
+      }
+    }
+
+    async function driveLoad() {
+      if (!accessToken) {
+        setDriveStatus("トークンがありません");
+        return;
+      }
+      if (!pickedFileId) {
+        setDriveStatus("DriveファイルJSONを選択してください");
+        return;
+      }
+      try {
+        const resp = await gapi.client.drive.files.get({
+          fileId: pickedFileId,
+          alt: "media",
+          supportsAllDrives: true,
+        });
+        const raw = resp.body;
+        const data = JSON.parse(raw);
+        const loadedSessions = Array.isArray(data) ? data : (data.sessions || null);
+        if (!Array.isArray(loadedSessions)) {
+          setDriveStatus("JSON形式エラー: sessions配列がありません");
+          return;
+        }
+        sessions = loadedSessions;
+        localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
+        refreshDashboard();
+        setDriveStatus(`Driveから読込完了: ${sessions.length}件`);
+      } catch (e) {
+        console.error("Drive load error:", e);
+        setDriveStatus(`読込失敗: ${e.message || e}`);
+      }
+    }
+
+    async function driveSave() {
+      if (!accessToken) {
+        setDriveStatus("Driveトークンがありません");
+        return;
+      }
+      if (!pickedFileId) {
+        setDriveStatus("Drive JSONファイルを選択してください");
+        return;
+      }
+      try {
+        const payloadObj = {
+          appVersion: "v8.1",
+          exportDate: new Date().toISOString(),
+          totalSessions: sessions.length,
+          sessions,
+        };
+        const payload = JSON.stringify(payloadObj, null, 2);
+
+        const url = `https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(pickedFileId)}?uploadType=media&supportsAllDrives=true`;
+        const r = await fetch(url, {
+          method: "PATCH",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          body: payload,
+        });
+        if (!r.ok) {
+          const t = await r.text().catch(() => "");
+          throw new Error(`HTTP ${r.status}: ${t}`);
+        }
+        setDriveStatus(`Driveへ保存成功（上書き）: ${sessions.length}件`);
+      } catch (e) {
+        console.error("Drive save error:", e);
+        setDriveStatus(e?.message || String(e));
+      }
+    }
+
+    async function driveSaveAsNewSameFolder() {
+      if (!accessToken) {
+        setDriveStatus("Driveトークンがありません");
+        return;
+      }
+      if (!pickedFileId) {
+        setDriveStatus("Drive JSONファイルを選択してください");
+        return;
+      }
+      try {
+        const meta = await gapi.client.drive.files.get({
+          fileId: pickedFileId,
+          fields: "parents,name",
+          supportsAllDrives: true,
+        });
+        const parentId = meta.result?.parents?.[0] || null;
+
+        const payloadObj = {
+          appVersion: "v8.1",
+          exportDate: new Date().toISOString(),
+          totalSessions: sessions.length,
+          sessions,
+        };
+        const payload = JSON.stringify(payloadObj, null, 2);
+
+        const name = `orange-card-backup-${new Date().toISOString().replace(/\./g, "-")}.json`;
+        const metadata = {
+          name,
+          mimeType: "application/json",
+          ...(parentId ? { parents: [parentId] } : {}),
+        };
+
+        const form = new FormData();
+        form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+        form.append("file", new Blob([payload], { type: "application/json" }));
+
+        const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+          },
+          body: form,
+        });
+        if (!res.ok) {
+          const t = await res.text().catch(() => "");
+          throw new Error(`HTTP ${res.status}: ${t}`);
+        }
+        setDriveStatus(`Driveへ別名保存成功: ${name}`);
+      } catch (e) {
+        console.error("Drive saveAs error:", e);
+        setDriveStatus(e?.message || String(e));
+      }
+    }
+
+    // ========== GLOBAL STATE ==========
+    let sessions = [];
+    let stareTimer = null;
+    let afterTimer = null;
+    let afterStart = null;
+    let selectedSharpness = 3;
+    let isTraining = false;
+    let currentSession = null;
+
+    let afterImageChartInstance = null;
+    let sharpnessChartInstance = null;
+    let countdownTimer = null;
+
+    window.addEventListener("load", function() {
+      initApp();
+    });
+
+    function initApp() {
+      initTabs();
+      initSharpnessListeners();
+      loadSessions();
+      refreshDashboard();
+      loadDriveFileId();
+      wireDriveUi();
+      initGoogleDriveClient().catch(e => {
+        setDriveStatus(e.message);
+      });
+    }
+
+    // ========== TABS ==========
+    function initTabs() {
+      const tabs = document.querySelectorAll("[data-tab]");
+      tabs.forEach(tab => {
+        tab.onclick = function(e) {
+          e.preventDefault();
+          const tabName = this.dataset.tab;
+
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+          this.classList.add("active");
+
+          document.querySelectorAll(".view").forEach(v => v.classList.add("hidden"));
+          document.getElementById(tabName).classList.remove("hidden");
+
+          if (tabName === "dashboard") {
+            refreshDashboard();
+          }
+        };
+      });
+    }
+
+    // ========== SHARPNESS ==========
+    function initSharpnessListeners() {
+      const radios = document.querySelectorAll("input[name='sharpness']");
+      radios.forEach(radio => {
+        radio.onchange = function() {
+          selectedSharpness = parseInt(this.value);
+          document.querySelectorAll(".sharpness-option").forEach(opt => opt.classList.remove("selected"));
+          this.parentElement.classList.add("selected");
+        };
+      });
+    }
+
+    // ========== START TRAINING ==========
+    function handleStartClick() {
+      if (isTraining) return;
+
+      if (stareTimer !== null) clearTimeout(stareTimer);
+      if (afterTimer !== null) clearInterval(afterTimer);
+      if (countdownTimer !== null) clearInterval(countdownTimer);
+      afterStart = null;
+      isTraining = true;
+
+      document.getElementById("startBtn").disabled = true;
+
+      const stareSec = parseInt(document.getElementById("stareSec").value);
+
+      const overlay = document.getElementById("fullscreenOverlay");
+      overlay.classList.remove("hidden");
+      overlay.classList.add("show");
+
+      let remaining = stareSec;
+      document.getElementById("fullscreenTimer").textContent = remaining;
+
+      countdownTimer = setInterval(() => {
+        remaining--;
+        document.getElementById("fullscreenTimer").textContent = remaining;
+        if (remaining <= 0) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          startAfterImage();
+        }
+      }, 1000);
+    }
+
+    function closeFullscreen() {
+      document.getElementById("fullscreenOverlay").classList.remove("show");
+      document.getElementById("fullscreenOverlay").classList.add("hidden");
+    }
+
+    function closeOverlays() {
+      document.getElementById("afterImageOverlay").classList.remove("show");
+      document.getElementById("afterImageOverlay").classList.add("hidden");
+      document.getElementById("sharpnessOverlay").classList.remove("show");
+      document.getElementById("sharpnessOverlay").classList.add("hidden");
+    }
+
+    function startAfterImage() {
+      const overlay = document.getElementById("fullscreenOverlay");
+      overlay.classList.remove("show");
+      overlay.classList.add("hidden");
+
+      afterStart = Date.now();
+
+      const afterOverlay = document.getElementById("afterImageOverlay");
+      afterOverlay.classList.remove("hidden");
+      afterOverlay.classList.add("show");
+
+      if (afterTimer !== null) clearInterval(afterTimer);
+      afterTimer = setInterval(() => {
+        if (afterStart === null) return;
+        const elapsed = (Date.now() - afterStart) / 1000;
+        document.getElementById("afterSec").textContent = elapsed.toFixed(1);
+      }, 100);
+
+      const clickHandler = () => {
+        endAfterImage();
+        document.removeEventListener("click", clickHandler);
+      };
+      document.addEventListener("click", clickHandler);
+    }
+
+    function endAfterImage() {
+      if (afterStart === null) return;
+
+      if (afterTimer !== null) {
+        clearInterval(afterTimer);
+        afterTimer = null;
+      }
+
+      const afterSec = (Date.now() - afterStart) / 1000;
+      afterStart = null;
+
+      const overlay = document.getElementById("afterImageOverlay");
+      overlay.classList.remove("show");
+      overlay.classList.add("hidden");
+
+      setTimeout(() => {
+        showSharpnessSelection(parseInt(document.getElementById("stareSec").value), afterSec);
+      }, 150);
+    }
+
+    function showSharpnessSelection(stareSec, afterSec) {
+      const radios = document.querySelectorAll("input[name='sharpness']");
+      radios.forEach(r => {
+        if (r.value === "3") {
+          r.checked = true;
+          r.parentElement.classList.add("selected");
+        } else {
+          r.parentElement.classList.remove("selected");
+        }
+      });
+      selectedSharpness = 3;
+
+      currentSession = { stareSec, afterSec };
+
+      const overlay = document.getElementById("sharpnessOverlay");
+      overlay.classList.add("show");
+      overlay.classList.remove("hidden");
+    }
+
+    function handleConfirmClick() {
+      if (!currentSession) return;
+
+      const session = currentSession;
+      session.sharpness = selectedSharpness;
+      session.timestamp = new Date().toISOString();
+
+      sessions.push(session);
+
+      try {
+        const json = JSON.stringify(sessions);
+        if (json.length > 5242880) {
+          sessions = sessions.slice(-100);
+          localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
+        } else {
+          localStorage.setItem("orangeCardSessions", json);
+        }
+      } catch (e) {
+        console.error("v8.1 LocalStorage error:", e);
+        alert("⚠ データ保存に失敗しました。容量超過の可能性があります。");
+      }
+
+      document.getElementById("sharpnessOverlay").classList.remove("show");
+      document.getElementById("sharpnessOverlay").classList.add("hidden");
+
+      showResult(session);
+      updateBrainVisualization(session);
+
+      setTimeout(() => {
+        isTraining = false;
+        document.getElementById("startBtn").disabled = false;
+        currentSession = null;
+      }, 1000);
+    }
+
+    function handleRetryClick() {
+      document.getElementById("sharpnessOverlay").classList.remove("show");
+      document.getElementById("sharpnessOverlay").classList.add("hidden");
+      isTraining = false;
+      document.getElementById("startBtn").disabled = false;
+      currentSession = null;
+    }
+
+    function showResult(session) {
+      const sharpnessText = { 3: "非常に鮮明", 2: "ぼんやり", 1: "ほぼ見えない" }[session.sharpness];
+      const date = new Date(session.timestamp);
+
+      const resultText = document.getElementById("resultText");
+      resultText.innerHTML = `
+        <strong>✅ トレーニング完了</strong><br>
+        凝視時間: ${session.stareSec}秒<br>
+        残像時間: ${session.afterSec.toFixed(2)}秒<br>
+        鮮明度: ${sharpnessText}<br>
+        記録時刻: ${date.toLocaleTimeString("ja-JP")}
+      `;
+
+      const resultCard = document.getElementById("resultCard");
+      resultCard.style.display = "block";
+      document.getElementById("sessionHint").style.display = "none";
+
+      setTimeout(() => {
+        resultCard.style.display = "none";
+      }, 5000);
+    }
+
+    // ========== BRAIN VISUALIZATION ==========
+    const SHARPNESSMULTIPLIER = { 3: 1.2, 2: 1.0, 1: 0.7 };
+
+    function updateBrainVisualization(session) {
+      const stareSec = session.stareSec;
+      const afterSec = session.afterSec;
+      const sharpness = session.sharpness || 3;
+      const sharpMult = SHARPNESSMULTIPLIER[sharpness] || 1.0;
+
+      // --- 4つの脳領域スコア ---
+      const occipitalScore = Math.min(100, (stareSec / 20) * 100);
+      const temporalScore = Math.min(100, (afterSec / 10) * sharpMult * 100);
+      const frontalScore = Math.min(100, (stareSec / 30) * 100);
+      const parietalScore = Math.min(100, ((stareSec + afterSec) / 15) * 100);
+
+      const qualityScore = Math.round((occipitalScore + temporalScore + frontalScore + parietalScore) / 4);
+
+      // --- SVG更新 ---
+      document.getElementById("pctOccipitalText").textContent = Math.round(occipitalScore) + "%";
+      document.getElementById("pctTemporalText").textContent = Math.round(temporalScore) + "%";
+      document.getElementById("pctFrontalText").textContent = Math.round(frontalScore) + "%";
+      document.getElementById("pctParietalText").textContent = Math.round(parietalScore) + "%";
+
+      // --- ゲージ更新 ---
+      document.getElementById("gaugeVisual").style.width = Math.min(100, occipitalScore) + "%";
+      document.getElementById("gaugeVisualText").textContent = Math.round(occipitalScore) + "%";
+
+      const cognitiveLoad = (frontalScore + temporalScore) / 2;
+      document.getElementById("gaugeCog").style.width = Math.min(100, cognitiveLoad) + "%";
+      document.getElementById("gaugeCogText").textContent = Math.round(cognitiveLoad) + "%";
+
+      // UIの「temporalVal」IDに表示（頭頂葉スコア）
+      document.getElementById("temporalVal").textContent = parietalScore.toFixed(0) + "%";
+
+      // --- 品質スコア ---
+      document.getElementById("qualityScore").textContent = qualityScore + "%";
+
+      const qualityLabel = document.getElementById("qualityLabel");
+      if (qualityScore >= 75) {
+        qualityLabel.textContent = "🎉 優秀な脳活動パターン";
+        qualityLabel.style.color = "#66bb6a";
+      } else if (qualityScore >= 50) {
+        qualityLabel.textContent = "👍 良好な脳活動パターン";
+        qualityLabel.style.color = "#ffc107";
+      } else {
+        qualityLabel.textContent = "💪 継続で改善が期待できます";
+        qualityLabel.style.color = "#ef5350";
+      }
+    }
+
+    // ========== CHARTS ==========
+    function updateCharts() {
+      if (sessions.length === 0) return;
+
+      const last20 = sessions.slice(-20);
+      const labels = last20.map((s, i) => i + 1);
+      const afterImageData = last20.map(s => parseFloat(s.afterSec.toFixed(2)));
+
+      const ctx1 = document.getElementById("afterImageChart").getContext("2d");
+      if (afterImageChartInstance) {
+        afterImageChartInstance.data.labels = labels;
+        afterImageChartInstance.data.datasets[0].data = afterImageData;
+        afterImageChartInstance.update();
+      } else {
+        afterImageChartInstance = new Chart(ctx1, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "残像時間（秒）",
+              data: afterImageData,
+              borderColor: "#ff9800",
+              backgroundColor: "rgba(255, 152, 0, 0.1)",
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 5,
+              pointBackgroundColor: "#ff9800",
+              pointBorderColor: "#fff",
+              pointBorderWidth: 2,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e7e7e7",
+                  font: { size: 14 }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { color: "#a8b0bf" },
+                grid: { color: "#2a2f3a" },
+              },
+              x: {
+                ticks: { color: "#a8b0bf" },
+                grid: { color: "#2a2f3a" },
+              }
+            }
+          }
+        });
+      }
+
+      const sharpnessCount = { "非常に鮮明": 0, "ぼんやり": 0, "ほぼ見えない": 0 };
+      sessions.forEach(s => {
+        const text = { 3: "非常に鮮明", 2: "ぼんやり", 1: "ほぼ見えない" }[s.sharpness];
+        if (sharpnessCount.hasOwnProperty(text)) {
+          sharpnessCount[text]++;
+        }
+      });
+
+      const ctx2 = document.getElementById("sharpnessChart").getContext("2d");
+      if (sharpnessChartInstance) {
+        sharpnessChartInstance.data.datasets[0].data = [sharpnessCount["非常に鮮明"], sharpnessCount["ぼんやり"], sharpnessCount["ほぼ見えない"]];
+        sharpnessChartInstance.update();
+      } else {
+        sharpnessChartInstance = new Chart(ctx2, {
+          type: "doughnut",
+          data: {
+            labels: ["非常に鮮明", "ぼんやり", "ほぼ見えない"],
+            datasets: [{
+              data: [sharpnessCount["非常に鮮明"], sharpnessCount["ぼんやり"], sharpnessCount["ほぼ見えない"]],
+              backgroundColor: ["#2e7d32", "#ffb300", "#e53935"],
+              borderColor: "#171a21",
+              borderWidth: 2,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e7e7e7",
+                  font: { size: 12 }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // ========== BACKUP / IMPORT / DELETE ==========
+    function handleBackupClick() {
+      if (sessions.length === 0) {
+        alert("⚠ バックアップするデータがありません。");
+        return;
+      }
+
+      const data = {
+        appVersion: "v8.1",
+        exportDate: new Date().toISOString(),
+        totalSessions: sessions.length,
+        sessions: sessions
+      };
+
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `orange-card-backup-${timestamp}.json`;
+
+      try {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        alert(`✅ バックアップ完了: ${sessions.length}件`);
+      } catch (e) {
+        console.error("v8.1 Backup error:", e);
+        alert("⚠ バックアップに失敗しました。");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const importFile = document.getElementById("importFile");
+      if (importFile) {
+        importFile.onchange = function(e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            try {
+              const data = JSON.parse(event.target.result);
+              if (data.sessions && Array.isArray(data.sessions)) {
+                sessions = data.sessions;
+                localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
+                refreshDashboard();
+                alert(`✅ インポート完了: ${sessions.length}件`);
+              } else {
+                alert("⚠ JSON形式エラー: sessions配列がありません。");
+              }
+            } catch (err) {
+              console.error("v8.1 Import error:", err);
+              alert("⚠ JSONファイルの解析に失敗しました。");
+            }
+          };
+          reader.readAsText(file);
+          this.value = "";
+        };
+      }
+    });
+
+    function handleDeleteClick() {
+      if (confirm("⚠ 全データを削除しますか？この操作は取り消せません。")) {
+        try {
+          sessions = [];
+          localStorage.removeItem("orangeCardSessions");
+          refreshDashboard();
+          alert("✅ 全データを削除しました。");
+        } catch (e) {
+          console.error("v8.1 Delete error:", e);
+          alert("⚠ 削除に失敗しました。");
+        }
+      }
+    }
+
+    function loadSessions() {
+      const stored = localStorage.getItem("orangeCardSessions");
+      if (stored) {
+        try {
+          sessions = JSON.parse(stored);
+        } catch (e) {
+          console.warn("v8.1 Parse error:", e);
+          sessions = [];
+        }
+      }
+    }
+  </script>
+</body>
+</html>
