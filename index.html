@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>Orange Card v10 - 残像トレーニング記録</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --text: #e7e7e7;
+      --muted: #a8b0bf;
+      --accent: #ff9800;
+      --accent2: #ffb300;
+      --danger: #e91e63;
+      --line: #2a2f3a;
+      --green: #4caf50;
+      --blue: #42a5f5;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar { background: #11141b; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; }
+    .topbar-inner { max-width: 1100px; margin: 0 auto; padding: 0.75rem 1rem; display: flex; gap: 1rem; align-items: center; justify-content: space-between; }
+    .brand { font-weight: 900; font-size: 1.1rem; }
+    .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .tab { background: transparent; border: 1px solid var(--line); color: var(--muted); padding: 0.45rem 0.75rem; border-radius: 999px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; }
+    .tab:hover { background: rgba(255,152,0,0.1); }
+    .tab.active { border-color: transparent; background: var(--accent); color: #111; font-weight: 850; }
+
+    /* ===== CONTAINER ===== */
+    .container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+    .view.hidden { display: none !important; }
+    .title { font-size: 1.35rem; margin: 0.2rem 0 1rem; font-weight: 700; }
+    h2 { font-size: 1.1rem; margin: 0 0 0.75rem; font-weight: 700; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1rem; margin-bottom: 1rem; }
+    .muted { color: var(--muted); font-size: 0.9rem; }
+
+    /* ===== FORM ===== */
+    label { display: flex; flex-direction: column; gap: 0.35rem; color: var(--muted); font-size: 0.95rem; }
+    select, input[type="number"] { padding: 0.6rem 0.7rem; border-radius: 10px; border: 1px solid var(--line); background: #0d0f14; color: var(--text); min-width: 5rem; cursor: pointer; font-size: 0.95rem; }
+    button { padding: 0.6rem 0.9rem; border-radius: 999px; border: none; background: var(--accent); color: #111; cursor: pointer; font-weight: 850; font-size: 0.95rem; transition: background-color 0.1s, transform 0.1s; }
+    button:hover { background: #ff8c00; transform: translateY(-1px); }
+    button:active { transform: scale(0.95); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    button.secondary:hover { background: rgba(255,152,0,0.15); border-color: var(--accent); }
+    button.danger { background: var(--danger); color: #fff; }
+    button.danger:hover { background: #d81b60; }
+    .row { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; }
+
+    /* ===== FULLSCREEN OVERLAY (凝視) ===== */
+    .fullscreen-overlay { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 99999; visibility: hidden; opacity: 0; transition: all 0.3s ease; }
+    .fullscreen-overlay.show { visibility: visible !important; opacity: 1 !important; }
+    .fullscreen-overlay.hidden { visibility: hidden !important; opacity: 0 !important; }
+    .fullscreen-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; width: 100%; height: 100%; }
+    .fullscreen-timer { font-size: 4rem; font-weight: 1000; color: var(--accent); text-shadow: 0 0 20px rgba(255,152,0,0.8); font-family: "Courier New", monospace; letter-spacing: 0.1em; }
+    .fullscreen-label { font-size: 1.5rem; color: var(--accent); text-align: center; }
+    .fullscreen-instruction { position: absolute; bottom: 2rem; color: var(--muted); font-size: 1rem; text-align: center; opacity: 0.7; }
+    .orange-card-fullscreen { width: 80vw; height: 60vh; max-width: 600px; max-height: 450px; background: linear-gradient(135deg, #ff9800 0%, #ff8c00 50%, #ff9800 100%); border-radius: 40px; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 100px rgba(255,152,0,1), 0 0 40px rgba(255,100,0,0.8); }
+    .orange-card-fullscreen::before { content: ""; position: absolute; width: 200px; height: 200px; background: #1e88e5; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 11; }
+    .orange-card-fullscreen::after { content: ""; position: absolute; width: 20px; height: 20px; background: #000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 12; box-shadow: 0 0 10px rgba(0,0,0,0.9); }
+
+    /* ===== AFTERIMAGE OVERLAY ===== */
+    .overlay { pointer-events: auto; user-select: none; -webkit-user-select: none; touch-action: manipulation; position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 99998; visibility: hidden; opacity: 0; transition: all 0.15s ease; }
+    .overlay.show { visibility: visible !important; opacity: 1 !important; }
+    .overlay.hidden { visibility: hidden !important; opacity: 0 !important; pointer-events: none; }
+    .overlay-inner { text-align: center; max-width: 540px; }
+    .big { font-size: 1.4rem; font-weight: 950; margin-bottom: 0.25rem; }
+    .small { color: var(--muted); margin-bottom: 0.75rem; font-size: 0.9rem; }
+    .timer { font-size: 2.2rem; font-weight: 1000; margin: 0.5rem 0 1rem; color: var(--accent); }
+
+    /* ===== SHARPNESS OVERLAY ===== */
+    .sharpness-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 99997; visibility: hidden; opacity: 0; transition: all 0.15s ease; overflow-y: auto; }
+    .sharpness-overlay.show { visibility: visible !important; opacity: 1 !important; }
+    .sharpness-overlay.hidden { visibility: hidden !important; opacity: 0 !important; pointer-events: none; }
+    .sharpness-inner { text-align: center; max-width: 560px; width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.5rem; z-index: 100000; }
+    .sharpness-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 1.5rem; }
+
+    /* ===== SHARPNESS 5-LEVEL ===== */
+    .sharpness-5level { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; text-align: left; }
+    .sharpness-5level label { flex-direction: row; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 10px; cursor: pointer; transition: border-color 0.15s, background-color 0.15s; color: var(--text); font-size: 0.9rem; line-height: 1.4; }
+    .sharpness-5level label:hover { border-color: var(--accent); background: rgba(255,152,0,0.04); }
+    .sharpness-5level label.selected { border-color: var(--accent); background: rgba(255,152,0,0.1); }
+    .sharpness-5level input[type="radio"] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
+    .sharpness-level-num { display: inline-block; background: var(--accent); color: #111; font-weight: 800; font-size: 0.75rem; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 6px; flex-shrink: 0; }
+    .sharpness-anchor { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px; }
+
+    /* ===== COLOR OPTIONS ===== */
+    .color-option-compact { padding: 0.75rem; border: 2px solid var(--line); border-radius: 8px; background: transparent; color: var(--text); cursor: pointer; font-size: 0.8rem; text-align: center; white-space: nowrap; flex-shrink: 0; transition: border-color 0.15s, background-color 0.15s; }
+    .color-option-compact:hover { border-color: var(--accent); background: rgba(255,152,0,0.08); }
+    .color-option-compact.selected { border-color: var(--accent); background: rgba(255,152,0,0.15); }
+    .color-swatch-small { width: 40px; height: 30px; margin: 0 auto 0.5rem; border-radius: 4px; }
+    .sharpness-buttons { display: flex; justify-content: center; gap: 0.75rem; width: 100%; flex-wrap: wrap; }
+
+    /* ===== RESULT CARD ===== */
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0; }
+    .result-item { background: rgba(255,152,0,0.06); border: 1px solid var(--line); border-radius: 10px; padding: 0.75rem; text-align: center; }
+    .result-item-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .result-item-value { font-size: 1.4rem; font-weight: 900; color: var(--accent); }
+    .result-item-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+    .result-compare { font-size: 0.8rem; margin-top: 0.2rem; }
+    .result-compare.up { color: var(--green); }
+    .result-compare.down { color: var(--danger); }
+    .result-compare.same { color: var(--muted); }
+    .pb-badge { display: inline-block; background: rgba(255,152,0,0.2); color: var(--accent); font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.3rem; }
+
+    /* ===== KPI ===== */
+    .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 0.55rem 0.7rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; background: rgba(0,0,0,0.15); }
+    .kpi-val { color: var(--text); font-weight: 950; }
+
+    /* ===== STAT CARD ===== */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; }
+    .stat-card { background: rgba(255,152,0,0.06); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; text-align: center; }
+    .stat-card-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; font-weight: 600; }
+    .stat-card-value { font-size: 1.6rem; font-weight: 900; color: var(--accent); }
+    .stat-card-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+
+    /* ===== PATTERN TABLE ===== */
+    .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1rem; border: 1px solid var(--line); border-radius: 8px; }
+    .pattern-table { width: 100%; min-width: 700px; border-collapse: collapse; font-size: 0.9rem; }
+    .pattern-table thead { background: rgba(255,152,0,0.15); border-bottom: 2px solid var(--accent); }
+    .pattern-table th { padding: 0.75rem; text-align: left; font-weight: 700; color: var(--accent); border: 1px solid var(--line); }
+    .pattern-table td { padding: 0.75rem; border: 1px solid var(--line); }
+    .pattern-table tbody tr:hover { background: rgba(255,152,0,0.05); }
+    .pattern-table tbody tr.highlight { background: rgba(255,152,0,0.12); border-left: 3px solid var(--accent); }
+    .pattern-name { font-weight: 600; color: var(--accent); }
+    .you-badge { display: inline-block; background: var(--accent); color: #111; font-size: 0.7rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.3rem; }
+    .star-rating { color: var(--accent); font-weight: 700; font-size: 1rem; }
+
+    /* ===== EXPLANATION GRID ===== */
+    .explanation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+    .explanation-box { background: rgba(255,152,0,0.06); border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem; }
+    .explanation-box h4 { margin: 0 0 0.5rem; color: var(--accent); font-size: 0.95rem; }
+    .explanation-box p { margin: 0; font-size: 0.85rem; line-height: 1.5; color: var(--muted); }
+    .explanation-box p + p { margin-top: 0.5rem; }
+    .section-subtitle { font-size: 1rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--accent); }
+
+    /* ===== DETAILS ===== */
+    .info-note { background: rgba(255,152,0,0.06); border-left: 3px solid var(--accent); padding: 0.75rem; margin: 0.75rem 0; font-size: 0.88rem; line-height: 1.6; color: var(--muted); }
+    .info-note strong { color: var(--accent); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .topbar-inner { flex-direction: column; align-items: flex-start; }
+      .nav { width: 100%; }
+      .result-grid { grid-template-columns: 1fr 1fr; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .pattern-table { font-size: 0.75rem; min-width: 650px; }
+      .pattern-table th, .pattern-table td { padding: 0.4rem; }
+      .fullscreen-timer { font-size: 3rem; }
+      .fullscreen-label { font-size: 1.2rem; }
+      .explanation-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 500px) {
+      .result-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== TOPBAR ===== -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">🟠 オレンジカード トレーニング</div>
+      <nav class="nav">
+        <button class="tab active" data-tab="training">トレーニング</button>
+        <button class="tab" data-tab="dashboard">記録</button>
+        <button class="tab" data-tab="analysis">分析</button>
+        <button class="tab" data-tab="settings">設定</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ===== TRAINING VIEW ===== -->
+    <section id="training" class="view">
+      <h1 class="title">🟠 残像トレーニング</h1>
+
+      <div class="info-note">
+        <strong>このアプリについて：</strong>
+        七田式オレンジカードの残像トレーニングを記録・可視化するツールです。
+        残像の持続時間、鮮明度、色の変化を記録し、自分の推移を追跡できます。
+        医療機器ではありません。不快感がある場合は直ちに中止してください。
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <label>
+            凝視時間
+            <select id="stareSec">
+              <option value="3">3秒</option>
+              <option value="5">5秒</option>
+              <option value="10" selected>10秒</option>
+              <option value="15">15秒</option>
+              <option value="20">20秒</option>
+              <option value="30">30秒</option>
+              <option value="60">60秒</option>
+            </select>
+          </label>
+          <button id="startBtn" onclick="handleStartClick()">🚀 開始</button>
+        </div>
+      </div>
+
+      <!-- ===== RESULT CARD ===== -->
+      <div class="card" id="resultCard" style="display:none; position:relative;">
+        <button onclick="document.getElementById('resultCard').style.display='none'" style="position:absolute;top:0.75rem;right:0.75rem;background:transparent;border:1px solid var(--line);color:var(--muted);font-size:0.85rem;padding:0.3rem 0.6rem;border-radius:8px;">✕</button>
+        <h3 style="margin:0 0 0.5rem">📊 今回の記録</h3>
+        <div class="result-grid" id="resultGrid"></div>
+        <div id="resultPattern" style="font-size:0.85rem; color:var(--muted); margin-top:0.5rem;"></div>
+      </div>
+
+      <div id="sessionHint" class="muted" style="margin-bottom:1rem; text-align:center; padding:2rem 0;">
+        <strong>🎯 「開始」を押してトレーニングを始めてください</strong>
+      </div>
+
+      <!-- ===== QUICK STATS ===== -->
+      <div class="card" id="quickStats" style="display:none;">
+        <h3 style="margin:0 0 0.75rem">📈 直近の推移</h3>
+        <canvas id="miniChart" style="max-height:200px;"></canvas>
+      </div>
+
+      <!-- ===== FULLSCREEN OVERLAY (凝視) ===== -->
+      <div id="fullscreenOverlay" class="fullscreen-overlay">
+        <div class="fullscreen-inner">
+          <div class="orange-card-fullscreen" id="orangeCardFullscreen"></div>
+          <div class="fullscreen-timer" id="fullscreenTimer">10</div>
+          <div class="fullscreen-label">🎯 カードの中心を凝視してください</div>
+          <div class="fullscreen-instruction">👁 黒い点をしっかり見つめてください</div>
+        </div>
+      </div>
+
+      <!-- ===== AFTERIMAGE OVERLAY ===== -->
+      <div id="afterImageOverlay" class="overlay">
+        <div class="overlay-inner">
+          <div class="big" id="afterImageStageLabel">① 残像がぼやけ始めたらタップ</div>
+          <div class="small" id="afterImageStageDesc">鮮明な残像のピーク時間を記録します</div>
+          <div class="timer"><span id="afterSec">0.0</span>秒 <span style="font-size:0.7em;color:var(--muted);">（鮮明）</span></div>
+          <div class="timer" style="color:#8ab4f8;font-size:1.6rem;"><span id="afterSecFade">0.0</span>秒 <span style="font-size:0.7em;color:var(--muted);">（残存）</span></div>
+          <div class="small" id="afterImageStageNote">残像が崩れ始めたらタップしてください</div>
+        </div>
+      </div>
+
+      <!-- ===== SHARPNESS OVERLAY (5段階) ===== -->
+      <div id="sharpnessOverlay" class="sharpness-overlay">
+        <div class="sharpness-inner">
+          <div class="sharpness-title">残像の記録</div>
+
+          <!-- 鮮明度 5段階 -->
+          <div style="margin-bottom:1rem; text-align:left;">
+            <div style="color:var(--muted);margin-bottom:0.5rem;font-weight:600;font-size:0.9rem;">残像の鮮明度</div>
+            <div class="sharpness-5level">
+              <label class="selected">
+                <input type="radio" name="sharpness" value="5" checked>
+                <div>
+                  <span class="sharpness-level-num">5</span> 鮮明
+                  <span class="sharpness-anchor">カードの形・色・中心の円がはっきり区別できる</span>
+                </div>
+              </label>
+              <label>
+                <input type="radio" name="sharpness" value="4">
+                <div>
+                  <span class="sharpness-level-num">4</span> やや鮮明
+                  <span class="sharpness-anchor">輪郭がある程度分かる。色も補色or正色が判別できる</span>
+                </div>
+              </label>
+              <label>
+                <input type="radio" name="sharpness" value="3">
+                <div>
+                  <span class="sharpness-level-num">3</span> ぼんやり
+                  <span class="sharpness-anchor">丸い形は分かるが、輪郭がにじんでいる。色は曖昧</span>
+                </div>
+              </label>
+              <label>
+                <input type="radio" name="sharpness" value="2">
+                <div>
+                  <span class="sharpness-level-num">2</span> 気配がある
+                  <span class="sharpness-anchor">何かある感じはするが、形も色も判別できない</span>
+                </div>
+              </label>
+              <label>
+                <input type="radio" name="sharpness" value="1">
+                <div>
+                  <span class="sharpness-level-num">1</span> 見えない
+                  <span class="sharpness-anchor">暗闇のまま。何か浮かんでいる気配もない</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 色選択 -->
+          <div style="margin-bottom:1rem; text-align:left;">
+            <div style="color:var(--muted);margin-bottom:0.5rem;font-weight:600;font-size:0.9rem;">残像の色</div>
+            <div style="display:flex;gap:0.5rem;overflow-x:auto;padding-bottom:0.25rem;">
+              <button class="color-option-compact" onclick="selectAfterimageColor(1,this)" title="薄い補色">
+                <div class="color-swatch-small" style="background:#b19cd9;"></div>
+                <div style="font-size:0.75rem;">薄補色</div>
+              </button>
+              <button class="color-option-compact" onclick="selectAfterimageColor(2,this)" title="濃い補色">
+                <div class="color-swatch-small" style="background:#7851a9;"></div>
+                <div style="font-size:0.75rem;">濃補色</div>
+              </button>
+              <button class="color-option-compact" onclick="selectAfterimageColor(3,this)" title="補色と正色混在">
+                <div class="color-swatch-small" style="background:linear-gradient(90deg,#9370db,#ff8c00);"></div>
+                <div style="font-size:0.75rem;">混在</div>
+              </button>
+              <button class="color-option-compact" onclick="selectAfterimageColor(4,this)" title="正色が主体">
+                <div class="color-swatch-small" style="background:#ff8c00;"></div>
+                <div style="font-size:0.75rem;">正色主体</div>
+              </button>
+              <button class="color-option-compact" onclick="selectAfterimageColor(5,this)" title="正色のみ">
+                <div class="color-swatch-small" style="background:#ffb300;"></div>
+                <div style="font-size:0.75rem;">正色のみ</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="sharpness-buttons">
+            <button id="confirmBtn" onclick="handleConfirmClick()">✅ 記録する</button>
+            <button id="retryBtn" class="secondary" onclick="handleRetryClick()">🔁 やり直す</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DASHBOARD VIEW ===== -->
+    <section id="dashboard" class="view hidden">
+      <h1 class="title">📊 記録</h1>
+
+      <!-- KPI Row -->
+      <div class="card">
+        <div class="row" style="flex-wrap:wrap;">
+          <div class="kpi"><span>今日：</span><span class="kpi-val" id="todayCount">0</span></div>
+          <div class="kpi"><span>合計：</span><span class="kpi-val" id="totalCount">0</span></div>
+          <div class="kpi"><span>連続：</span><span class="kpi-val" id="consecutiveDays">0</span><span>日</span></div>
+          <div class="kpi"><span>実施日数：</span><span class="kpi-val" id="trainingDays">0</span><span>日</span></div>
+        </div>
+      </div>
+
+      <!-- Main Chart -->
+      <div class="card">
+        <h2>📈 残像時間の推移（直近20回）</h2>
+        <canvas id="afterImageChart" style="max-height:300px;"></canvas>
+      </div>
+
+      <!-- Efficiency Chart -->
+      <div class="card">
+        <h2>⚡ 凝視効率の推移（残像秒÷凝視秒）</h2>
+        <canvas id="efficiencyChart" style="max-height:250px;"></canvas>
+      </div>
+
+      <!-- Sharpness Distribution -->
+      <div class="card">
+        <h2>🎯 鮮明度の分布</h2>
+        <canvas id="sharpnessChart" style="max-height:250px;"></canvas>
+      </div>
+
+      <!-- Color Transition Tracking -->
+      <div class="card">
+        <h2>🎨 正色移行トラッキング</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card-label">初正色日</div>
+            <div class="stat-card-value" id="firstCorrectColorDate" style="font-size:1.1rem;">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">正色出現率（全体）</div>
+            <div class="stat-card-value" id="correctColorRate">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">正色出現率（最近10）</div>
+            <div class="stat-card-value" id="recent10CorrectRate">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">進捗段階</div>
+            <div class="stat-card-value" id="colorStage" style="font-size:0.95rem;">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Self-Best Records -->
+      <div class="card">
+        <h2>🏆 自己ベスト</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card-label">最長残像（鮮明）</div>
+            <div class="stat-card-value" id="bestAfterSec">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">最高効率比</div>
+            <div class="stat-card-value" id="bestEfficiency">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">最高鮮明度</div>
+            <div class="stat-card-value" id="bestSharpness">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">最長連続日数</div>
+            <div class="stat-card-value" id="bestStreak">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Table -->
+      <div class="card">
+        <h2>📋 最近の記録</h2>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--line);">
+                <th style="padding:0.5rem;text-align:left;">時刻</th>
+                <th style="padding:0.5rem;text-align:left;">凝視</th>
+                <th style="padding:0.5rem;text-align:left;">残像(鮮明/残存)</th>
+                <th style="padding:0.5rem;text-align:left;">効率</th>
+                <th style="padding:0.5rem;text-align:left;">鮮明度</th>
+                <th style="padding:0.5rem;text-align:left;">色</th>
+              </tr>
+            </thead>
+            <tbody id="recentTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ANALYSIS VIEW ===== -->
+    <section id="analysis" class="view hidden">
+      <h1 class="title">🧪 分析</h1>
+
+      <!-- パターン判定 -->
+      <div class="card">
+        <h2>📍 あなたの現在地</h2>
+        <div id="currentPatternInfo" class="info-note">
+          トレーニングデータがまだありません。
+        </div>
+      </div>
+
+      <!-- パターン表 -->
+      <div class="card">
+        <h2>📊 パターン一覧</h2>
+        <p class="muted" style="margin-bottom:0.75rem;">凝視時間と残像時間の組み合わせパターンです。直近の平均に最も近いパターンがハイライトされます。</p>
+        <div class="table-wrapper">
+          <table class="pattern-table" id="patternTable">
+            <thead>
+              <tr>
+                <th>パターン</th>
+                <th>凝視秒</th>
+                <th>残像秒</th>
+                <th>効率比</th>
+                <th>特徴</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-stare="5" data-after="30"><td class="pattern-name">A</td><td>5</td><td>30</td><td>6.0倍</td><td>超高効率型：最小の凝視で長い残像を生成</td></tr>
+              <tr data-stare="10" data-after="30"><td class="pattern-name">B</td><td>10</td><td>30</td><td>3.0倍</td><td>高効率型：短い凝視で安定した残像</td></tr>
+              <tr data-stare="15" data-after="30"><td class="pattern-name">C</td><td>15</td><td>30</td><td>2.0倍</td><td>バランス型：凝視と残像のバランスが良い</td></tr>
+              <tr data-stare="20" data-after="30"><td class="pattern-name">D</td><td>20</td><td>30</td><td>1.5倍</td><td>標準型：十分な凝視で安定した残像</td></tr>
+              <tr data-stare="30" data-after="30"><td class="pattern-name">E</td><td>30</td><td>30</td><td>1.0倍</td><td>長凝視型：凝視時間に比例した残像</td></tr>
+              <tr data-stare="30" data-after="60"><td class="pattern-name">F</td><td>30</td><td>60</td><td>2.0倍</td><td>持久型：長い凝視と長い残像の両方</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 目標設定ガイド -->
+      <div class="card">
+        <h2>🎯 目標ガイド</h2>
+        <div class="info-note">
+          <strong>初心者：</strong>まずは30秒凝視で残像が見えることに慣れる。鮮明度3以上を目指す。<br>
+          <strong>中級者：</strong>凝視時間を15→10秒に短縮しながら残像時間を維持。効率比2.0以上が目安。<br>
+          <strong>上級者：</strong>5〜10秒凝視で30秒残像。補色→正色への移行を追跡。<br>
+          <strong>ポイント：</strong>同じ凝視時間で残像が伸びているか、同じ残像時間を短い凝視で出せているかが進歩の指標です。
+        </div>
+      </div>
+
+      <!-- 色の変化について -->
+      <div class="card">
+        <h2>🎨 残像の色について</h2>
+        <div class="info-note">
+          <strong>補色（青紫系）：</strong>網膜の錐体細胞の疲労による生理現象。誰にでも起こる。<br>
+          <strong>正色（オレンジ系）：</strong>七田式では「イメージ力の向上」とされる。随意的な心的イメージ（voluntary mental imagery）が関与している可能性がある。ただし、心的イメージの鮮明度は個人差が非常に大きく（アファンタジア〜ハイパーファンタジア）、「誰でも訓練で正色が見える」とは限らない。<br>
+          <strong>このアプリでの扱い：</strong>正色が見えるかどうかを判断せず、あなた自身の記録の変化を追跡します。
+        </div>
+      </div>
+
+      <!-- 効率比の解説 -->
+      <div class="card">
+        <h2>⚡ 効率比とは？</h2>
+        <div class="info-note">
+          <strong>効率比</strong>は、凝視時間に対する残像時間の比率です。<br>
+          高いほど、少ない凝視時間で長い残像を生成できたことを意味します。<br>
+          <strong>例：</strong>5秒凝視で30秒残像 → 効率比 6.0倍<br><br>
+          効率比が高い状態は「生理的な網膜疲労（誰にでも起きる物理現象）」ではなく、何らかの心的イメージ保持が関与している可能性があります。
+          ただし、そのメカニズムの詳細は未解明です。
+        </div>
+      </div>
+
+      <!-- パターン別の解読ガイド -->
+      <div class="card">
+        <h2>🧠 パターンの読み方</h2>
+        <p class="muted" style="margin-bottom:1rem;">各パターンで推測される脳の状態です。あくまで仮説的な解釈であり、fMRI等の実測に基づくものではありません。</p>
+
+        <div class="info-note" style="border-left-color:#42a5f5;">
+          <strong>凝視時間が短い（5〜10秒）のに残像が長い場合</strong><br>
+          網膜の物理的な疲れだけでは説明しにくい残像です。注意の維持（前頭葉的な機能）や、心的イメージの生成（側頭葉的な機能）が関与している可能性があります。凝視効率が高いほど、「脳の内部生成」の割合が大きいと推測されます。
+        </div>
+
+        <div class="info-note" style="border-left-color:#4caf50; margin-top:0.75rem;">
+          <strong>凝視時間が長い（20〜30秒）場合</strong><br>
+          網膜の錐体細胞が十分に疲労するため、生理的な残像が出やすくなります。これは誰にでも起こる現象で、特別なイメージ力がなくても残像が見えます。ここから凝視時間を短くしても残像が維持できるかどうかが、進歩の指標になります。
+        </div>
+
+        <div class="info-note" style="border-left-color:#ffb300; margin-top:0.75rem;">
+          <strong>残像が60秒以上持続する場合</strong><br>
+          長時間のイメージ維持には、注意の持続力が必要です。残像が消えかけても「見よう」とする意志で保持できる場合、トップダウンの注意制御が働いていると考えられます。
+        </div>
+      </div>
+
+      <!-- 脳領域の役割（参考知識） -->
+      <div class="card">
+        <h2>📖 脳領域の役割（参考知識）</h2>
+        <p class="muted" style="margin-bottom:0.75rem;">残像トレーニングに関連すると考えられる脳領域の一般的な知識です。このアプリがこれらを測定しているわけではありません。</p>
+
+        <div class="explanation-grid">
+          <div class="explanation-box" style="border-left:3px solid #42a5f5;">
+            <h4>後頭葉（視覚処理）</h4>
+            <p>色・形・動きなど視覚情報の基本処理を担当。V1（一次視覚野）はカードを見ている間に活動します。</p>
+            <p>凝視時間が長いほど、網膜の物理的疲労に依存した残像が出やすくなります。</p>
+          </div>
+          <div class="explanation-box" style="border-left:3px solid #e53935;">
+            <h4>側頭葉（イメージ生成）</h4>
+            <p>紡錘状回などが色や形の認識・再現に関与。心的イメージの生成にも関わるとされます。</p>
+            <p>「短い凝視で鮮明な残像」が出る場合、この領域の寄与が大きい可能性があります。</p>
+          </div>
+          <div class="explanation-box" style="border-left:3px solid #4caf50;">
+            <h4>前頭葉（注意制御）</h4>
+            <p>注意の維持・集中力の制御を担当。残像を「見続けよう」とする意志的な保持に関与。</p>
+            <p>残像が長く持続する場合、前頭葉のトップダウン信号が寄与していると考えられます。</p>
+          </div>
+          <div class="explanation-box" style="border-left:3px solid #ffb300;">
+            <h4>頭頂葉（空間認識）</h4>
+            <p>空間注意と視覚情報の統合を担当。残像を「同じ位置に安定させる」能力に関わります。</p>
+            <p>イメージが視野内で動いたり消えたりするのは、空間的な安定性の問題です。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 推奨トレーニングプラン -->
+      <div class="card">
+        <h2>📅 推奨トレーニングプラン</h2>
+        <div class="explanation-grid">
+          <div class="explanation-box">
+            <h4>1週目：基礎固め</h4>
+            <p><strong>目標：</strong>30秒凝視で残像が見える</p>
+            <p>毎日1〜2セット。残像が見えることに慣れる段階です。鮮明度3（ぼんやり）以上を目指しましょう。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>2週目：効率化</h4>
+            <p><strong>目標：</strong>15〜20秒凝視で残像を維持</p>
+            <p>凝視時間を徐々に短くしながら、残像時間を維持します。効率比が上がっていれば進歩です。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>3週目以降：挑戦</h4>
+            <p><strong>目標：</strong>10秒凝視で30秒残像</p>
+            <p>効率比2.0以上を目指す。または、正色が見える頻度の変化を追跡してみましょう。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>継続のコツ</h4>
+            <p>無理せず、週3〜5回続けることが大切です。</p>
+            <p>残像が見えにくい日もあります。日による変動は正常です。毎回同じ基準で記録することで、長期的な変化が見えてきます。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- パターン別アドバイス -->
+      <div class="card">
+        <h2>💡 パターン別アドバイス</h2>
+        <div class="explanation-grid">
+          <div class="explanation-box">
+            <h4>パターンA〜C（高効率型）の方へ</h4>
+            <p>短い凝視で長い残像を生成できています。</p>
+            <p><strong>次の挑戦：</strong>凝視時間をさらに短くする（5秒凝視で30秒残像）。または、残像の色を正色に近づけることを意識してみましょう。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>パターンD〜E（標準型）の方へ</h4>
+            <p>凝視時間に比例した残像が出ている状態です。</p>
+            <p><strong>次の挑戦：</strong>凝視時間を10〜15秒に短縮しながら残像時間を維持。効率比を高めていきましょう。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>パターンF（持久型）の方へ</h4>
+            <p>長い凝視と長い残像の両方を維持できています。</p>
+            <p><strong>次の挑戦：</strong>凝視時間を短縮して効率比を高める方向も有効です。30秒凝視で60秒残像が出るなら、15秒凝視で30秒残像も目指せるかもしれません。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>残像が見えにくい方へ</h4>
+            <p>まずは30秒凝視から始めてください。暗い部屋で目を閉じると見えやすくなります。</p>
+            <p>個人差が非常に大きい（アファンタジアの人は心的イメージ自体が見えない）ので、見えないこと自体は異常ではありません。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 次のステップ -->
+      <div class="card">
+        <h2>🚀 次のステップ</h2>
+        <div class="explanation-grid">
+          <div class="explanation-box">
+            <h4>目標1：凝視時間の短縮</h4>
+            <p>「30秒凝視→30秒残像」から「10秒凝視→30秒残像」へ。</p>
+            <p>同じ残像時間をより短い凝視で出せるようになることが、最も明確な進歩の指標です。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>目標2：鮮明度の向上</h4>
+            <p>同じ凝視時間で、鮮明度が3→4→5と上がっていれば進歩です。</p>
+            <p>記録を見返して、鮮明度の推移を確認しましょう。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>測定基準の統一</h4>
+            <p>「輪郭がはっきり見えている状態」で残像のピーク（1回目のタップ）を判定。</p>
+            <p>毎回同じ基準で測定することで、データの信頼性が上がります。</p>
+          </div>
+          <div class="explanation-box">
+            <h4>応用トレーニング</h4>
+            <p>残像の色を意志で変える、形を動かす・回転させるなど。</p>
+            <p>これらは心的イメージの操作能力に関わる高度なトレーニングです。このアプリでは記録しませんが、日々のメモとして残すと面白いかもしれません。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 参考文献 -->
+      <div class="card">
+        <h2>📚 参考情報</h2>
+        <div class="muted" style="line-height:1.8; font-size:0.85rem;">
+          <p style="margin:0 0 0.5rem;">残像（afterimage）は視覚神経科学で広く研究されている現象です。</p>
+          <ul style="margin:0; padding-left:1.5rem;">
+            <li>Brascamp et al. (2010) - 負の残像の視覚特性と神経基盤</li>
+            <li>Spagna et al. (2021) - 視覚残像と注意の神経メカニズム</li>
+            <li>Zeman et al. (2015) - アファンタジア（心的イメージの個人差）</li>
+            <li>Kosslyn et al. (2006) - 心的イメージと視覚野の活動</li>
+          </ul>
+          <p style="margin:0.75rem 0 0; padding:0.5rem; background:rgba(255,152,0,0.08); border-radius:6px;">
+            ⚠ 七田式オレンジカード訓練自体の効果を検証した査読付き論文は、現時点で確認されていません。
+            このアプリは訓練の記録ツールであり、効果を保証するものではありません。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SETTINGS VIEW ===== -->
+    <section id="settings" class="view hidden">
+      <h1 class="title">⚙ 設定</h1>
+
+      <div class="card">
+        <h2>🎵 アルファ波BGM（バイノーラルビート）</h2>
+        <div class="muted" style="font-size:0.85rem;margin-bottom:1rem;line-height:1.6;">
+          左右の耳にわずかに異なる周波数（432Hz / 442Hz）を流し、差分10Hz（アルファ波帯域）を生成します。<br>
+          <span style="color:var(--accent);">※ステレオイヤホン/ヘッドホンが必要です。</span>
+        </div>
+        <div class="row" style="align-items:center;gap:1rem;">
+          <button id="bgmToggleBtn" onclick="toggleBinauralBeat()">▶ BGM再生</button>
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <label style="font-size:0.8rem;margin-bottom:0.2rem;color:var(--muted);">音量</label>
+            <input type="range" id="bgmVolume" min="0" max="0.3" step="0.01" value="0.05" style="width:100%;cursor:pointer;">
+          </div>
+        </div>
+        <div class="muted" id="bgmStatus" style="font-size:0.8rem;margin-top:0.5rem;">停止中</div>
+      </div>
+
+      <div class="card">
+        <h2>💾 データ管理</h2>
+        <div class="row" style="margin-bottom:0.75rem;">
+          <button id="backupBtn" onclick="handleBackupClick()">📦 バックアップ</button>
+          <button id="importBtn" onclick="document.getElementById('importFile').click()">📥 インポート</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none;">
+          <button id="deleteBtn" class="danger" onclick="handleDeleteClick()">🗑 全削除</button>
+        </div>
+        <div class="row" style="margin-top:0.75rem;">
+          <div class="muted" id="driveStatus" style="margin-top:0.5rem;"></div>
+          <button id="gAuthBtn" class="secondary">🔐 Googleでログイン</button>
+          <button id="pickDriveFileBtn" class="secondary" disabled>📂 DriveのJSONを選択</button>
+          <button id="driveLoadBtn" class="secondary" disabled>☁ Driveから読込</button>
+          <button id="driveSaveBtn" disabled>💾 Driveへ保存</button>
+          <button id="driveSaveAsBtn" class="secondary" disabled>💾 Driveへ別名保存</button>
+        </div>
+        <p class="muted" style="margin-top:0.75rem;line-height:1.6;">
+          データはブラウザ内（LocalStorage）に保存されます。キャッシュ削除で消える場合があるため、定期的にバックアップしてください。<br>
+          Google Drive連携は作成者向けの機能です。
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>ℹ️ アプリについて</h2>
+        <div class="muted" style="line-height:1.8;">
+          <strong>Orange Card v10</strong> - 残像トレーニング記録ツール<br>
+          七田式オレンジカードの残像トレーニングを記録・可視化します。<br>
+          医療機器ではありません。個人情報は一切収集していません。
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- Google APIs -->
+  <script defer src="https://apis.google.com/js/api.js"></script>
+  <script defer src="https://accounts.google.com/gsi/client"></script>
+
+  <script>
+    "use strict";
+
+    // ===== HELPER =====
+    function getEffectiveAfterSec(s) {
+      return Number(s.afterSharpSec ?? s.afterSec) || 0;
+    }
+
+    // ===== GLOBAL STATE =====
+    let sessions = [];
+    let stareTimer = null, afterTimer = null, afterStart = null;
+    let afterSharpSec = null, afterFadeSec = null, afterClickStage = 0;
+    let selectedSharpness = 5;
+    let selectedAfterimageColor = null;
+    let isTraining = false, currentSession = null;
+    let afterImageChartInstance = null, sharpnessChartInstance = null, efficiencyChartInstance = null, miniChartInstance = null;
+    let countdownTimer = null;
+
+    // ===== INIT =====
+    window.addEventListener("load", initApp);
+
+    function initApp() {
+      initTabs();
+      initSharpnessListeners();
+      loadSessions();
+      refreshDashboard();
+      // Show quick stats and mini chart if data exists
+      if (sessions.length > 0) {
+        document.getElementById("quickStats").style.display = "block";
+        document.getElementById("sessionHint").style.display = "none";
+        updateMiniChart();
+      }
+      loadDriveFileId();
+      wireDriveUi();
+      waitForGoogleApis().then(() => {
+        initGoogleDriveClient().catch(e => setDriveStatus(e.message));
+      });
+    }
+
+    function waitForGoogleApis(timeout = 10000) {
+      return new Promise(resolve => {
+        const start = Date.now();
+        const check = () => {
+          if (window.gapi && window.google?.accounts?.oauth2) resolve();
+          else if (Date.now() - start > timeout) { setDriveStatus("Google APIの読み込みがタイムアウトしました"); resolve(); }
+          else setTimeout(check, 200);
+        };
+        check();
+      });
+    }
+
+    // ===== TABS =====
+    function initTabs() {
+      document.querySelectorAll("[data-tab]").forEach(tab => {
+        tab.onclick = function(e) {
+          e.preventDefault();
+          const name = this.dataset.tab;
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+          this.classList.add("active");
+          document.querySelectorAll(".view").forEach(v => v.classList.add("hidden"));
+          document.getElementById(name).classList.remove("hidden");
+          if (name === "dashboard") refreshDashboard();
+          if (name === "analysis") refreshAnalysis();
+        };
+      });
+    }
+
+    // ===== SHARPNESS (5-level) =====
+    function initSharpnessListeners() {
+      document.querySelectorAll("input[name='sharpness']").forEach(radio => {
+        radio.onchange = function() {
+          selectedSharpness = parseInt(this.value);
+          document.querySelectorAll(".sharpness-5level label").forEach(l => l.classList.remove("selected"));
+          this.closest("label").classList.add("selected");
+        };
+      });
+    }
+
+    function selectAfterimageColor(val, btn) {
+      selectedAfterimageColor = val;
+      document.querySelectorAll(".color-option-compact").forEach(b => b.classList.remove("selected"));
+      if (btn) btn.classList.add("selected");
+    }
+
+    // ===== TRAINING FLOW =====
+    function handleStartClick() {
+      if (isTraining) return;
+      if (stareTimer !== null) clearTimeout(stareTimer);
+      if (afterTimer !== null) clearInterval(afterTimer);
+      if (countdownTimer !== null) clearInterval(countdownTimer);
+      afterStart = null;
+      isTraining = true;
+      document.getElementById("startBtn").disabled = true;
+
+      const stareSec = parseInt(document.getElementById("stareSec").value);
+      const overlay = document.getElementById("fullscreenOverlay");
+      overlay.classList.remove("hidden");
+      overlay.classList.add("show");
+
+      let remaining = stareSec;
+      document.getElementById("fullscreenTimer").textContent = remaining;
+      countdownTimer = setInterval(() => {
+        remaining--;
+        document.getElementById("fullscreenTimer").textContent = remaining;
+        if (remaining <= 0) { clearInterval(countdownTimer); countdownTimer = null; startAfterImage(); }
+      }, 1000);
+    }
+
+    function startAfterImage() {
+      document.getElementById("fullscreenOverlay").classList.remove("show");
+      document.getElementById("fullscreenOverlay").classList.add("hidden");
+
+      afterStart = Date.now();
+      afterSharpSec = null; afterFadeSec = null; afterClickStage = 0;
+
+      const afterOverlay = document.getElementById("afterImageOverlay");
+      afterOverlay.classList.remove("hidden");
+      afterOverlay.classList.add("show");
+
+      // Reset labels
+      document.getElementById("afterImageStageLabel").textContent = "① 残像がぼやけ始めたらタップ";
+      document.getElementById("afterImageStageDesc").textContent = "鮮明な残像のピーク時間を記録します";
+      document.getElementById("afterImageStageNote").textContent = "残像が崩れ始めたらタップしてください";
+
+      if (afterTimer !== null) clearInterval(afterTimer);
+      afterTimer = setInterval(() => {
+        if (!afterStart) return;
+        const elapsed = (Date.now() - afterStart) / 1000;
+        const sharpEl = document.getElementById("afterSec");
+        if (sharpEl) sharpEl.textContent = (afterSharpSec ?? elapsed).toFixed(1);
+        const fadeEl = document.getElementById("afterSecFade");
+        if (fadeEl) fadeEl.textContent = (afterFadeSec ?? elapsed).toFixed(1);
+      }, 100);
+
+      afterOverlay.onpointerdown = endAfterImage;
+    }
+
+    function endAfterImage() {
+      if (!afterStart) return;
+      const elapsed = (Date.now() - afterStart) / 1000;
+
+      if (afterClickStage === 0) {
+        afterSharpSec = elapsed;
+        afterClickStage = 1;
+        document.getElementById("afterSec").textContent = afterSharpSec.toFixed(1);
+        document.getElementById("afterImageStageLabel").textContent = "② 残像が完全に消えたらタップ";
+        document.getElementById("afterImageStageDesc").textContent = "残像の残存時間を記録します（任意）";
+        document.getElementById("afterImageStageNote").textContent = "残像が見えなくなったらタップしてください";
+        return;
+      }
+
+      afterFadeSec = elapsed;
+      document.getElementById("afterSecFade").textContent = afterFadeSec.toFixed(1);
+      if (afterTimer !== null) { clearInterval(afterTimer); afterTimer = null; }
+
+      const ref = document.getElementById("afterImageOverlay");
+      ref.onclick = null; ref.onpointerdown = null;
+      afterStart = null;
+      ref.classList.remove("show"); ref.classList.add("hidden");
+      setTimeout(() => showSharpnessSelection(parseInt(document.getElementById("stareSec").value), afterSharpSec, afterFadeSec), 150);
+    }
+
+    function showSharpnessSelection(stareSec, sharpSec, fadeSec) {
+      // Reset sharpness to 5
+      document.querySelectorAll("input[name='sharpness']").forEach(r => {
+        if (r.value === "5") { r.checked = true; r.closest("label").classList.add("selected"); }
+        else r.closest("label").classList.remove("selected");
+      });
+      selectedSharpness = 5;
+      selectedAfterimageColor = null;
+      document.querySelectorAll(".color-option-compact").forEach(b => b.classList.remove("selected"));
+      currentSession = { stareSec, afterSharpSec: sharpSec, afterFadeSec: fadeSec };
+      const ov = document.getElementById("sharpnessOverlay");
+      ov.classList.add("show"); ov.classList.remove("hidden");
+    }
+
+    function handleConfirmClick() {
+      if (!currentSession) return;
+      if (selectedAfterimageColor === null) { alert("⚠ 残像の色を選択してください"); return; }
+      const session = currentSession;
+      session.afterimageColor = selectedAfterimageColor;
+      session.sharpness = selectedSharpness;
+      session.timestamp = new Date().toISOString();
+      sessions.push(session);
+
+      try {
+        localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
+      } catch (e) {
+        if (e.name === "QuotaExceededError" || e.code === 22) {
+          sessions = sessions.slice(-100);
+          try { localStorage.setItem("orangeCardSessions", JSON.stringify(sessions)); } catch(e2) { alert("⚠ データ保存に失敗しました。バックアップを取ってください。"); }
+        }
+      }
+
+      document.getElementById("sharpnessOverlay").classList.remove("show");
+      document.getElementById("sharpnessOverlay").classList.add("hidden");
+
+      showResult(session);
+      updateMiniChart();
+
+      setTimeout(() => { isTraining = false; document.getElementById("startBtn").disabled = false; currentSession = null; }, 500);
+    }
+
+    function handleRetryClick() {
+      document.getElementById("sharpnessOverlay").classList.remove("show");
+      document.getElementById("sharpnessOverlay").classList.add("hidden");
+      isTraining = false; document.getElementById("startBtn").disabled = false; currentSession = null;
+    }
+
+    // ===== RESULT DISPLAY =====
+    function showResult(session) {
+      const afterSec = getEffectiveAfterSec(session);
+      const efficiency = (afterSec / Math.max(1, session.stareSec)).toFixed(1);
+      const sharpLabels = { 5: "鮮明", 4: "やや鮮明", 3: "ぼんやり", 2: "気配", 1: "見えない" };
+      const colorLabels = { 1: "薄補色", 2: "濃補色", 3: "混在", 4: "正色主体", 5: "正色のみ" };
+
+      // Compare with previous
+      const prev = sessions.length >= 2 ? sessions[sessions.length - 2] : null;
+      const prevAfter = prev ? getEffectiveAfterSec(prev) : null;
+      const prevEff = prev ? (getEffectiveAfterSec(prev) / Math.max(1, prev.stareSec)) : null;
+
+      // Personal bests
+      const allAfterSecs = sessions.map(s => getEffectiveAfterSec(s));
+      const bestAfter = Math.max(...allAfterSecs);
+      const isPB = afterSec >= bestAfter && afterSec > 0;
+
+      function cmp(cur, prev) {
+        if (prev === null) return "";
+        const diff = cur - prev;
+        if (Math.abs(diff) < 0.05) return '<span class="result-compare same">→ 前回と同じ</span>';
+        return diff > 0
+          ? `<span class="result-compare up">▲ +${diff.toFixed(1)} 前回比</span>`
+          : `<span class="result-compare down">▼ ${diff.toFixed(1)} 前回比</span>`;
+      }
+
+      const grid = document.getElementById("resultGrid");
+      grid.innerHTML = `
+        <div class="result-item">
+          <div class="result-item-label">残像時間（鮮明）</div>
+          <div class="result-item-value">${afterSec.toFixed(1)}秒${isPB ? '<span class="pb-badge">PB!</span>' : ''}</div>
+          ${cmp(afterSec, prevAfter)}
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">凝視効率</div>
+          <div class="result-item-value">${efficiency}倍</div>
+          ${cmp(parseFloat(efficiency), prevEff)}
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">鮮明度</div>
+          <div class="result-item-value" style="font-size:1.1rem;">${sharpLabels[session.sharpness] || "-"} (${session.sharpness}/5)</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">残像の色</div>
+          <div class="result-item-value" style="font-size:1.1rem;">${colorLabels[session.afterimageColor] || "-"}</div>
+        </div>
+      `;
+
+      // Pattern match
+      const pattern = getClosestPattern(session.stareSec, afterSec);
+      document.getElementById("resultPattern").textContent = pattern ? `📍 パターン${pattern.name}に近い記録です（${pattern.desc}）` : "";
+
+      document.getElementById("resultCard").style.display = "block";
+      document.getElementById("sessionHint").style.display = "none";
+      document.getElementById("quickStats").style.display = "block";
+    }
+
+    // ===== PATTERN MATCHING =====
+    const PATTERNS = [
+      { name: "A", stare: 5, after: 30, eff: 6.0, desc: "超高効率型" },
+      { name: "B", stare: 10, after: 30, eff: 3.0, desc: "高効率型" },
+      { name: "C", stare: 15, after: 30, eff: 2.0, desc: "バランス型" },
+      { name: "D", stare: 20, after: 30, eff: 1.5, desc: "標準型" },
+      { name: "E", stare: 30, after: 30, eff: 1.0, desc: "長凝視型" },
+      { name: "F", stare: 30, after: 60, eff: 2.0, desc: "持久型" },
+    ];
+
+    function getClosestPattern(stare, after) {
+      if (!after || after <= 0) return null;
+      let best = null, bestDist = Infinity;
+      for (const p of PATTERNS) {
+        const d = Math.sqrt(Math.pow((stare - p.stare) / 30, 2) + Math.pow((after - p.after) / 60, 2));
+        if (d < bestDist) { bestDist = d; best = p; }
+      }
+      return best;
+    }
+
+    // ===== MINI CHART (training tab) =====
+    function updateMiniChart() {
+      if (sessions.length === 0) return;
+      const last10 = sessions.slice(-10);
+      const labels = last10.map((_, i) => i + 1);
+      const data = last10.map(s => parseFloat(getEffectiveAfterSec(s).toFixed(1)));
+      const ctx = document.getElementById("miniChart").getContext("2d");
+
+      if (miniChartInstance) {
+        miniChartInstance.data.labels = labels;
+        miniChartInstance.data.datasets[0].data = data;
+        miniChartInstance.update();
+      } else {
+        miniChartInstance = new Chart(ctx, {
+          type: "line",
+          data: { labels, datasets: [{ label: "残像時間（秒）", data, borderColor: "#ff9800", backgroundColor: "rgba(255,152,0,0.1)", borderWidth: 2, fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: "#ff9800" }] },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: "#a8b0bf" }, grid: { color: "#2a2f3a" } }, x: { ticks: { color: "#a8b0bf" }, grid: { color: "#2a2f3a" } } } }
+        });
+      }
+    }
+
+    // ===== DASHBOARD =====
+    function refreshDashboard() {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const todaySessions = sessions.filter(s => { const d = new Date(s.timestamp); d.setHours(0,0,0,0); return d.getTime() === today.getTime(); });
+
+      setText("todayCount", todaySessions.length);
+      setText("totalCount", sessions.length);
+
+      // Consecutive days & training days
+      const stats = calcStreakStats();
+      setText("consecutiveDays", stats.consecutive);
+      setText("trainingDays", stats.uniqueDays);
+
+      if (!sessions.length) return;
+
+      // Self-bests
+      const allAfter = sessions.map(s => getEffectiveAfterSec(s));
+      const allEff = sessions.map(s => getEffectiveAfterSec(s) / Math.max(1, s.stareSec));
+      const allSharp = sessions.map(s => s.sharpness || 1);
+      setText("bestAfterSec", Math.max(...allAfter).toFixed(1) + "秒");
+      setText("bestEfficiency", Math.max(...allEff).toFixed(1) + "倍");
+      setText("bestSharpness", Math.max(...allSharp) + "/5");
+      setText("bestStreak", stats.bestStreak + "日");
+
+      // Color transition
+      updateColorTransition();
+
+      // Recent table
+      updateRecentTable();
+
+      // Charts
+      updateCharts();
+    }
+
+    function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+    function calcStreakStats() {
+      if (!sessions.length) return { consecutive: 0, uniqueDays: 0, bestStreak: 0 };
+      const uniqueDates = [...new Set(sessions.map(s => { const d = new Date(s.timestamp); d.setHours(0,0,0,0); return d.getTime(); }))].sort((a,b) => b - a);
+      const uniqueDays = uniqueDates.length;
+      const today = new Date(); today.setHours(0,0,0,0);
+
+      let consecutive = 0;
+      const diffFirst = Math.round((today.getTime() - uniqueDates[0]) / 86400000);
+      if (diffFirst <= 1) {
+        consecutive = 1;
+        for (let i = 1; i < uniqueDates.length; i++) {
+          const diff = Math.round((uniqueDates[i-1] - uniqueDates[i]) / 86400000);
+          if (diff === 1) consecutive++;
+          else break;
+        }
+      }
+
+      // Best streak ever
+      let bestStreak = 0, streak = 1;
+      for (let i = 1; i < uniqueDates.length; i++) {
+        const diff = Math.round((uniqueDates[i-1] - uniqueDates[i]) / 86400000);
+        if (diff === 1) streak++;
+        else { bestStreak = Math.max(bestStreak, streak); streak = 1; }
+      }
+      bestStreak = Math.max(bestStreak, streak, consecutive);
+
+      return { consecutive, uniqueDays, bestStreak };
+    }
+
+    function updateColorTransition() {
+      let correctCount = 0, totalColor = 0, firstDate = null;
+      sessions.forEach(s => {
+        if (s.afterimageColor !== undefined) {
+          totalColor++;
+          if (s.afterimageColor >= 4) { correctCount++; if (!firstDate) firstDate = s.timestamp; }
+        }
+      });
+
+      const rate = totalColor > 0 ? Math.round(correctCount / totalColor * 100) : 0;
+      const recent10 = sessions.slice(-10);
+      let r10c = 0, r10t = 0;
+      recent10.forEach(s => { if (s.afterimageColor !== undefined) { r10t++; if (s.afterimageColor >= 4) r10c++; } });
+      const r10rate = r10t > 0 ? Math.round(r10c / r10t * 100) : 0;
+
+      setText("firstCorrectColorDate", firstDate ? new Date(firstDate).toLocaleDateString("ja-JP") : "未出現");
+      setText("correctColorRate", rate + "%");
+      setText("recent10CorrectRate", r10rate + "%");
+
+      let stage = "補色のみ（初期）";
+      if (rate >= 80) stage = "✓ 正色主体（習熟期）";
+      else if (rate >= 50) stage = "混在（発展期）";
+      else if (rate > 0) stage = "補色主体（継続中）";
+      setText("colorStage", stage);
+    }
+
+    function updateRecentTable() {
+      const tbody = document.getElementById("recentTable");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      const colorTexts = { 1: "薄補色", 2: "濃補色", 3: "混在", 4: "正色主体", 5: "正色のみ" };
+      const sharpTexts = { 5: "鮮明", 4: "やや鮮明", 3: "ぼんやり", 2: "気配", 1: "見えない" };
+
+      sessions.slice(-10).reverse().forEach(s => {
+        const row = document.createElement("tr");
+        row.style.borderBottom = "1px solid var(--line)";
+        const after = getEffectiveAfterSec(s);
+        const fade = Number(s.afterFadeSec ?? s.afterSec) || 0;
+        const eff = (after / Math.max(1, s.stareSec)).toFixed(1);
+        row.innerHTML = `
+          <td style="padding:0.5rem">${new Date(s.timestamp).toLocaleTimeString("ja-JP")}</td>
+          <td style="padding:0.5rem">${s.stareSec}秒</td>
+          <td style="padding:0.5rem">${after.toFixed(1)} / ${fade.toFixed(1)}秒</td>
+          <td style="padding:0.5rem">${eff}倍</td>
+          <td style="padding:0.5rem">${sharpTexts[s.sharpness] || "-"}</td>
+          <td style="padding:0.5rem">${colorTexts[s.afterimageColor] || "-"}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ===== CHARTS =====
+    function updateCharts() {
+      if (!sessions.length) return;
+      const last20 = sessions.slice(-20);
+
+      // Afterimage time chart
+      const ctx1 = document.getElementById("afterImageChart")?.getContext("2d");
+      if (ctx1) {
+        const labels = last20.map((_, i) => i + 1);
+        const data1 = last20.map(s => parseFloat(getEffectiveAfterSec(s).toFixed(1)));
+        if (afterImageChartInstance) {
+          afterImageChartInstance.data.labels = labels;
+          afterImageChartInstance.data.datasets[0].data = data1;
+          afterImageChartInstance.update();
+        } else {
+          afterImageChartInstance = new Chart(ctx1, {
+            type: "line",
+            data: { labels, datasets: [{ label: "残像時間（秒）", data: data1, borderColor: "#ff9800", backgroundColor: "rgba(255,152,0,0.1)", borderWidth: 3, fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: "#ff9800", pointBorderColor: "#fff", pointBorderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: "#e7e7e7" } } }, scales: { y: { beginAtZero: true, ticks: { color: "#a8b0bf" }, grid: { color: "#2a2f3a" } }, x: { ticks: { color: "#a8b0bf" }, grid: { color: "#2a2f3a" } } } }
+          });
+        }
+      }
+
+      // Efficiency chart
+      const ctx2 = document.getElementById("efficiencyChart")?.getContext("2d");
+      if (ctx2) {
+        const labels = last20.map((_, i) => i + 1);
+        const data2 = last20.map(s => parseFloat((getEffectiveAfterSec(s) / Math.max(1, s.stareSec)).toFixed(2)));
+        if (efficiencyChartInstance) {
+          efficiencyChartInstance.data.labels = labels;
+          efficiencyChartInstance.data.datasets[0].data = data2;
+          efficiencyChartInstance.update();
+        } else {
+          efficiencyChartInstance = new Chart(ctx2, {
+            type: "line",
+            data: { labels, datasets: [{ label: "効率比（倍）", data: data2, borderColor: "#42a5f5", backgroundColor: "rgba(66,165,245,0.1)", borderWidth: 3, fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: "#42a5f5", pointBorderColor: "#fff", pointBorderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: "#e7e7e7" } } }, scales: { y: { beginAtZero: true, ticks: { color: "#a8b0bf" }, grid: { color: "#2a2f3a" } }, x: { ticks: { color: "#a8b0bf" }, grid: { color: "#2a2f3a" } } } }
+          });
+        }
+      }
+
+      // Sharpness distribution (5 levels)
+      const ctx3 = document.getElementById("sharpnessChart")?.getContext("2d");
+      if (ctx3) {
+        const counts = [0, 0, 0, 0, 0];
+        sessions.forEach(s => { const v = (s.sharpness || 1); if (v >= 1 && v <= 5) counts[v - 1]++; });
+        const labels5 = ["1:見えない", "2:気配", "3:ぼんやり", "4:やや鮮明", "5:鮮明"];
+        if (sharpnessChartInstance) {
+          sharpnessChartInstance.data.datasets[0].data = counts;
+          sharpnessChartInstance.update();
+        } else {
+          sharpnessChartInstance = new Chart(ctx3, {
+            type: "doughnut",
+            data: { labels: labels5, datasets: [{ data: counts, backgroundColor: ["#e53935", "#ff7043", "#ffb300", "#66bb6a", "#2e7d32"], borderColor: "#171a21", borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: "#e7e7e7", font: { size: 12 } } } } }
+          });
+        }
+      }
+    }
+
+    // ===== ANALYSIS =====
+    function refreshAnalysis() {
+      // Highlight closest pattern in table
+      const rows = document.querySelectorAll("#patternTable tbody tr");
+      rows.forEach(r => { r.classList.remove("highlight"); const badge = r.querySelector(".you-badge"); if (badge) badge.remove(); });
+
+      if (sessions.length < 3) {
+        document.getElementById("currentPatternInfo").innerHTML = "データが3件以上たまるとパターン判定が表示されます。";
+        return;
+      }
+
+      const recent5 = sessions.slice(-5);
+      const avgStare = recent5.reduce((s, x) => s + x.stareSec, 0) / recent5.length;
+      const avgAfter = recent5.reduce((s, x) => s + getEffectiveAfterSec(x), 0) / recent5.length;
+      const avgEff = avgAfter / Math.max(1, avgStare);
+      const avgSharp = recent5.reduce((s, x) => s + (x.sharpness || 1), 0) / recent5.length;
+      const pattern = getClosestPattern(avgStare, avgAfter);
+
+      if (pattern) {
+        rows.forEach(r => {
+          if (r.querySelector(".pattern-name")?.textContent === pattern.name) {
+            r.classList.add("highlight");
+            const nameCell = r.querySelector(".pattern-name");
+            nameCell.innerHTML = pattern.name + ' <span class="you-badge">あなた</span>';
+          }
+        });
+      }
+
+      document.getElementById("currentPatternInfo").innerHTML = `
+        <strong>直近5回の平均：</strong>凝視 ${avgStare.toFixed(0)}秒 → 残像 ${avgAfter.toFixed(1)}秒（効率 ${avgEff.toFixed(1)}倍）<br>
+        <strong>平均鮮明度：</strong>${avgSharp.toFixed(1)} / 5<br>
+        <strong>最も近いパターン：</strong>${pattern ? `パターン${pattern.name}（${pattern.desc}）` : "判定不能"}<br>
+        ${avgEff >= 3 ? "⚡ 高い効率比です。凝視時間をさらに短縮してみましょう。" :
+          avgEff >= 1.5 ? "👍 良好な効率です。残像の鮮明度を意識してみましょう。" :
+          "💪 まずは残像が安定して見えることを目指しましょう。"}
+      `;
+    }
+
+    // ===== BACKUP / IMPORT / DELETE =====
+    function handleBackupClick() {
+      if (!sessions.length) { alert("⚠ バックアップするデータがありません。"); return; }
+      const data = { appVersion: "v10", exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
+      const filename = `orange-card-backup-${new Date().toISOString().slice(0,10)}.json`;
+      try {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a"); link.href = url; link.download = filename;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        alert(`✅ バックアップ完了: ${sessions.length}件`);
+      } catch (e) { alert("⚠ バックアップに失敗しました。"); }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const importFile = document.getElementById("importFile");
+      if (importFile) {
+        importFile.onchange = function(e) {
+          const file = e.target.files[0]; if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            try {
+              const data = JSON.parse(ev.target.result);
+              if (data.sessions && Array.isArray(data.sessions)) {
+                // Migrate old 3-level sharpness to 5-level
+                data.sessions.forEach(s => {
+                  if (s.sharpness === 3 && !s._migrated) { s.sharpness = 5; s._migrated = true; }
+                  else if (s.sharpness === 2 && !s._migrated) { s.sharpness = 3; s._migrated = true; }
+                  else if (s.sharpness === 1 && !s._migrated) { s.sharpness = 1; s._migrated = true; }
+                });
+                sessions = data.sessions;
+                localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
+                refreshDashboard();
+                alert(`✅ インポート完了: ${sessions.length}件`);
+              } else { alert("⚠ sessions配列がありません。"); }
+            } catch (err) { alert("⚠ JSONの解析に失敗しました。"); }
+          };
+          reader.readAsText(file);
+          this.value = "";
+        };
+      }
+    });
+
+    function handleDeleteClick() {
+      if (confirm("⚠ 全データを削除しますか？この操作は取り消せません。")) {
+        sessions = []; localStorage.removeItem("orangeCardSessions");
+        refreshDashboard(); alert("✅ 全データを削除しました。");
+      }
+    }
+
+    function loadSessions() {
+      const stored = localStorage.getItem("orangeCardSessions");
+      if (stored) { try { sessions = JSON.parse(stored); } catch (e) { sessions = []; } }
+    }
+
+    // ===== GOOGLE DRIVE =====
+    // ⚠️ 以下のキーはクライアントサイドに露出しています。本番では使用制限を設定してください。
+    const CLIENTID = "312868081144-1c6gjkal8rgllhi8iqgblbgjarc058jc.apps.googleusercontent.com";
+    const APIKEY = "AIzaSyDhw-1p83aMURAZqPGrrmTe8EJU68Dj82I";
+    const APPID = "312868081144";
+    const DRIVESCOPES = "https://www.googleapis.com/auth/drive.file";
+    const DRIVEDISCOVERY = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
+    let tokenClient = null, accessToken, pickedFileId, pickerReady = false;
+
+    function setDriveStatus(msg) { setText("driveStatus", msg); }
+    function updateDriveButtons() {
+      const has = !!accessToken, hasF = !!pickedFileId;
+      ["pickDriveFileBtn"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !has; });
+      ["driveLoadBtn","driveSaveBtn","driveSaveAsBtn"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !(has && hasF); });
+    }
+    function loadDriveFileId() { pickedFileId = localStorage.getItem("driveFileId"); }
+    function wireDriveUi() {
+      const g = document.getElementById("gAuthBtn"); if (g) g.onclick = () => requestAccessToken(true);
+      const p = document.getElementById("pickDriveFileBtn"); if (p) p.onclick = openPicker;
+      const l = document.getElementById("driveLoadBtn"); if (l) l.onclick = driveLoad;
+      const s = document.getElementById("driveSaveBtn"); if (s) s.onclick = driveSave;
+      const sa = document.getElementById("driveSaveAsBtn"); if (sa) sa.onclick = driveSaveAsNew;
+      setDriveStatus(pickedFileId ? `DriveファイルID: ${pickedFileId}` : "未接続");
+      updateDriveButtons();
+    }
+    function requestAccessToken(interactive) { if (!tokenClient) { setDriveStatus("OAuth未初期化"); return; } tokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" }); }
+    async function initGoogleDriveClient() {
+      if (!window.gapi) throw new Error("gapi未ロード");
+      if (!window.google?.accounts?.oauth2) throw new Error("GIS未ロード");
+      await new Promise((res, rej) => {
+        gapi.load("client:picker", async () => {
+          try { await gapi.client.init({ apiKey: APIKEY, discoveryDocs: [DRIVEDISCOVERY] }); pickerReady = true; res(); }
+          catch (e) { rej(e); }
+        });
+      });
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENTID, scope: DRIVESCOPES,
+        callback: resp => { if (resp?.error) { setDriveStatus(`OAuth失敗: ${resp.error}`); return; } accessToken = resp.access_token; gapi.client.setToken({ access_token: accessToken }); setDriveStatus("接続完了"); updateDriveButtons(); }
+      });
+      updateDriveButtons();
+    }
+    function openPicker() {
+      if (!pickerReady || !accessToken) { requestAccessToken(true); return; }
+      const view = new google.picker.View(google.picker.ViewId.DOCS); view.setMimeTypes("application/json");
+      new google.picker.PickerBuilder().addView(view).setOAuthToken(accessToken).setDeveloperKey(APIKEY).setAppId(APPID).setCallback(pickerCb).build().setVisible(true);
+    }
+    function pickerCb(data) {
+      if (data.action === google.picker.Action.PICKED) { const doc = data.docs?.[0]; pickedFileId = doc?.id; if (pickedFileId) { localStorage.setItem("driveFileId", pickedFileId); setDriveStatus(`選択: ${doc.name}`); } updateDriveButtons(); }
+    }
+    async function driveLoad() {
+      if (!accessToken || !pickedFileId) return;
+      try {
+        const resp = await gapi.client.drive.files.get({ fileId: pickedFileId, alt: "media", supportsAllDrives: true });
+        const data = JSON.parse(resp.body);
+        const loaded = Array.isArray(data) ? data : (data.sessions || null);
+        if (!Array.isArray(loaded)) { setDriveStatus("sessions配列がありません"); return; }
+        sessions = loaded; localStorage.setItem("orangeCardSessions", JSON.stringify(sessions)); refreshDashboard(); setDriveStatus(`読込完了: ${sessions.length}件`);
+      } catch (e) { setDriveStatus(`読込失敗: ${e.message || e}`); }
+    }
+    async function driveSave() {
+      if (!accessToken || !pickedFileId) return;
+      try {
+        const payload = JSON.stringify({ appVersion: "v10", exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions }, null, 2);
+        const r = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(pickedFileId)}?uploadType=media&supportsAllDrives=true`, { method: "PATCH", headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json; charset=utf-8" }, body: payload });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        setDriveStatus(`保存完了: ${sessions.length}件`);
+      } catch (e) { setDriveStatus(e?.message || String(e)); }
+    }
+    async function driveSaveAsNew() {
+      if (!accessToken || !pickedFileId) return;
+      try {
+        const meta = await gapi.client.drive.files.get({ fileId: pickedFileId, fields: "parents", supportsAllDrives: true });
+        const parentId = meta.result?.parents?.[0] || null;
+        const payload = JSON.stringify({ appVersion: "v10", exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions }, null, 2);
+        const name = `orange-card-backup-${new Date().toISOString().replace(/\./g,"-")}.json`;
+        const form = new FormData();
+        form.append("metadata", new Blob([JSON.stringify({ name, mimeType: "application/json", ...(parentId ? { parents: [parentId] } : {}) })], { type: "application/json" }));
+        form.append("file", new Blob([payload], { type: "application/json" }));
+        const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true", { method: "POST", headers: { "Authorization": `Bearer ${accessToken}` }, body: form });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setDriveStatus(`別名保存完了: ${name}`);
+      } catch (e) { setDriveStatus(e?.message || String(e)); }
+    }
+
+    // ===== BINAURAL BEAT =====
+    let audioCtx = null, oscLeft = null, oscRight = null, gainNode = null, isBgmPlaying = false;
+
+    function toggleBinauralBeat() {
+      const btn = document.getElementById("bgmToggleBtn");
+      const statusEl = document.getElementById("bgmStatus");
+      const volSlider = document.getElementById("bgmVolume");
+
+      if (isBgmPlaying) {
+        if (oscLeft) { oscLeft.stop(); oscLeft.disconnect(); oscLeft = null; }
+        if (oscRight) { oscRight.stop(); oscRight.disconnect(); oscRight = null; }
+        if (gainNode) { gainNode.disconnect(); gainNode = null; }
+        isBgmPlaying = false;
+        btn.textContent = "▶ BGM再生"; btn.classList.remove("danger");
+        statusEl.textContent = "停止中";
+        return;
+      }
+
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx) audioCtx = new AC();
+        else if (audioCtx.state === "suspended") audioCtx.resume();
+
+        const baseFreq = 432, beatFreq = 10;
+        gainNode = audioCtx.createGain();
+        gainNode.gain.value = volSlider ? parseFloat(volSlider.value) : 0.05;
+        gainNode.connect(audioCtx.destination);
+
+        oscLeft = audioCtx.createOscillator(); oscLeft.type = "sine"; oscLeft.frequency.value = baseFreq;
+        const panL = audioCtx.createStereoPanner(); panL.pan.value = -1;
+        oscLeft.connect(panL); panL.connect(gainNode);
+
+        oscRight = audioCtx.createOscillator(); oscRight.type = "sine"; oscRight.frequency.value = baseFreq + beatFreq;
+        const panR = audioCtx.createStereoPanner(); panR.pan.value = 1;
+        oscRight.connect(panR); panR.connect(gainNode);
+
+        const now = audioCtx.currentTime;
+        oscLeft.start(now); oscRight.start(now);
+
+        isBgmPlaying = true;
+        btn.textContent = "⏹ 停止"; btn.classList.add("danger");
+        statusEl.textContent = `再生中: L=${baseFreq}Hz / R=${baseFreq+beatFreq}Hz (差分${beatFreq}Hz)`;
+      } catch (e) { alert("オーディオの再生に失敗しました。"); }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const vol = document.getElementById("bgmVolume");
+      if (vol) vol.addEventListener("input", e => {
+        if (isBgmPlaying && gainNode) gainNode.gain.setTargetAtTime(parseFloat(e.target.value), audioCtx.currentTime, 0.1);
+      });
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (isBgmPlaying) { try { oscLeft?.stop(); oscRight?.stop(); } catch(e){} }
+      if (audioCtx) { try { audioCtx.close(); } catch(e){} }
+    });
+  </script>
+</body>
+</html>
