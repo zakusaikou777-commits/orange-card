@@ -2,8 +2,15 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v10 - 残像トレーニング記録</title>
+  <title>Orange Card v11 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Orange Card">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
   <style>
     :root {
       --bg: #0f1115;
@@ -146,6 +153,18 @@
     .info-note { background: rgba(255,152,0,0.06); border-left: 3px solid var(--accent); padding: 0.75rem; margin: 0.75rem 0; font-size: 0.88rem; line-height: 1.6; color: var(--muted); }
     .info-note strong { color: var(--accent); }
 
+    /* ===== OVERLAY CONTROLS ===== */
+    .overlay-cancel { position: absolute; top: 1rem; right: 1rem; z-index: 30; background: transparent; border: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; padding: 0.4rem 0.75rem; border-radius: 999px; font-weight: 600; }
+    .overlay-cancel:hover { background: rgba(255,255,255,0.08); transform: none; }
+    .overlay-actions { display: flex; gap: 0.6rem; justify-content: center; margin-top: 1.25rem; flex-wrap: wrap; }
+    .note-input { width: 100%; padding: 0.6rem 0.7rem; border-radius: 10px; border: 1px solid var(--line); background: #0d0f14; color: var(--text); font-size: 0.9rem; }
+    .sync-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin-right: 0.45rem; vertical-align: middle; }
+    .sync-dot.ok { background: var(--green); }
+    .sync-dot.busy { background: var(--accent); }
+    .sync-dot.err { background: var(--danger); }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 900px) {
       .topbar-inner { flex-direction: column; align-items: flex-start; }
@@ -230,6 +249,7 @@
 
       <!-- ===== FULLSCREEN OVERLAY (凝視) ===== -->
       <div id="fullscreenOverlay" class="fullscreen-overlay">
+        <button class="overlay-cancel" type="button" onclick="cancelTraining(event)">✕ 中止</button>
         <div class="fullscreen-inner">
           <div class="orange-card-fullscreen" id="orangeCardFullscreen"></div>
           <div class="fullscreen-timer" id="fullscreenTimer">10</div>
@@ -240,12 +260,18 @@
 
       <!-- ===== AFTERIMAGE OVERLAY ===== -->
       <div id="afterImageOverlay" class="overlay">
+        <button class="overlay-cancel" type="button"
+                onpointerdown="event.stopPropagation()" onclick="cancelTraining(event)">✕ 中止</button>
         <div class="overlay-inner">
           <div class="big" id="afterImageStageLabel">① 残像がぼやけ始めたらタップ</div>
           <div class="small" id="afterImageStageDesc">鮮明な残像のピーク時間を記録します</div>
           <div class="timer"><span id="afterSec">0.0</span>秒 <span style="font-size:0.7em;color:var(--muted);">（鮮明）</span></div>
           <div class="timer" style="color:#8ab4f8;font-size:1.6rem;"><span id="afterSecFade">0.0</span>秒 <span style="font-size:0.7em;color:var(--muted);">（残存）</span></div>
           <div class="small" id="afterImageStageNote">残像が崩れ始めたらタップしてください</div>
+          <div class="overlay-actions">
+            <button type="button" id="skipFadeBtn" class="secondary" style="display:none;"
+                    onpointerdown="event.stopPropagation()" onclick="skipFadeStage(event)">残存の計測をとばす</button>
+          </div>
         </div>
       </div>
 
@@ -258,8 +284,8 @@
           <div style="margin-bottom:1rem; text-align:left;">
             <div style="color:var(--muted);margin-bottom:0.5rem;font-weight:600;font-size:0.9rem;">残像の鮮明度</div>
             <div class="sharpness-5level">
-              <label class="selected">
-                <input type="radio" name="sharpness" value="5" checked>
+              <label>
+                <input type="radio" name="sharpness" value="5">
                 <div>
                   <span class="sharpness-level-num">5</span> 鮮明
                   <span class="sharpness-anchor">カードの形・色・中心の円がはっきり区別できる</span>
@@ -323,9 +349,15 @@
             </div>
           </div>
 
+          <div style="margin-bottom:1rem; text-align:left;">
+            <div style="color:var(--muted);margin-bottom:0.5rem;font-weight:600;font-size:0.9rem;">メモ（任意）</div>
+            <input id="sessionNote" class="note-input" type="text" maxlength="80"
+                   placeholder="例：就寝前 / 部屋が明るい / 寝不足">
+          </div>
+
           <div class="sharpness-buttons">
             <button id="confirmBtn" onclick="handleConfirmClick()">✅ 記録する</button>
-            <button id="retryBtn" class="secondary" onclick="handleRetryClick()">🔁 やり直す</button>
+            <button id="retryBtn" class="secondary" onclick="handleRetryClick()">🔁 記録せずにやり直す</button>
           </div>
         </div>
       </div>
@@ -422,6 +454,7 @@
                 <th style="padding:0.5rem;text-align:left;">効率</th>
                 <th style="padding:0.5rem;text-align:left;">鮮明度</th>
                 <th style="padding:0.5rem;text-align:left;">色</th>
+                <th style="padding:0.5rem;text-align:left;">メモ</th>
               </tr>
             </thead>
             <tbody id="recentTable"></tbody>
@@ -465,6 +498,23 @@
               <tr data-stare="30" data-after="30"><td class="pattern-name">E</td><td>30</td><td>30</td><td>1.0倍</td><td>長凝視型：凝視時間に比例した残像</td></tr>
               <tr data-stare="30" data-after="60"><td class="pattern-name">F</td><td>30</td><td>60</td><td>2.0倍</td><td>持久型：長い凝視と長い残像の両方</td></tr>
             </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 凝視時間別の比較 -->
+      <div class="card">
+        <h2>⏱ 凝視時間別の平均</h2>
+        <p class="muted" style="margin-bottom:0.75rem;">
+          効率比は、凝視時間が短いほど自動的に大きくなります（残像時間は凝視時間に比例して伸び続けないため）。
+          進歩を見るときは、同じ凝視秒どうしで比べてください。
+        </p>
+        <div class="table-wrapper">
+          <table class="pattern-table" style="min-width:520px;">
+            <thead>
+              <tr><th>凝視秒</th><th>回数</th><th>残像 全体平均</th><th>直近5回の平均</th><th>変化</th></tr>
+            </thead>
+            <tbody id="byStareTable"></tbody>
           </table>
         </div>
       </div>
@@ -659,8 +709,9 @@
       <div class="card">
         <h2>🎵 アルファ波BGM（バイノーラルビート）</h2>
         <div class="muted" style="font-size:0.85rem;margin-bottom:1rem;line-height:1.6;">
-          左右の耳にわずかに異なる周波数（432Hz / 442Hz）を流し、差分10Hz（アルファ波帯域）を生成します。<br>
-          <span style="color:var(--accent);">※ステレオイヤホン/ヘッドホンが必要です。</span>
+          左右の耳にわずかに異なる周波数（432Hz / 442Hz）を流し、差分10Hz（アルファ波帯域）のうなりを作ります。<br>
+          <span style="color:var(--accent);">※ステレオイヤホン/ヘッドホンが必要です。</span><br>
+          バイノーラルビートが脳波や集中力を変えるという主張は、研究結果が一致していません。効果を保証するものではなく、集中の助けになると感じる場合に使ってください。
         </div>
         <div class="row" style="align-items:center;gap:1rem;">
           <button id="bgmToggleBtn" onclick="toggleBinauralBeat()">▶ BGM再生</button>
@@ -673,31 +724,44 @@
       </div>
 
       <div class="card">
-        <h2>💾 データ管理</h2>
-        <div class="row" style="margin-bottom:0.75rem;">
-          <button id="backupBtn" onclick="handleBackupClick()">📦 バックアップ</button>
-          <button id="importBtn" onclick="document.getElementById('importFile').click()">📥 インポート</button>
+        <h2>☁ スマホとPCで同期</h2>
+        <p class="muted" style="margin:0 0 1rem;line-height:1.7;">
+          Googleアカウントに接続すると、記録はDrive内のこのアプリ専用の保存領域に置かれ、
+          両方の端末で同じデータになります。ファイルを選ぶ必要はありません。<br>
+          同期するタイミング：アプリを開いたとき／記録した直後／別のタブから戻ってきたとき。
+        </p>
+        <div class="row">
+          <button id="driveConnectBtn">🔐 Googleに接続</button>
+          <button id="driveSyncBtn" class="secondary">🔄 今すぐ同期</button>
+          <button id="driveDisconnectBtn" class="secondary">接続を解除</button>
+        </div>
+        <div class="muted" id="driveStatus" style="margin-top:0.85rem;"><span class="sync-dot"></span>未接続</div>
+        <p class="muted" style="margin-top:0.75rem;line-height:1.6;font-size:0.82rem;">
+          両方の端末の記録は「足し合わせ」で統合します。片方で消しても、もう片方に残っていれば復活します。
+          消すときは両方の端末で削除してください。
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>💾 バックアップ</h2>
+        <div class="row">
+          <button id="backupBtn" onclick="handleBackupClick()">📦 JSONで書き出し</button>
+          <button id="importBtn" onclick="document.getElementById('importFile').click()">📥 読み込んで統合</button>
           <input id="importFile" type="file" accept="application/json" style="display:none;">
           <button id="deleteBtn" class="danger" onclick="handleDeleteClick()">🗑 全削除</button>
         </div>
-        <div class="row" style="margin-top:0.75rem;">
-          <div class="muted" id="driveStatus" style="margin-top:0.5rem;"></div>
-          <button id="gAuthBtn" class="secondary">🔐 Googleでログイン</button>
-          <button id="pickDriveFileBtn" class="secondary" disabled>📂 DriveのJSONを選択</button>
-          <button id="driveLoadBtn" class="secondary" disabled>☁ Driveから読込</button>
-          <button id="driveSaveBtn" disabled>💾 Driveへ保存</button>
-          <button id="driveSaveAsBtn" class="secondary" disabled>💾 Driveへ別名保存</button>
-        </div>
-        <p class="muted" style="margin-top:0.75rem;line-height:1.6;">
-          データはブラウザ内（LocalStorage）に保存されます。キャッシュ削除で消える場合があるため、定期的にバックアップしてください。<br>
-          Google Drive連携は作成者向けの機能です。
+        <p class="muted" style="margin-top:0.75rem;line-height:1.7;">
+          読み込みは上書きではなく統合です。同じ記録が二重に増えることはありません。<br>
+          同期を使わない場合、記録はこのブラウザの中だけに残ります。
+          iPhoneのSafariでは、ホーム画面に追加していないサイトのデータが約7日で消えることがあります。
+          共有ボタンから「ホーム画面に追加」しておくと安全です。
         </p>
       </div>
 
       <div class="card">
         <h2>ℹ️ アプリについて</h2>
         <div class="muted" style="line-height:1.8;">
-          <strong>Orange Card v10</strong> - 残像トレーニング記録ツール<br>
+          <strong>Orange Card v11</strong> - 残像トレーニング記録ツール<br>
           七田式オレンジカードの残像トレーニングを記録・可視化します。<br>
           医療機器ではありません。個人情報は一切収集していません。
         </div>
@@ -707,8 +771,7 @@
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <!-- Google APIs -->
-  <script defer src="https://apis.google.com/js/api.js"></script>
+  <!-- Google Identity Services (Drive同期用) -->
   <script defer src="https://accounts.google.com/gsi/client"></script>
 
   <script>
@@ -743,19 +806,38 @@
         document.getElementById("sessionHint").style.display = "none";
         updateMiniChart();
       }
-      loadDriveFileId();
       wireDriveUi();
-      waitForGoogleApis().then(() => {
-        initGoogleDriveClient().catch(e => setDriveStatus(e.message));
+      wireGlobalEvents();
+      registerServiceWorker();
+      waitForGoogleIdentity().then(initGoogleIdentity);
+    }
+
+    function wireGlobalEvents() {
+      document.addEventListener("keydown", e => {
+        if (e.key !== "Escape" || !isTraining) return;
+        // 記録画面（測定済み）でのEscでは消さない。凝視中・残像計測中だけ中止する。
+        if (document.getElementById("sharpnessOverlay").classList.contains("show")) return;
+        cancelTraining();
+      });
+      window.addEventListener("online", () => scheduleSync(500));
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState !== "visible") return;
+        if (isTraining) { if (!wakeLock) requestWakeLock(); }
+        else scheduleSync(500);
       });
     }
 
-    function waitForGoogleApis(timeout = 10000) {
+    function registerServiceWorker() {
+      if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    }
+
+    function waitForGoogleIdentity(timeout = 10000) {
       return new Promise(resolve => {
         const start = Date.now();
         const check = () => {
-          if (window.gapi && window.google?.accounts?.oauth2) resolve();
-          else if (Date.now() - start > timeout) { setDriveStatus("Google APIの読み込みがタイムアウトしました"); resolve(); }
+          if (window.google?.accounts?.oauth2) resolve(true);
+          else if (Date.now() - start > timeout) { setDriveStatus("Googleのライブラリを読み込めませんでした", "err"); resolve(false); }
           else setTimeout(check, 200);
         };
         check();
@@ -796,39 +878,69 @@
     }
 
     // ===== TRAINING FLOW =====
+    function clearAllTimers() {
+      if (stareTimer !== null) { clearTimeout(stareTimer); stareTimer = null; }
+      if (afterTimer !== null) { clearInterval(afterTimer); afterTimer = null; }
+      if (countdownTimer !== null) { clearInterval(countdownTimer); countdownTimer = null; }
+    }
+
+    function showOverlay(id) { const el = document.getElementById(id); if (el) { el.classList.remove("hidden"); el.classList.add("show"); } }
+    function hideOverlay(id) { const el = document.getElementById(id); if (el) { el.classList.remove("show"); el.classList.add("hidden"); } }
+
     function handleStartClick() {
       if (isTraining) return;
-      if (stareTimer !== null) clearTimeout(stareTimer);
-      if (afterTimer !== null) clearInterval(afterTimer);
-      if (countdownTimer !== null) clearInterval(countdownTimer);
+      clearAllTimers();
       afterStart = null;
       isTraining = true;
       document.getElementById("startBtn").disabled = true;
+      requestWakeLock();
 
       const stareSec = parseInt(document.getElementById("stareSec").value);
-      const overlay = document.getElementById("fullscreenOverlay");
-      overlay.classList.remove("hidden");
-      overlay.classList.add("show");
+      showOverlay("fullscreenOverlay");
 
-      let remaining = stareSec;
-      document.getElementById("fullscreenTimer").textContent = remaining;
+      // 経過時間はタイマーの回数ではなく時刻で測る（バックグラウンドでもズレない）
+      const deadline = Date.now() + stareSec * 1000;
+      document.getElementById("fullscreenTimer").textContent = stareSec;
       countdownTimer = setInterval(() => {
-        remaining--;
-        document.getElementById("fullscreenTimer").textContent = remaining;
-        if (remaining <= 0) { clearInterval(countdownTimer); countdownTimer = null; startAfterImage(); }
-      }, 1000);
+        const left = Math.ceil((deadline - Date.now()) / 1000);
+        document.getElementById("fullscreenTimer").textContent = Math.max(0, left);
+        if (left <= 0) { clearInterval(countdownTimer); countdownTimer = null; startAfterImage(); }
+      }, 200);
+    }
+
+    function cancelTraining(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      clearAllTimers();
+      ["fullscreenOverlay", "afterImageOverlay", "sharpnessOverlay"].forEach(hideOverlay);
+      const ref = document.getElementById("afterImageOverlay");
+      if (ref) { ref.onpointerdown = null; ref.onclick = null; }
+      afterStart = null;
+      currentSession = null;
+      isTraining = false;
+      document.getElementById("startBtn").disabled = false;
+      releaseWakeLock();
+    }
+
+    // ===== SCREEN WAKE LOCK（凝視中に画面を消させない） =====
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); }
+      catch (e) { /* 非対応ブラウザでは何もしない */ }
+    }
+    function releaseWakeLock() {
+      try { wakeLock?.release(); } catch (e) {}
+      wakeLock = null;
     }
 
     function startAfterImage() {
-      document.getElementById("fullscreenOverlay").classList.remove("show");
-      document.getElementById("fullscreenOverlay").classList.add("hidden");
+      hideOverlay("fullscreenOverlay");
+      document.getElementById("skipFadeBtn").style.display = "none";
 
       afterStart = Date.now();
       afterSharpSec = null; afterFadeSec = null; afterClickStage = 0;
 
       const afterOverlay = document.getElementById("afterImageOverlay");
-      afterOverlay.classList.remove("hidden");
-      afterOverlay.classList.add("show");
+      showOverlay("afterImageOverlay");
 
       // Reset labels
       document.getElementById("afterImageStageLabel").textContent = "① 残像がぼやけ始めたらタップ";
@@ -848,9 +960,13 @@
       afterOverlay.onpointerdown = endAfterImage;
     }
 
+    let lastTapAt = 0;
     function endAfterImage() {
       if (!afterStart) return;
-      const elapsed = (Date.now() - afterStart) / 1000;
+      const now = Date.now();
+      if (now - lastTapAt < 400) return; // 連打で①と②が同時に入るのを防ぐ
+      lastTapAt = now;
+      const elapsed = (now - afterStart) / 1000;
 
       if (afterClickStage === 0) {
         afterSharpSec = elapsed;
@@ -859,65 +975,80 @@
         document.getElementById("afterImageStageLabel").textContent = "② 残像が完全に消えたらタップ";
         document.getElementById("afterImageStageDesc").textContent = "残像の残存時間を記録します（任意）";
         document.getElementById("afterImageStageNote").textContent = "残像が見えなくなったらタップしてください";
+        document.getElementById("skipFadeBtn").style.display = "";
         return;
       }
 
       afterFadeSec = elapsed;
-      document.getElementById("afterSecFade").textContent = afterFadeSec.toFixed(1);
+      finishAfterImage();
+    }
+
+    function skipFadeStage(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (!afterStart || afterClickStage === 0) return;
+      afterFadeSec = afterSharpSec;
+      finishAfterImage();
+    }
+
+    function finishAfterImage() {
+      document.getElementById("afterSecFade").textContent = Number(afterFadeSec || 0).toFixed(1);
       if (afterTimer !== null) { clearInterval(afterTimer); afterTimer = null; }
 
       const ref = document.getElementById("afterImageOverlay");
       ref.onclick = null; ref.onpointerdown = null;
       afterStart = null;
-      ref.classList.remove("show"); ref.classList.add("hidden");
+      hideOverlay("afterImageOverlay");
+      releaseWakeLock();
       setTimeout(() => showSharpnessSelection(parseInt(document.getElementById("stareSec").value), afterSharpSec, afterFadeSec), 150);
     }
 
     function showSharpnessSelection(stareSec, sharpSec, fadeSec) {
-      // Reset sharpness to 5
+      // どれも選ばれていない状態から始める（5が初期選択だと記録が上振れする）
       document.querySelectorAll("input[name='sharpness']").forEach(r => {
-        if (r.value === "5") { r.checked = true; r.closest("label").classList.add("selected"); }
-        else r.closest("label").classList.remove("selected");
+        r.checked = false;
+        r.closest("label").classList.remove("selected");
       });
-      selectedSharpness = 5;
+      selectedSharpness = null;
       selectedAfterimageColor = null;
       document.querySelectorAll(".color-option-compact").forEach(b => b.classList.remove("selected"));
+      const noteEl = document.getElementById("sessionNote");
+      if (noteEl) noteEl.value = "";
       currentSession = { stareSec, afterSharpSec: sharpSec, afterFadeSec: fadeSec };
-      const ov = document.getElementById("sharpnessOverlay");
-      ov.classList.add("show"); ov.classList.remove("hidden");
+      showOverlay("sharpnessOverlay");
     }
 
     function handleConfirmClick() {
       if (!currentSession) return;
-      if (selectedAfterimageColor === null) { alert("⚠ 残像の色を選択してください"); return; }
-      const session = currentSession;
-      session.afterimageColor = selectedAfterimageColor;
-      session.sharpness = selectedSharpness;
-      session.timestamp = new Date().toISOString();
+      if (selectedSharpness === null) { alert("残像の鮮明度を選んでください。"); return; }
+      if (selectedAfterimageColor === null) { alert("残像の色を選んでください。"); return; }
+
+      const noteEl = document.getElementById("sessionNote");
+      const session = normalizeSession({
+        ...currentSession,
+        sharpness: selectedSharpness,
+        afterimageColor: selectedAfterimageColor,
+        timestamp: new Date().toISOString(),
+        note: noteEl ? noteEl.value : ""
+      });
+      if (!session) { alert("記録を作成できませんでした。"); return; }
+
       sessions.push(session);
+      persistSessions();
 
-      try {
-        localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
-      } catch (e) {
-        if (e.name === "QuotaExceededError" || e.code === 22) {
-          sessions = sessions.slice(-100);
-          try { localStorage.setItem("orangeCardSessions", JSON.stringify(sessions)); } catch(e2) { alert("⚠ データ保存に失敗しました。バックアップを取ってください。"); }
-        }
-      }
-
-      document.getElementById("sharpnessOverlay").classList.remove("show");
-      document.getElementById("sharpnessOverlay").classList.add("hidden");
-
+      hideOverlay("sharpnessOverlay");
       showResult(session);
       updateMiniChart();
+      scheduleSync(1500);
 
       setTimeout(() => { isTraining = false; document.getElementById("startBtn").disabled = false; currentSession = null; }, 500);
     }
 
     function handleRetryClick() {
-      document.getElementById("sharpnessOverlay").classList.remove("show");
-      document.getElementById("sharpnessOverlay").classList.add("hidden");
-      isTraining = false; document.getElementById("startBtn").disabled = false; currentSession = null;
+      hideOverlay("sharpnessOverlay");
+      isTraining = false;
+      document.getElementById("startBtn").disabled = false;
+      currentSession = null;
+      handleStartClick(); // そのままもう一度計測する
     }
 
     // ===== RESULT DISPLAY =====
@@ -932,10 +1063,11 @@
       const prevAfter = prev ? getEffectiveAfterSec(prev) : null;
       const prevEff = prev ? (getEffectiveAfterSec(prev) / Math.max(1, prev.stareSec)) : null;
 
-      // Personal bests
-      const allAfterSecs = sessions.map(s => getEffectiveAfterSec(s));
-      const bestAfter = Math.max(...allAfterSecs);
-      const isPB = afterSec >= bestAfter && afterSec > 0;
+      // Personal best は「今回を除いた過去の最高」と比べる
+      const prevBest = sessions.length >= 2
+        ? Math.max(...sessions.slice(0, -1).map(s => getEffectiveAfterSec(s)))
+        : 0;
+      const isPB = sessions.length >= 2 && afterSec > prevBest && afterSec > 0;
 
       function cmp(cur, prev) {
         if (prev === null) return "";
@@ -1001,7 +1133,7 @@
     function updateMiniChart() {
       if (sessions.length === 0) return;
       const last10 = sessions.slice(-10);
-      const labels = last10.map((_, i) => i + 1);
+      const labels = last10.map(s => dateLabel(s));
       const data = last10.map(s => parseFloat(getEffectiveAfterSec(s).toFixed(1)));
       const ctx = document.getElementById("miniChart").getContext("2d");
 
@@ -1031,7 +1163,7 @@
       setText("consecutiveDays", stats.consecutive);
       setText("trainingDays", stats.uniqueDays);
 
-      if (!sessions.length) return;
+      if (!sessions.length) { clearDashboard(); return; }
 
       // Self-bests
       const allAfter = sessions.map(s => getEffectiveAfterSec(s));
@@ -1053,6 +1185,31 @@
     }
 
     function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+    // 記録が0件になったとき、前の内容を画面に残さない
+    function clearDashboard() {
+      ["bestAfterSec", "bestEfficiency", "bestSharpness", "bestStreak",
+       "firstCorrectColorDate", "correctColorRate", "recent10CorrectRate", "colorStage"]
+        .forEach(id => setText(id, "-"));
+      const tbody = document.getElementById("recentTable");
+      if (tbody) tbody.innerHTML = "";
+      [afterImageChartInstance, efficiencyChartInstance, miniChartInstance].forEach(ch => {
+        if (!ch) return;
+        ch.data.labels = [];
+        ch.data.datasets.forEach(d => { d.data = []; });
+        ch.update();
+      });
+      if (sharpnessChartInstance) {
+        sharpnessChartInstance.data.datasets[0].data = [0, 0, 0, 0, 0];
+        sharpnessChartInstance.update();
+      }
+      const rc = document.getElementById("resultCard");
+      if (rc) rc.style.display = "none";
+      const qs = document.getElementById("quickStats");
+      if (qs) qs.style.display = "none";
+      const hint = document.getElementById("sessionHint");
+      if (hint) hint.style.display = "";
+    }
 
     function calcStreakStats() {
       if (!sessions.length) return { consecutive: 0, uniqueDays: 0, bestStreak: 0 };
@@ -1123,12 +1280,18 @@
         const fade = Number(s.afterFadeSec ?? s.afterSec) || 0;
         const eff = (after / Math.max(1, s.stareSec)).toFixed(1);
         row.innerHTML = `
-          <td style="padding:0.5rem">${new Date(s.timestamp).toLocaleTimeString("ja-JP")}</td>
+          <td style="padding:0.5rem">${new Date(s.timestamp).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
           <td style="padding:0.5rem">${s.stareSec}秒</td>
           <td style="padding:0.5rem">${after.toFixed(1)} / ${fade.toFixed(1)}秒</td>
           <td style="padding:0.5rem">${eff}倍</td>
           <td style="padding:0.5rem">${sharpTexts[s.sharpness] || "-"}</td>
           <td style="padding:0.5rem">${colorTexts[s.afterimageColor] || "-"}</td>`;
+        // メモは自由入力なので、HTMLとして解釈させずに入れる
+        const noteCell = document.createElement("td");
+        noteCell.style.padding = "0.5rem";
+        noteCell.style.color = "var(--muted)";
+        noteCell.textContent = s.note || "";
+        row.appendChild(noteCell);
         tbody.appendChild(row);
       });
     }
@@ -1141,16 +1304,21 @@
       // Afterimage time chart
       const ctx1 = document.getElementById("afterImageChart")?.getContext("2d");
       if (ctx1) {
-        const labels = last20.map((_, i) => i + 1);
+        const labels = last20.map(s => dateLabel(s));
         const data1 = last20.map(s => parseFloat(getEffectiveAfterSec(s).toFixed(1)));
+        const ma1 = movingAverage(data1, 5);
         if (afterImageChartInstance) {
           afterImageChartInstance.data.labels = labels;
           afterImageChartInstance.data.datasets[0].data = data1;
+          afterImageChartInstance.data.datasets[1].data = ma1;
           afterImageChartInstance.update();
         } else {
           afterImageChartInstance = new Chart(ctx1, {
             type: "line",
-            data: { labels, datasets: [{ label: "残像時間（秒）", data: data1, borderColor: "#ff9800", backgroundColor: "rgba(255,152,0,0.1)", borderWidth: 3, fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: "#ff9800", pointBorderColor: "#fff", pointBorderWidth: 2 }] },
+            data: { labels, datasets: [
+              { label: "残像時間（秒）", data: data1, borderColor: "#ff9800", backgroundColor: "rgba(255,152,0,0.1)", borderWidth: 3, fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: "#ff9800", pointBorderColor: "#fff", pointBorderWidth: 2 },
+              { label: "5回の移動平均", data: ma1, borderColor: "#8ab4f8", borderWidth: 2, borderDash: [6, 4], fill: false, tension: 0.3, pointRadius: 0 }
+            ] },
             options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: "#e7e7e7" } } }, scales: { y: { beginAtZero: true, ticks: { color: "#a8b0bf" }, grid: { color: "#2a2f3a" } }, x: { ticks: { color: "#a8b0bf" }, grid: { color: "#2a2f3a" } } } }
           });
         }
@@ -1159,7 +1327,7 @@
       // Efficiency chart
       const ctx2 = document.getElementById("efficiencyChart")?.getContext("2d");
       if (ctx2) {
-        const labels = last20.map((_, i) => i + 1);
+        const labels = last20.map(s => dateLabel(s));
         const data2 = last20.map(s => parseFloat((getEffectiveAfterSec(s) / Math.max(1, s.stareSec)).toFixed(2)));
         if (efficiencyChartInstance) {
           efficiencyChartInstance.data.labels = labels;
@@ -1193,8 +1361,52 @@
       }
     }
 
+    function dateLabel(s) {
+      const d = new Date(s.timestamp);
+      return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" }) + " " +
+             d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+    }
+
     // ===== ANALYSIS =====
+    function buildByStareTable() {
+      const tbody = document.getElementById("byStareTable");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!sessions.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="5">記録がまだありません。</td>';
+        tbody.appendChild(tr);
+        return;
+      }
+      const groups = new Map();
+      sessions.forEach(s => {
+        if (!groups.has(s.stareSec)) groups.set(s.stareSec, []);
+        groups.get(s.stareSec).push(s);
+      });
+      [...groups.keys()].sort((a, b) => a - b).forEach(k => {
+        const arr = groups.get(k);
+        const all = arr.map(getEffectiveAfterSec);
+        const avg = all.reduce((a, b) => a + b, 0) / all.length;
+        const recent = all.slice(-5);
+        const rAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+        const diff = rAvg - avg;
+        let cls = "same", mark = "→ 横ばい";
+        if (diff > 0.5) { cls = "up"; mark = "▲ +" + diff.toFixed(1) + "秒"; }
+        else if (diff < -0.5) { cls = "down"; mark = "▼ " + diff.toFixed(1) + "秒"; }
+        if (arr.length < 3) { cls = "same"; mark = "データ不足"; }
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + k + "秒</td>" +
+          "<td>" + arr.length + "回</td>" +
+          "<td>" + avg.toFixed(1) + "秒</td>" +
+          "<td>" + rAvg.toFixed(1) + "秒</td>" +
+          '<td class="result-compare ' + cls + '">' + mark + "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
     function refreshAnalysis() {
+      buildByStareTable();
       // Highlight closest pattern in table
       const rows = document.querySelectorAll("#patternTable tbody tr");
       rows.forEach(r => { r.classList.remove("highlight"); const badge = r.querySelector(".you-badge"); if (badge) badge.remove(); });
@@ -1234,7 +1446,7 @@
     // ===== BACKUP / IMPORT / DELETE =====
     function handleBackupClick() {
       if (!sessions.length) { alert("⚠ バックアップするデータがありません。"); return; }
-      const data = { appVersion: "v10", exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
+      const data = { appVersion: "v11", schema: 2, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
       const filename = `orange-card-backup-${new Date().toISOString().slice(0,10)}.json`;
       try {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -1255,19 +1467,22 @@
           reader.onload = function(ev) {
             try {
               const data = JSON.parse(ev.target.result);
-              if (data.sessions && Array.isArray(data.sessions)) {
-                // Migrate old 3-level sharpness to 5-level
-                data.sessions.forEach(s => {
-                  if (s.sharpness === 3 && !s._migrated) { s.sharpness = 5; s._migrated = true; }
-                  else if (s.sharpness === 2 && !s._migrated) { s.sharpness = 3; s._migrated = true; }
-                  else if (s.sharpness === 1 && !s._migrated) { s.sharpness = 1; s._migrated = true; }
-                });
-                sessions = data.sessions;
-                localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
-                refreshDashboard();
-                alert(`✅ インポート完了: ${sessions.length}件`);
-              } else { alert("⚠ sessions配列がありません。"); }
-            } catch (err) { alert("⚠ JSONの解析に失敗しました。"); }
+              const raw = Array.isArray(data) ? data : data?.sessions;
+              if (!Array.isArray(raw)) { alert("このファイルには記録が入っていません。"); return; }
+              // 3段階の鮮明度だった頃のファイルだけ変換する（v10以降のファイルは触らない）
+              // 変換するのは、3段階だった頃のファイルだと確認できたときだけ
+              const legacy = typeof data?.appVersion === "string" && /^v[1-9]$/.test(data.appVersion);
+              const incoming = raw
+                .map(s => normalizeSession(legacy ? migrateLegacySharpness(s) : s))
+                .filter(Boolean);
+              const before = sessions.length;
+              sessions = mergeSessions(incoming);
+              persistSessions();
+              refreshDashboard();
+              updateMiniChart();
+              scheduleSync(500);
+              alert(`読み込みました。${sessions.length - before}件を追加して、合計${sessions.length}件です。`);
+            } catch (err) { alert("このJSONを読み取れませんでした。"); }
           };
           reader.readAsText(file);
           this.value = "";
@@ -1275,100 +1490,285 @@
       }
     });
 
+    function migrateLegacySharpness(s) {
+      const map = { 3: 5, 2: 3, 1: 1 };
+      const v = Number(s?.sharpness);
+      return { ...s, sharpness: map[v] ?? s?.sharpness };
+    }
+
     function handleDeleteClick() {
-      if (confirm("⚠ 全データを削除しますか？この操作は取り消せません。")) {
-        sessions = []; localStorage.removeItem("orangeCardSessions");
-        refreshDashboard(); alert("✅ 全データを削除しました。");
-      }
+      if (!confirm("すべての記録を削除します。取り消せません。続けますか？")) return;
+      sessions = [];
+      localStorage.removeItem("orangeCardSessions");
+      refreshDashboard();
+      updateMiniChart();
+      if (driveEnabled()) syncNow({ overwrite: true }); // Driveの内容も空にする
+      alert("すべての記録を削除しました。もう片方の端末でも削除してください。");
     }
 
     function loadSessions() {
       const stored = localStorage.getItem("orangeCardSessions");
-      if (stored) { try { sessions = JSON.parse(stored); } catch (e) { sessions = []; } }
+      if (!stored) return;
+      try {
+        const parsed = JSON.parse(stored);
+        sessions = Array.isArray(parsed) ? parsed.map(normalizeSession).filter(Boolean) : [];
+      } catch (e) { sessions = []; }
     }
 
-    // ===== GOOGLE DRIVE =====
-    // ⚠️ 以下のキーはクライアントサイドに露出しています。本番では使用制限を設定してください。
+    function newId() {
+      if (window.crypto?.randomUUID) return crypto.randomUUID();
+      return "s-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+    }
+
+    function clampNum(v, lo, hi, fallback) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.min(hi, Math.max(lo, n));
+    }
+
+    // すべての記録に id を持たせ、値を数値に正規化する（同期の突き合わせと表示の安全のため）
+    function normalizeSession(s) {
+      if (!s || typeof s !== "object") return null;
+      if (typeof s.timestamp !== "string" && !(s.timestamp instanceof Date)) return null;
+      let ts;
+      try { ts = new Date(s.timestamp).toISOString(); } catch (e) { return null; }
+      const sharp = Number(s.afterSharpSec ?? s.afterSec);
+      const fade = Number(s.afterFadeSec ?? s.afterSec);
+      return {
+        id: (typeof s.id === "string" && s.id) ? s.id : newId(),
+        timestamp: ts,
+        stareSec: clampNum(s.stareSec, 1, 600, 10),
+        afterSharpSec: Number.isFinite(sharp) ? Math.max(0, sharp) : 0,
+        afterFadeSec: Number.isFinite(fade) ? Math.max(0, fade) : 0,
+        sharpness: clampNum(s.sharpness, 1, 5, 1),
+        afterimageColor: clampNum(s.afterimageColor, 1, 5, 1),
+        note: typeof s.note === "string" ? s.note.slice(0, 80) : ""
+      };
+    }
+
+    // 端末をまたいだ統合：id が同じものは1件として扱い、時刻順に並べ直す
+    function mergeSessions(incoming) {
+      const map = new Map();
+      const keyOf = s => s.id || `${s.timestamp}|${s.stareSec}|${s.afterSharpSec}`;
+      [...sessions, ...incoming].forEach(s => {
+        if (!s) return;
+        const k = keyOf(s);
+        if (!map.has(k)) map.set(k, s);
+      });
+      return [...map.values()].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    }
+
+    function persistSessions() {
+      try {
+        localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
+        return true;
+      } catch (e) {
+        alert("保存できませんでした。設定タブから書き出しておいてください。（記録は消していません）");
+        return false;
+      }
+    }
+
+    function movingAverage(arr, w) {
+      return arr.map((_, i) => {
+        const from = Math.max(0, i - w + 1);
+        const slice = arr.slice(from, i + 1);
+        return parseFloat((slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(2));
+      });
+    }
+
+    // ===== GOOGLE DRIVE 自動同期 =====
+    // 記録は Drive の「アプリ専用データ領域」(appDataFolder) に置きます。
+    // ユーザーのDrive一覧には出ず、このアプリからしか読めません。ファイル選択は不要です。
+    // OAuthクライアントIDは公開されても問題ない値ですが、Google Cloud Console の
+    // 「承認済みのJavaScript生成元」を自分のドメインだけに絞っておいてください。
     const CLIENTID = "312868081144-1c6gjkal8rgllhi8iqgblbgjarc058jc.apps.googleusercontent.com";
-    const APIKEY = "AIzaSyDhw-1p83aMURAZqPGrrmTe8EJU68Dj82I";
-    const APPID = "312868081144";
-    const DRIVESCOPES = "https://www.googleapis.com/auth/drive.file";
-    const DRIVEDISCOVERY = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
-    let tokenClient = null, accessToken, pickedFileId, pickerReady = false;
+    const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+    const SYNC_FILENAME = "orange-card-data.json";
 
-    function setDriveStatus(msg) { setText("driveStatus", msg); }
-    function updateDriveButtons() {
-      const has = !!accessToken, hasF = !!pickedFileId;
-      ["pickDriveFileBtn"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !has; });
-      ["driveLoadBtn","driveSaveBtn","driveSaveAsBtn"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !(has && hasF); });
+    let tokenClient = null;
+    let accessToken = null;
+    let tokenExpiry = 0;
+    let tokenWaiters = [];
+    let syncFileId = null;
+    let syncing = false;
+    let syncTimer = null;
+
+    function driveEnabled() { return localStorage.getItem("ocDriveEnabled") === "1"; }
+
+    function setDriveStatus(msg, state) {
+      const el = document.getElementById("driveStatus");
+      if (!el) return;
+      el.innerHTML = "";
+      const dot = document.createElement("span");
+      dot.className = "sync-dot" + (state ? " " + state : "");
+      el.appendChild(dot);
+      el.appendChild(document.createTextNode(msg));
     }
-    function loadDriveFileId() { pickedFileId = localStorage.getItem("driveFileId"); }
+
     function wireDriveUi() {
-      const g = document.getElementById("gAuthBtn"); if (g) g.onclick = () => requestAccessToken(true);
-      const p = document.getElementById("pickDriveFileBtn"); if (p) p.onclick = openPicker;
-      const l = document.getElementById("driveLoadBtn"); if (l) l.onclick = driveLoad;
-      const s = document.getElementById("driveSaveBtn"); if (s) s.onclick = driveSave;
-      const sa = document.getElementById("driveSaveAsBtn"); if (sa) sa.onclick = driveSaveAsNew;
-      setDriveStatus(pickedFileId ? `DriveファイルID: ${pickedFileId}` : "未接続");
-      updateDriveButtons();
+      const c = document.getElementById("driveConnectBtn");
+      if (c) c.onclick = connectDrive;
+      const s = document.getElementById("driveSyncBtn");
+      if (s) s.onclick = () => syncNow({ interactive: true });
+      const d = document.getElementById("driveDisconnectBtn");
+      if (d) d.onclick = disconnectDrive;
+      setDriveStatus(driveEnabled() ? "接続を確認しています…" : "未接続");
     }
-    function requestAccessToken(interactive) { if (!tokenClient) { setDriveStatus("OAuth未初期化"); return; } tokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" }); }
-    async function initGoogleDriveClient() {
-      if (!window.gapi) throw new Error("gapi未ロード");
-      if (!window.google?.accounts?.oauth2) throw new Error("GIS未ロード");
-      await new Promise((res, rej) => {
-        gapi.load("client:picker", async () => {
-          try { await gapi.client.init({ apiKey: APIKEY, discoveryDocs: [DRIVEDISCOVERY] }); pickerReady = true; res(); }
-          catch (e) { rej(e); }
+
+    function initGoogleIdentity(ready) {
+      if (!ready || !window.google?.accounts?.oauth2) return;
+      try {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENTID,
+          scope: DRIVE_SCOPE,
+          callback: onToken
         });
+      } catch (e) {
+        setDriveStatus("Google接続を初期化できませんでした", "err");
+        return;
+      }
+      if (driveEnabled()) {
+        // 前回接続済みなら、画面を出さずにトークンだけ取り直す
+        tokenWaiters.push(() => syncNow());
+        tokenClient.requestAccessToken({ prompt: "" });
+        setTimeout(() => {
+          if (!accessToken) setDriveStatus("再接続が必要です。「Googleに接続」を押してください", "err");
+        }, 8000);
+      }
+    }
+
+    function onToken(resp) {
+      if (resp?.error || !resp?.access_token) {
+        accessToken = null;
+        tokenExpiry = 0;
+        setDriveStatus("接続できませんでした（" + (resp?.error || "不明") + "）", "err");
+      } else {
+        accessToken = resp.access_token;
+        tokenExpiry = Date.now() + (Number(resp.expires_in || 3600) - 60) * 1000;
+        localStorage.setItem("ocDriveEnabled", "1");
+      }
+      const waiters = tokenWaiters;
+      tokenWaiters = [];
+      waiters.forEach(fn => { try { fn(accessToken); } catch (e) {} });
+    }
+
+    function ensureToken(interactive) {
+      if (accessToken && Date.now() < tokenExpiry) return Promise.resolve(accessToken);
+      if (!tokenClient) return Promise.resolve(null);
+      return new Promise(resolve => {
+        tokenWaiters.push(resolve);
+        if (tokenWaiters.length === 1) tokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" });
+        setTimeout(() => {
+          if (tokenWaiters.includes(resolve)) {
+            tokenWaiters = tokenWaiters.filter(f => f !== resolve);
+            resolve(null);
+          }
+        }, 20000);
       });
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENTID, scope: DRIVESCOPES,
-        callback: resp => { if (resp?.error) { setDriveStatus(`OAuth失敗: ${resp.error}`); return; } accessToken = resp.access_token; gapi.client.setToken({ access_token: accessToken }); setDriveStatus("接続完了"); updateDriveButtons(); }
+    }
+
+    function connectDrive() {
+      if (!tokenClient) { setDriveStatus("Googleのライブラリを読み込めていません", "err"); return; }
+      tokenWaiters.push(() => syncNow());
+      tokenClient.requestAccessToken({ prompt: "consent" });
+    }
+
+    function disconnectDrive() {
+      localStorage.removeItem("ocDriveEnabled");
+      accessToken = null;
+      tokenExpiry = 0;
+      syncFileId = null;
+      clearTimeout(syncTimer);
+      setDriveStatus("接続を解除しました。この端末の記録はそのまま残ります。");
+    }
+
+    async function driveFetch(token, url, opts = {}) {
+      const res = await fetch(url, {
+        ...opts,
+        headers: { Authorization: "Bearer " + token, ...(opts.headers || {}) }
       });
-      updateDriveButtons();
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res;
     }
-    function openPicker() {
-      if (!pickerReady || !accessToken) { requestAccessToken(true); return; }
-      const view = new google.picker.View(google.picker.ViewId.DOCS); view.setMimeTypes("application/json");
-      new google.picker.PickerBuilder().addView(view).setOAuthToken(accessToken).setDeveloperKey(APIKEY).setAppId(APPID).setCallback(pickerCb).build().setVisible(true);
+
+    async function driveFindFile(token) {
+      const q = encodeURIComponent("name='" + SYNC_FILENAME + "' and trashed=false");
+      const res = await driveFetch(token,
+        "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id)&q=" + q);
+      const json = await res.json();
+      return json.files?.[0]?.id || null;
     }
-    function pickerCb(data) {
-      if (data.action === google.picker.Action.PICKED) { const doc = data.docs?.[0]; pickedFileId = doc?.id; if (pickedFileId) { localStorage.setItem("driveFileId", pickedFileId); setDriveStatus(`選択: ${doc.name}`); } updateDriveButtons(); }
+
+    async function driveCreateFile(token) {
+      const res = await driveFetch(token, "https://www.googleapis.com/drive/v3/files?fields=id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: SYNC_FILENAME, parents: ["appDataFolder"], mimeType: "application/json" })
+      });
+      return (await res.json()).id;
     }
-    async function driveLoad() {
-      if (!accessToken || !pickedFileId) return;
+
+    async function driveRead(token, id) {
+      const res = await driveFetch(token, "https://www.googleapis.com/drive/v3/files/" + id + "?alt=media");
+      const text = await res.text();
+      if (!text.trim()) return null;
+      return JSON.parse(text);
+    }
+
+    async function driveWrite(token, id, payload) {
+      await driveFetch(token,
+        "https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=media", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+    }
+
+    function scheduleSync(delay = 2000) {
+      if (!driveEnabled()) return;
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => syncNow(), delay);
+    }
+
+    async function syncNow(opts = {}) {
+      if (syncing) { setDriveStatus("同期中です…", "busy"); return; }
+      if (!driveEnabled() && !opts.interactive) return;
+      if (!navigator.onLine) { setDriveStatus("オフラインです。つながったら自動で同期します", "err"); return; }
+
+      const token = await ensureToken(false);
+      if (!token) { setDriveStatus("接続が切れています。「Googleに接続」を押してください", "err"); return; }
+
+      syncing = true;
+      setDriveStatus("同期中…", "busy");
       try {
-        const resp = await gapi.client.drive.files.get({ fileId: pickedFileId, alt: "media", supportsAllDrives: true });
-        const data = JSON.parse(resp.body);
-        const loaded = Array.isArray(data) ? data : (data.sessions || null);
-        if (!Array.isArray(loaded)) { setDriveStatus("sessions配列がありません"); return; }
-        sessions = loaded; localStorage.setItem("orangeCardSessions", JSON.stringify(sessions)); refreshDashboard(); setDriveStatus(`読込完了: ${sessions.length}件`);
-      } catch (e) { setDriveStatus(`読込失敗: ${e.message || e}`); }
-    }
-    async function driveSave() {
-      if (!accessToken || !pickedFileId) return;
-      try {
-        const payload = JSON.stringify({ appVersion: "v10", exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions }, null, 2);
-        const r = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(pickedFileId)}?uploadType=media&supportsAllDrives=true`, { method: "PATCH", headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json; charset=utf-8" }, body: payload });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        setDriveStatus(`保存完了: ${sessions.length}件`);
-      } catch (e) { setDriveStatus(e?.message || String(e)); }
-    }
-    async function driveSaveAsNew() {
-      if (!accessToken || !pickedFileId) return;
-      try {
-        const meta = await gapi.client.drive.files.get({ fileId: pickedFileId, fields: "parents", supportsAllDrives: true });
-        const parentId = meta.result?.parents?.[0] || null;
-        const payload = JSON.stringify({ appVersion: "v10", exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions }, null, 2);
-        const name = `orange-card-backup-${new Date().toISOString().replace(/\./g,"-")}.json`;
-        const form = new FormData();
-        form.append("metadata", new Blob([JSON.stringify({ name, mimeType: "application/json", ...(parentId ? { parents: [parentId] } : {}) })], { type: "application/json" }));
-        form.append("file", new Blob([payload], { type: "application/json" }));
-        const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true", { method: "POST", headers: { "Authorization": `Bearer ${accessToken}` }, body: form });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        setDriveStatus(`別名保存完了: ${name}`);
-      } catch (e) { setDriveStatus(e?.message || String(e)); }
+        if (!syncFileId) syncFileId = (await driveFindFile(token)) || (await driveCreateFile(token));
+
+        if (!opts.overwrite) {
+          const remote = await driveRead(token, syncFileId);
+          const raw = Array.isArray(remote) ? remote : (remote?.sessions || []);
+          const incoming = (Array.isArray(raw) ? raw : []).map(normalizeSession).filter(Boolean);
+          sessions = mergeSessions(incoming);
+          persistSessions();
+          refreshDashboard();
+          updateMiniChart();
+        }
+
+        await driveWrite(token, syncFileId, {
+          appVersion: "v11",
+          schema: 2,
+          exportDate: new Date().toISOString(),
+          totalSessions: sessions.length,
+          sessions
+        });
+        localStorage.setItem("ocLastSync", new Date().toISOString());
+        setDriveStatus("同期しました（" + sessions.length + "件・" + new Date().toLocaleTimeString("ja-JP") + "）", "ok");
+      } catch (e) {
+        const msg = String(e?.message || e);
+        if (msg.includes("401") || msg.includes("403")) { accessToken = null; tokenExpiry = 0; }
+        setDriveStatus("同期できませんでした：" + msg, "err");
+      } finally {
+        syncing = false;
+      }
     }
 
     // ===== BINAURAL BEAT =====
