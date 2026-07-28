@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v11 - 残像トレーニング記録</title>
+  <title>Orange Card v12 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -70,9 +70,9 @@
     .fullscreen-timer { font-size: 4rem; font-weight: 1000; color: var(--accent); text-shadow: 0 0 20px rgba(255,152,0,0.8); font-family: "Courier New", monospace; letter-spacing: 0.1em; }
     .fullscreen-label { font-size: 1.5rem; color: var(--accent); text-align: center; }
     .fullscreen-instruction { position: absolute; bottom: 2rem; color: var(--muted); font-size: 1rem; text-align: center; opacity: 0.7; }
-    .orange-card-fullscreen { width: 80vw; height: 60vh; max-width: 600px; max-height: 450px; background: linear-gradient(135deg, #ff9800 0%, #ff8c00 50%, #ff9800 100%); border-radius: 40px; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 100px rgba(255,152,0,1), 0 0 40px rgba(255,100,0,0.8); }
-    .orange-card-fullscreen::before { content: ""; position: absolute; width: 200px; height: 200px; background: #1e88e5; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 11; }
-    .orange-card-fullscreen::after { content: ""; position: absolute; width: 20px; height: 20px; background: #000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 12; box-shadow: 0 0 10px rgba(0,0,0,0.9); }
+    .orange-card-fullscreen { width: var(--card-w, 80vw); height: var(--card-h, 60vh); max-width: var(--card-maxw, 600px); max-height: var(--card-maxh, 450px); background: linear-gradient(135deg, #ff9800 0%, #ff8c00 50%, #ff9800 100%); border-radius: 40px; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 100px rgba(255,152,0,1), 0 0 40px rgba(255,100,0,0.8); }
+    .orange-card-fullscreen::before { content: ""; position: absolute; width: var(--circle-d, 200px); height: var(--circle-d, 200px); background: #1e88e5; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 11; }
+    .orange-card-fullscreen::after { content: ""; position: absolute; width: var(--dot-d, 20px); height: var(--dot-d, 20px); background: #000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 12; box-shadow: 0 0 10px rgba(0,0,0,0.9); }
 
     /* ===== AFTERIMAGE OVERLAY ===== */
     .overlay { pointer-events: auto; user-select: none; -webkit-user-select: none; touch-action: manipulation; position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 99998; visibility: hidden; opacity: 0; transition: all 0.15s ease; }
@@ -153,6 +153,15 @@
     .info-note { background: rgba(255,152,0,0.06); border-left: 3px solid var(--accent); padding: 0.75rem; margin: 0.75rem 0; font-size: 0.88rem; line-height: 1.6; color: var(--muted); }
     .info-note strong { color: var(--accent); }
 
+    /* ===== MEASUREMENT SETTINGS ===== */
+    .opt-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.85rem; flex-wrap: wrap; color: var(--text); font-size: 0.92rem; }
+    .opt-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+    .calib-box { border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin-top: 1rem; }
+    .calib-bar { height: 54px; border-radius: 6px; background: linear-gradient(135deg, #2b6cb0, #1e88e5); border: 2px solid #90caf9; max-width: 100%; }
+    .calib-range { width: 100%; margin: 0.85rem 0 0.5rem; accent-color: var(--accent); }
+    .cond-warn { border-left: 3px solid var(--danger); background: rgba(229,57,53,0.08); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.88rem; line-height: 1.6; color: var(--text); }
+    .set-indicator { color: var(--accent); font-weight: 800; font-size: 0.9rem; margin-top: 0.6rem; }
+
     /* ===== OVERLAY CONTROLS ===== */
     .overlay-cancel { position: absolute; top: 1rem; right: 1rem; z-index: 30; background: transparent; border: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; padding: 0.4rem 0.75rem; border-radius: 999px; font-weight: 600; }
     .overlay-cancel:hover { background: rgba(255,255,255,0.08); transform: none; }
@@ -218,15 +227,30 @@
             <select id="stareSec">
               <option value="3">3秒</option>
               <option value="5">5秒</option>
-              <option value="10" selected>10秒</option>
+              <option value="10">10秒</option>
               <option value="15">15秒</option>
               <option value="20">20秒</option>
-              <option value="30">30秒</option>
+              <option value="30" selected>30秒</option>
               <option value="60">60秒</option>
+            </select>
+          </label>
+          <label>
+            繰り返し
+            <select id="setCount">
+              <option value="1" selected>1回</option>
+              <option value="3">3回</option>
+              <option value="5">5回</option>
+              <option value="10">10回</option>
             </select>
           </label>
           <button id="startBtn" onclick="handleStartClick()">🚀 開始</button>
         </div>
+        <div class="set-indicator" id="setIndicator"></div>
+        <p class="muted" style="margin:0.75rem 0 0;line-height:1.7;font-size:0.85rem;">
+          ①青い円の中心を見つめる → ②合図が鳴ったら<strong style="color:var(--accent);">目を閉じる</strong> →
+          ③まぶたの裏の残像がぼやけたら画面をタップ → ④完全に消えたらもう一度タップ。<br>
+          目を閉じたまま操作できるよう、計測中は秒数を表示しません（設定で変更できます）。
+        </p>
       </div>
 
       <!-- ===== RESULT CARD ===== -->
@@ -252,9 +276,9 @@
         <button class="overlay-cancel" type="button" onclick="cancelTraining(event)">✕ 中止</button>
         <div class="fullscreen-inner">
           <div class="orange-card-fullscreen" id="orangeCardFullscreen"></div>
-          <div class="fullscreen-timer" id="fullscreenTimer">10</div>
-          <div class="fullscreen-label">🎯 カードの中心を凝視してください</div>
-          <div class="fullscreen-instruction">👁 黒い点をしっかり見つめてください</div>
+          <div class="fullscreen-timer" id="fullscreenTimer">30</div>
+          <div class="fullscreen-label">🎯 青い円の中心を見つめてください</div>
+          <div class="fullscreen-instruction">🔔 合図が鳴ったら目を閉じてください</div>
         </div>
       </div>
 
@@ -263,14 +287,29 @@
         <button class="overlay-cancel" type="button"
                 onpointerdown="event.stopPropagation()" onclick="cancelTraining(event)">✕ 中止</button>
         <div class="overlay-inner">
+          <div class="small" style="color:var(--accent);font-weight:700;margin-bottom:0.5rem;">👁 目は閉じたままで大丈夫です</div>
           <div class="big" id="afterImageStageLabel">① 残像がぼやけ始めたらタップ</div>
-          <div class="small" id="afterImageStageDesc">鮮明な残像のピーク時間を記録します</div>
-          <div class="timer"><span id="afterSec">0.0</span>秒 <span style="font-size:0.7em;color:var(--muted);">（鮮明）</span></div>
-          <div class="timer" style="color:#8ab4f8;font-size:1.6rem;"><span id="afterSecFade">0.0</span>秒 <span style="font-size:0.7em;color:var(--muted);">（残存）</span></div>
+          <div class="small" id="afterImageStageDesc">まぶたの裏の残像を見てください</div>
+          <div class="timer" id="afterSecRow"><span id="afterSec">0.0</span>秒 <span style="font-size:0.7em;color:var(--muted);">（鮮明）</span></div>
+          <div class="timer" id="afterSecFadeRow" style="color:#8ab4f8;font-size:1.6rem;"><span id="afterSecFade">0.0</span>秒 <span style="font-size:0.7em;color:var(--muted);">（残存）</span></div>
           <div class="small" id="afterImageStageNote">残像が崩れ始めたらタップしてください</div>
           <div class="overlay-actions">
             <button type="button" id="skipFadeBtn" class="secondary" style="display:none;"
                     onpointerdown="event.stopPropagation()" onclick="skipFadeStage(event)">残存の計測をとばす</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rest Between Sets -->
+      <div id="restOverlay" class="overlay">
+        <div class="overlay-inner">
+          <div class="small" id="restProgress">1 / 3 回 終了</div>
+          <div class="big">🌙 目を休めてください</div>
+          <div class="timer"><span id="restTimer">10</span>秒</div>
+          <div class="small">次のカードが自動で始まります</div>
+          <div class="overlay-actions">
+            <button type="button" class="secondary" onclick="skipRest()">すぐ次へ</button>
+            <button type="button" class="secondary" onclick="stopSets()">ここでやめる</button>
           </div>
         </div>
       </div>
@@ -502,6 +541,20 @@
         </div>
       </div>
 
+      <!-- 測定条件 -->
+      <div class="card">
+        <h2>🖥 測定条件</h2>
+        <div id="conditionWarning"></div>
+        <div class="table-wrapper">
+          <table class="pattern-table" style="min-width:520px;">
+            <thead>
+              <tr><th>端末</th><th>回数</th><th>見かけの大きさ</th><th>視距離</th></tr>
+            </thead>
+            <tbody id="conditionTable"></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- 凝視時間別の比較 -->
       <div class="card">
         <h2>⏱ 凝視時間別の平均</h2>
@@ -724,6 +777,67 @@
       </div>
 
       <div class="card">
+        <h2>📐 計測の設定</h2>
+
+        <div class="opt-row">
+          <input type="checkbox" id="optShowTimer">
+          <span>計測中に秒数を表示する</span>
+        </div>
+        <p class="muted" style="margin:-0.4rem 0 1rem;line-height:1.7;font-size:0.85rem;">
+          七田式の手順では、カードを見たあと目を閉じてまぶたの裏の残像を見ます。
+          数字を見ようとすると目を開けることになるので、既定では隠してあります。
+          凝視の終わりと計測の終わりは音と振動でお知らせします。
+        </p>
+
+        <div class="opt-row">
+          <input type="checkbox" id="optCue" checked>
+          <span>合図の音と振動を使う</span>
+        </div>
+
+        <div class="opt-row">
+          <label>セット間の休憩
+            <select id="optRestSec">
+              <option value="0">なし</option>
+              <option value="5">5秒</option>
+              <option value="10" selected>10秒</option>
+              <option value="20">20秒</option>
+              <option value="30">30秒</option>
+            </select>
+          </label>
+          <label>目と画面の距離
+            <select id="optViewDist">
+              <option value="30">30cm</option>
+              <option value="40">40cm</option>
+              <option value="50" selected>50cm</option>
+              <option value="60">60cm</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="opt-row">
+          <label style="flex:1;min-width:240px;">この端末の名前（記録に残ります）
+            <input id="optDeviceLabel" class="note-input" type="text" maxlength="32" style="margin-top:0.35rem;">
+          </label>
+        </div>
+
+        <div class="calib-box">
+          <div style="font-weight:700;margin-bottom:0.5rem;">カードの見かけの大きさをそろえる（任意）</div>
+          <p class="muted" style="margin:0 0 0.85rem;line-height:1.7;font-size:0.85rem;">
+            端末によって画面の細かさが違うので、同じ「画面の80%」でも実際の大きさは変わります。
+            下の青いバーの幅を、手元のクレジットカードの長辺（85.6mm）にぴったり合わせて保存すると、
+            スマホでもPCでも目に映る大きさが同じになるようにカードを描きます。
+          </p>
+          <div class="calib-bar" id="calibBar" style="width:340px;"></div>
+          <input class="calib-range" type="range" id="calibRange" min="120" max="1200" value="340">
+          <div class="muted" id="calibInfo" style="line-height:1.6;">未設定（画面の割合で表示しています）</div>
+          <div class="row" style="margin-top:0.85rem;">
+            <button id="calibSaveBtn" class="secondary">この幅で保存</button>
+            <button id="calibClearBtn" class="secondary">設定を消す</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>☁ スマホとPCで同期</h2>
         <p class="muted" style="margin:0 0 1rem;line-height:1.7;">
           Googleアカウントに接続すると、記録はDrive内のこのアプリ専用の保存領域に置かれ、
@@ -761,7 +875,7 @@
       <div class="card">
         <h2>ℹ️ アプリについて</h2>
         <div class="muted" style="line-height:1.8;">
-          <strong>Orange Card v11</strong> - 残像トレーニング記録ツール<br>
+          <strong>Orange Card v12</strong> - 残像トレーニング記録ツール<br>
           七田式オレンジカードの残像トレーニングを記録・可視化します。<br>
           医療機器ではありません。個人情報は一切収集していません。
         </div>
@@ -807,9 +921,65 @@
         updateMiniChart();
       }
       wireDriveUi();
+      wireMeasurementSettings();
+      applyCardSize();
+      updateSetIndicator();
       wireGlobalEvents();
       registerServiceWorker();
       waitForGoogleIdentity().then(initGoogleIdentity);
+    }
+
+    function wireMeasurementSettings() {
+      const showTimer = document.getElementById("optShowTimer");
+      const cue = document.getElementById("optCue");
+      const rest = document.getElementById("optRestSec");
+      const dist = document.getElementById("optViewDist");
+      const range = document.getElementById("calibRange");
+      const bar = document.getElementById("calibBar");
+      const saveBtn = document.getElementById("calibSaveBtn");
+      const clearBtn = document.getElementById("calibClearBtn");
+      if (!showTimer) return;
+
+      showTimer.checked = optShowTimer();
+      showTimer.onchange = () => localStorage.setItem("ocShowTimer", showTimer.checked ? "1" : "0");
+      cue.checked = optCueOn();
+      cue.onchange = () => { localStorage.setItem("ocCue", cue.checked ? "1" : "0"); if (cue.checked) primeCueAudio(); };
+      rest.value = String(optRestSec());
+      rest.onchange = () => localStorage.setItem("ocRestSec", rest.value);
+      const devEl = document.getElementById("optDeviceLabel");
+      devEl.value = deviceLabel();
+      devEl.onchange = () => {
+        const v = devEl.value.trim().slice(0, 32);
+        if (v) localStorage.setItem("ocDeviceLabel", v);
+        devEl.value = deviceLabel();
+      };
+      dist.value = String(optViewDistCm());
+      dist.onchange = () => { localStorage.setItem("ocViewDistCm", dist.value); applyCardSize(); updateCalibInfo(); };
+
+      const saved = optPxPerMm();
+      if (saved) range.value = String(Math.round(saved * CREDIT_CARD_MM));
+      bar.style.width = range.value + "px";
+      range.oninput = () => { bar.style.width = range.value + "px"; };
+      saveBtn.onclick = () => {
+        localStorage.setItem("ocPxPerMm", String(Number(range.value) / CREDIT_CARD_MM));
+        applyCardSize();
+        updateCalibInfo();
+      };
+      clearBtn.onclick = () => {
+        localStorage.removeItem("ocPxPerMm");
+        applyCardSize();
+        updateCalibInfo();
+      };
+      updateCalibInfo();
+    }
+
+    function updateCalibInfo() {
+      const el = document.getElementById("calibInfo");
+      if (!el) return;
+      const g = computeCardGeometry();
+      if (!g) { el.textContent = "未設定（画面の割合で表示しています）"; return; }
+      el.textContent = `${optViewDistCm()}cm から見て 幅${g.widthMm.toFixed(0)}mm・視角${g.angle.toFixed(1)}° で表示します`
+        + (g.clamped ? "（画面に収まらないため縮めています）" : "");
     }
 
     function wireGlobalEvents() {
@@ -820,6 +990,7 @@
         cancelTraining();
       });
       window.addEventListener("online", () => scheduleSync(500));
+      window.addEventListener("resize", () => applyCardSize());
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState !== "visible") return;
         if (isTraining) { if (!wakeLock) requestWakeLock(); }
@@ -878,45 +1049,188 @@
     }
 
     // ===== TRAINING FLOW =====
+    // ===== 計測の設定 =====
+    const TARGET_ANGLE_DEG = 10;   // 目に映る大きさ（約100mmを50cmで見たときと同じ）
+    const CREDIT_CARD_MM = 85.6;   // 実寸合わせの基準
+
+    function optShowTimer() { return localStorage.getItem("ocShowTimer") === "1"; }
+    function optCueOn() { return localStorage.getItem("ocCue") !== "0"; }
+    function optRestSec() { return parseInt(localStorage.getItem("ocRestSec") ?? "10", 10) || 0; }
+    function optViewDistCm() { return parseInt(localStorage.getItem("ocViewDistCm") ?? "50", 10) || 50; }
+    function optPxPerMm() { const v = parseFloat(localStorage.getItem("ocPxPerMm") || "0"); return v > 0 ? v : null; }
+
+    function deviceLabel() {
+      let v = localStorage.getItem("ocDeviceLabel");
+      if (v) return v;
+      const short = Math.min(screen.width, screen.height);
+      const coarse = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+      let kind;
+      if (short < 500) kind = "スマホ";
+      else if (short < 1000 && coarse) kind = "タブレット";
+      else kind = "PC";
+      v = kind + " " + screen.width + "×" + screen.height;
+      localStorage.setItem("ocDeviceLabel", v);
+      return v;
+    }
+
+    // 実寸を合わせてあれば、視距離から逆算して同じ視角になる大きさで描く
+    function computeCardGeometry() {
+      const pxPerMm = optPxPerMm();
+      if (!pxPerMm) return null;
+      const distMm = optViewDistCm() * 10;
+      let wPx = 2 * distMm * Math.tan((TARGET_ANGLE_DEG / 2) * Math.PI / 180) * pxPerMm;
+      let hPx = wPx * 0.75;
+      const scale = Math.min(1, (window.innerWidth * 0.92) / wPx, (window.innerHeight * 0.72) / hPx);
+      wPx *= scale; hPx *= scale;
+      const widthMm = wPx / pxPerMm;
+      const angle = 2 * Math.atan((widthMm / 2) / distMm) * 180 / Math.PI;
+      return { wPx, hPx, widthMm, angle, clamped: scale < 1 };
+    }
+
+    function applyCardSize() {
+      const el = document.getElementById("orangeCardFullscreen");
+      if (!el) return;
+      const g = computeCardGeometry();
+      if (!g) {
+        ["--card-w", "--card-h", "--card-maxw", "--card-maxh", "--circle-d", "--dot-d"]
+          .forEach(p => el.style.removeProperty(p));
+        return;
+      }
+      el.style.setProperty("--card-w", g.wPx + "px");
+      el.style.setProperty("--card-h", g.hPx + "px");
+      el.style.setProperty("--card-maxw", "none");
+      el.style.setProperty("--card-maxh", "none");
+      el.style.setProperty("--circle-d", (g.wPx / 3) + "px");
+      el.style.setProperty("--dot-d", (g.wPx / 30) + "px");
+    }
+
+    // 記録に残す測定条件
+    function currentConditions() {
+      const g = computeCardGeometry();
+      return {
+        deviceLabel: deviceLabel(),
+        viewDistCm: optViewDistCm(),
+        cardMm: g ? Math.round(g.widthMm * 10) / 10 : null,
+        visualAngle: g ? Math.round(g.angle * 10) / 10 : null
+      };
+    }
+
+    // ===== 合図（目を閉じたままでも分かるように） =====
+    let cueCtx = null;
+    function primeCueAudio() {
+      if (!optCueOn()) return;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!cueCtx) cueCtx = new AC();
+        if (cueCtx.state === "suspended") cueCtx.resume();
+      } catch (e) {}
+    }
+    function playCue(freq) {
+      if (!optCueOn()) return;
+      try { if (navigator.vibrate) navigator.vibrate(120); } catch (e) {}
+      try {
+        if (!cueCtx) primeCueAudio();
+        if (!cueCtx) return;
+        const t = cueCtx.currentTime;
+        const osc = cueCtx.createOscillator();
+        const g = cueCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq || 880;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.18, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+        osc.connect(g); g.connect(cueCtx.destination);
+        osc.start(t); osc.stop(t + 0.36);
+      } catch (e) {}
+    }
+
     function clearAllTimers() {
       if (stareTimer !== null) { clearTimeout(stareTimer); stareTimer = null; }
       if (afterTimer !== null) { clearInterval(afterTimer); afterTimer = null; }
       if (countdownTimer !== null) { clearInterval(countdownTimer); countdownTimer = null; }
+      if (restTimer !== null) { clearInterval(restTimer); restTimer = null; }
     }
 
     function showOverlay(id) { const el = document.getElementById(id); if (el) { el.classList.remove("hidden"); el.classList.add("show"); } }
     function hideOverlay(id) { const el = document.getElementById(id); if (el) { el.classList.remove("show"); el.classList.add("hidden"); } }
 
-    function handleStartClick() {
+    let setTotal = 1, setIndex = 0, restTimer = null;
+
+    function updateSetIndicator() {
+      const el = document.getElementById("setIndicator");
+      if (!el) return;
+      el.textContent = (setTotal > 1 && setIndex > 0) ? `${setIndex} / ${setTotal} 回目` : "";
+    }
+
+    function handleStartClick(opts) {
       if (isTraining) return;
       clearAllTimers();
       afterStart = null;
       isTraining = true;
       document.getElementById("startBtn").disabled = true;
+      primeCueAudio();
       requestWakeLock();
 
+      if (!(opts && opts.retry)) {
+        if (setIndex === 0) setTotal = parseInt(document.getElementById("setCount").value, 10) || 1;
+        setIndex++;
+      }
+      updateSetIndicator();
+      applyCardSize();
+
       const stareSec = parseInt(document.getElementById("stareSec").value);
+      const timerEl = document.getElementById("fullscreenTimer");
+      timerEl.style.display = optShowTimer() ? "" : "none";
       showOverlay("fullscreenOverlay");
 
       // 経過時間はタイマーの回数ではなく時刻で測る（バックグラウンドでもズレない）
       const deadline = Date.now() + stareSec * 1000;
-      document.getElementById("fullscreenTimer").textContent = stareSec;
+      timerEl.textContent = stareSec;
       countdownTimer = setInterval(() => {
         const left = Math.ceil((deadline - Date.now()) / 1000);
-        document.getElementById("fullscreenTimer").textContent = Math.max(0, left);
+        timerEl.textContent = Math.max(0, left);
         if (left <= 0) { clearInterval(countdownTimer); countdownTimer = null; startAfterImage(); }
       }, 200);
+    }
+
+    // ===== セット間の休憩 =====
+    function startRest() {
+      const sec = optRestSec();
+      if (sec <= 0) { handleStartClick(); return; }
+      setText("restProgress", `${setIndex} / ${setTotal} 回 終了`);
+      setText("restTimer", sec);
+      showOverlay("restOverlay");
+      const deadline = Date.now() + sec * 1000;
+      restTimer = setInterval(() => {
+        const left = Math.ceil((deadline - Date.now()) / 1000);
+        setText("restTimer", Math.max(0, left));
+        if (left <= 0) { clearInterval(restTimer); restTimer = null; hideOverlay("restOverlay"); handleStartClick(); }
+      }, 200);
+    }
+    function skipRest() {
+      if (restTimer !== null) { clearInterval(restTimer); restTimer = null; }
+      hideOverlay("restOverlay");
+      handleStartClick();
+    }
+    function stopSets() {
+      if (restTimer !== null) { clearInterval(restTimer); restTimer = null; }
+      hideOverlay("restOverlay");
+      setIndex = 0; setTotal = 1;
+      updateSetIndicator();
     }
 
     function cancelTraining(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       clearAllTimers();
-      ["fullscreenOverlay", "afterImageOverlay", "sharpnessOverlay"].forEach(hideOverlay);
+      ["fullscreenOverlay", "afterImageOverlay", "sharpnessOverlay", "restOverlay"].forEach(hideOverlay);
       const ref = document.getElementById("afterImageOverlay");
       if (ref) { ref.onpointerdown = null; ref.onclick = null; }
       afterStart = null;
       currentSession = null;
       isTraining = false;
+      setIndex = 0; setTotal = 1;
+      updateSetIndicator();
       document.getElementById("startBtn").disabled = false;
       releaseWakeLock();
     }
@@ -934,7 +1248,11 @@
 
     function startAfterImage() {
       hideOverlay("fullscreenOverlay");
+      playCue(880);                       // 目を閉じる合図
       document.getElementById("skipFadeBtn").style.display = "none";
+      const show = optShowTimer() ? "" : "none";
+      document.getElementById("afterSecRow").style.display = show;
+      document.getElementById("afterSecFadeRow").style.display = show;
 
       afterStart = Date.now();
       afterSharpSec = null; afterFadeSec = null; afterClickStage = 0;
@@ -998,6 +1316,7 @@
       ref.onclick = null; ref.onpointerdown = null;
       afterStart = null;
       hideOverlay("afterImageOverlay");
+      playCue(520);                       // 目を開けてよい合図
       releaseWakeLock();
       setTimeout(() => showSharpnessSelection(parseInt(document.getElementById("stareSec").value), afterSharpSec, afterFadeSec), 150);
     }
@@ -1025,6 +1344,7 @@
       const noteEl = document.getElementById("sessionNote");
       const session = normalizeSession({
         ...currentSession,
+        ...currentConditions(),
         sharpness: selectedSharpness,
         afterimageColor: selectedAfterimageColor,
         timestamp: new Date().toISOString(),
@@ -1040,7 +1360,13 @@
       updateMiniChart();
       scheduleSync(1500);
 
-      setTimeout(() => { isTraining = false; document.getElementById("startBtn").disabled = false; currentSession = null; }, 500);
+      setTimeout(() => {
+        isTraining = false;
+        document.getElementById("startBtn").disabled = false;
+        currentSession = null;
+        if (setIndex < setTotal) startRest();
+        else { setIndex = 0; setTotal = 1; updateSetIndicator(); }
+      }, 500);
     }
 
     function handleRetryClick() {
@@ -1048,7 +1374,7 @@
       isTraining = false;
       document.getElementById("startBtn").disabled = false;
       currentSession = null;
-      handleStartClick(); // そのままもう一度計測する
+      handleStartClick({ retry: true }); // やり直しはセット数を消費しない
     }
 
     // ===== RESULT DISPLAY =====
@@ -1405,8 +1731,57 @@
       });
     }
 
+    function buildConditionTable() {
+      const tbody = document.getElementById("conditionTable");
+      const warn = document.getElementById("conditionWarning");
+      if (!tbody || !warn) return;
+      tbody.innerHTML = "";
+      warn.innerHTML = "";
+      if (!sessions.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="4">記録がまだありません。</td>';
+        tbody.appendChild(tr);
+        return;
+      }
+      const groups = new Map();
+      sessions.forEach(s => {
+        const key = (s.deviceLabel || "不明") + "|" + (s.visualAngle ?? "-") + "|" + (s.viewDistCm ?? "-");
+        if (!groups.has(key)) groups.set(key, { n: 0, s });
+        groups.get(key).n++;
+      });
+      const angles = [];
+      [...groups.values()].sort((a, b) => b.n - a.n).forEach(g => {
+        if (g.s.visualAngle) angles.push(g.s.visualAngle);
+        const tr = document.createElement("tr");
+        const td = t => { const c = document.createElement("td"); c.textContent = t; return c; };
+        tr.appendChild(td(g.s.deviceLabel || "不明"));
+        tr.appendChild(td(g.n + "回"));
+        tr.appendChild(td(g.s.visualAngle ? `視角 ${g.s.visualAngle}°（幅${g.s.cardMm ?? "?"}mm）` : "未設定（画面の割合）"));
+        tr.appendChild(td(g.s.viewDistCm ? g.s.viewDistCm + "cm" : "-"));
+        tbody.appendChild(tr);
+      });
+
+      const unset = sessions.filter(s => !s.visualAngle).length;
+      const devices = new Set(sessions.map(s => s.deviceLabel || "不明"));
+      const msgs = [];
+      if (devices.size > 1 && unset > 0) {
+        msgs.push("複数の端末の記録が混ざっていて、実寸合わせがされていないものがあります。画面の大きさが違うと残像の出方も変わるため、グラフの上下が上達によるものか端末の違いによるものか区別できません。");
+      }
+      if (angles.length >= 2) {
+        const min = Math.min(...angles), max = Math.max(...angles);
+        if (max / min > 1.2) msgs.push(`見かけの大きさが ${min}° から ${max}° までばらついています。同じ条件どうしで比べてください。`);
+      }
+      if (msgs.length) {
+        const div = document.createElement("div");
+        div.className = "cond-warn";
+        div.textContent = "⚠ " + msgs.join(" ");
+        warn.appendChild(div);
+      }
+    }
+
     function refreshAnalysis() {
       buildByStareTable();
+      buildConditionTable();
       // Highlight closest pattern in table
       const rows = document.querySelectorAll("#patternTable tbody tr");
       rows.forEach(r => { r.classList.remove("highlight"); const badge = r.querySelector(".you-badge"); if (badge) badge.remove(); });
@@ -1446,7 +1821,7 @@
     // ===== BACKUP / IMPORT / DELETE =====
     function handleBackupClick() {
       if (!sessions.length) { alert("⚠ バックアップするデータがありません。"); return; }
-      const data = { appVersion: "v11", schema: 2, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
+      const data = { appVersion: "v12", schema: 2, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
       const filename = `orange-card-backup-${new Date().toISOString().slice(0,10)}.json`;
       try {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -1542,7 +1917,10 @@
         afterFadeSec: Number.isFinite(fade) ? Math.max(0, fade) : 0,
         sharpness: clampNum(s.sharpness, 1, 5, 1),
         afterimageColor: clampNum(s.afterimageColor, 1, 5, 1),
-        note: typeof s.note === "string" ? s.note.slice(0, 80) : ""
+        note: typeof s.note === "string" ? s.note.slice(0, 80) : "",
+        deviceLabel: typeof s.deviceLabel === "string" ? s.deviceLabel.slice(0, 32) : "",
+        viewDistCm: Number.isFinite(Number(s.viewDistCm)) ? clampNum(s.viewDistCm, 5, 300, 50) : null,
+        visualAngle: Number.isFinite(Number(s.visualAngle)) ? clampNum(s.visualAngle, 0.1, 90, 10) : null
       };
     }
 
@@ -1754,7 +2132,7 @@
         }
 
         await driveWrite(token, syncFileId, {
-          appVersion: "v11",
+          appVersion: "v12",
           schema: 2,
           exportDate: new Date().toISOString(),
           totalSessions: sessions.length,

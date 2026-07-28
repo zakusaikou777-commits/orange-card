@@ -1,5 +1,5 @@
-// Orange Card v11 - オフラインで開けるようにするためのキャッシュ
-const CACHE = "orange-card-v11";
+// Orange Card v12 - オフラインで開けるようにするためのキャッシュ
+const CACHE = "orange-card-v12";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
