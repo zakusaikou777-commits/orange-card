@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v12 - 残像トレーニング記録</title>
+  <title>Orange Card v14 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -67,6 +67,9 @@
     .fullscreen-overlay.show { visibility: visible !important; opacity: 1 !important; }
     .fullscreen-overlay.hidden { visibility: hidden !important; opacity: 0 !important; }
     .fullscreen-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; width: 100%; height: 100%; }
+    .card-stack { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+    .stare-progress { width: var(--card-w, 80vw); max-width: var(--card-maxw, 600px); height: 5px; border-radius: 999px; background: rgba(255,255,255,0.15); overflow: hidden; }
+    .stare-progress-fill { height: 100%; width: 100%; background: var(--accent); border-radius: 999px; }
     .fullscreen-timer { font-size: 4rem; font-weight: 1000; color: var(--accent); text-shadow: 0 0 20px rgba(255,152,0,0.8); font-family: "Courier New", monospace; letter-spacing: 0.1em; }
     .fullscreen-label { font-size: 1.5rem; color: var(--accent); text-align: center; }
     .fullscreen-instruction { position: absolute; bottom: 2rem; color: var(--muted); font-size: 1rem; text-align: center; opacity: 0.7; }
@@ -249,7 +252,7 @@
         <p class="muted" style="margin:0.75rem 0 0;line-height:1.7;font-size:0.85rem;">
           ①青い円の中心を見つめる → ②合図が鳴ったら<strong style="color:var(--accent);">目を閉じる</strong> →
           ③まぶたの裏の残像がぼやけたら画面をタップ → ④完全に消えたらもう一度タップ。<br>
-          目を閉じたまま操作できるよう、計測中は秒数を表示しません（設定で変更できます）。
+          残り時間はカードの下のゲージと数字で確認できます（設定タブで変えられます）。
         </p>
       </div>
 
@@ -275,7 +278,10 @@
       <div id="fullscreenOverlay" class="fullscreen-overlay">
         <button class="overlay-cancel" type="button" onclick="cancelTraining(event)">✕ 中止</button>
         <div class="fullscreen-inner">
-          <div class="orange-card-fullscreen" id="orangeCardFullscreen"></div>
+          <div class="card-stack">
+            <div class="orange-card-fullscreen" id="orangeCardFullscreen"></div>
+            <div class="stare-progress" id="stareProgress"><div class="stare-progress-fill" id="stareProgressFill"></div></div>
+          </div>
           <div class="fullscreen-timer" id="fullscreenTimer">30</div>
           <div class="fullscreen-label">🎯 青い円の中心を見つめてください</div>
           <div class="fullscreen-instruction">🔔 合図が鳴ったら目を閉じてください</div>
@@ -760,33 +766,66 @@
       <h1 class="title">⚙ 設定</h1>
 
       <div class="card">
-        <h2>🎵 アルファ波BGM（バイノーラルビート）</h2>
-        <div class="muted" style="font-size:0.85rem;margin-bottom:1rem;line-height:1.6;">
-          左右の耳にわずかに異なる周波数（432Hz / 442Hz）を流し、差分10Hz（アルファ波帯域）のうなりを作ります。<br>
-          <span style="color:var(--accent);">※ステレオイヤホン/ヘッドホンが必要です。</span><br>
-          バイノーラルビートが脳波や集中力を変えるという主張は、研究結果が一致していません。効果を保証するものではなく、集中の助けになると感じる場合に使ってください。
+        <h2>🎵 集中用サウンド</h2>
+        <div class="muted" style="font-size:0.85rem;margin-bottom:1rem;line-height:1.7;">
+          脳波を特定の速さに引き込むという考え方（ブレインウェーブ・エントレインメント）に基づく音です。
+          ただし<strong style="color:var(--accent);">効果は確立していません</strong>。
+          文献レビューでは質の高い研究自体が少なく、結果もそろっていません。
+          落ち着くと感じる場合に使ってください。
         </div>
+
+        <div class="opt-row">
+          <label style="flex:1;min-width:230px;">音の種類
+            <select id="bgmMode" style="width:100%;margin-top:0.35rem;">
+              <option value="pink">ピンクノイズ（拍なし・イヤホン不要）</option>
+              <option value="am">振幅変調トーン（イヤホン不要）</option>
+              <option value="binaural">バイノーラルビート（要ヘッドホン）</option>
+            </select>
+          </label>
+          <label style="flex:1;min-width:180px;">拍の速さ
+            <select id="bgmBeat" style="width:100%;margin-top:0.35rem;">
+              <option value="6">6Hz（シータ帯）</option>
+              <option value="10" selected>10Hz（アルファ帯）</option>
+              <option value="12">12Hz（アルファ上端）</option>
+            </select>
+          </label>
+        </div>
+
         <div class="row" style="align-items:center;gap:1rem;">
-          <button id="bgmToggleBtn" onclick="toggleBinauralBeat()">▶ BGM再生</button>
+          <button id="bgmToggleBtn" onclick="toggleBgm()">▶ 再生</button>
           <div style="flex:1;display:flex;flex-direction:column;">
             <label style="font-size:0.8rem;margin-bottom:0.2rem;color:var(--muted);">音量</label>
-            <input type="range" id="bgmVolume" min="0" max="0.3" step="0.01" value="0.05" style="width:100%;cursor:pointer;">
+            <input type="range" id="bgmVolume" min="0" max="0.4" step="0.01" value="0.14" style="width:100%;cursor:pointer;">
           </div>
         </div>
         <div class="muted" id="bgmStatus" style="font-size:0.8rem;margin-top:0.5rem;">停止中</div>
+        <p class="muted" style="margin-top:0.85rem;line-height:1.7;font-size:0.82rem;">
+          バイノーラルビートは左右で違う音を鳴らして頭の中でうなりを作るため、ヘッドホンが要ります。
+          また音を小さくすると感じ取れなくなるので、小音量で流すのには向きません。
+          脳波側の反応そのものは、振幅変調トーンのほうが強く出ると報告されています。<br>
+          ただし残像の長さを測っている最中は、規則的な拍がそのまま時間の目安になってしまいます。
+          計測中は<strong style="color:var(--accent);">ピンクノイズか無音</strong>をおすすめします。<br>
+          合図が鳴る瞬間は、自動で音量を下げます。
+        </p>
       </div>
 
       <div class="card">
         <h2>📐 計測の設定</h2>
 
         <div class="opt-row">
-          <input type="checkbox" id="optShowTimer">
-          <span>計測中に秒数を表示する</span>
+          <label style="flex:1;min-width:240px;">計測中の時間表示
+            <select id="optTimerDisplay" style="width:100%;margin-top:0.35rem;">
+              <option value="numbers" selected>数字とゲージ</option>
+              <option value="gauge">ゲージだけ（数字なし）</option>
+              <option value="none">表示しない</option>
+            </select>
+          </label>
         </div>
         <p class="muted" style="margin:-0.4rem 0 1rem;line-height:1.7;font-size:0.85rem;">
-          七田式の手順では、カードを見たあと目を閉じてまぶたの裏の残像を見ます。
-          数字を見ようとすると目を開けることになるので、既定では隠してあります。
-          凝視の終わりと計測の終わりは音と振動でお知らせします。
+          凝視中は、カードのすぐ下に残り時間のゲージが出ます。
+          数字は大きく目立つ位置にあるので、読もうとすると視線が中心から外れ、残像がぼやけやすくなります。
+          それが気になる場合は「ゲージだけ」にすると、視線を動かさずに残りが分かります。<br>
+          目を閉じている間は画面が見えないので、凝視の終わりと計測の終わりは音と振動でお知らせします。
         </p>
 
         <div class="opt-row">
@@ -875,7 +914,7 @@
       <div class="card">
         <h2>ℹ️ アプリについて</h2>
         <div class="muted" style="line-height:1.8;">
-          <strong>Orange Card v12</strong> - 残像トレーニング記録ツール<br>
+          <strong>Orange Card v14</strong> - 残像トレーニング記録ツール<br>
           七田式オレンジカードの残像トレーニングを記録・可視化します。<br>
           医療機器ではありません。個人情報は一切収集していません。
         </div>
@@ -922,6 +961,7 @@
       }
       wireDriveUi();
       wireMeasurementSettings();
+      wireBgmControls();
       applyCardSize();
       updateSetIndicator();
       wireGlobalEvents();
@@ -930,7 +970,7 @@
     }
 
     function wireMeasurementSettings() {
-      const showTimer = document.getElementById("optShowTimer");
+      const timerDisp = document.getElementById("optTimerDisplay");
       const cue = document.getElementById("optCue");
       const rest = document.getElementById("optRestSec");
       const dist = document.getElementById("optViewDist");
@@ -938,10 +978,10 @@
       const bar = document.getElementById("calibBar");
       const saveBtn = document.getElementById("calibSaveBtn");
       const clearBtn = document.getElementById("calibClearBtn");
-      if (!showTimer) return;
+      if (!timerDisp) return;
 
-      showTimer.checked = optShowTimer();
-      showTimer.onchange = () => localStorage.setItem("ocShowTimer", showTimer.checked ? "1" : "0");
+      timerDisp.value = optTimerDisplay();
+      timerDisp.onchange = () => localStorage.setItem("ocTimerDisplay", timerDisp.value);
       cue.checked = optCueOn();
       cue.onchange = () => { localStorage.setItem("ocCue", cue.checked ? "1" : "0"); if (cue.checked) primeCueAudio(); };
       rest.value = String(optRestSec());
@@ -1053,7 +1093,10 @@
     const TARGET_ANGLE_DEG = 10;   // 目に映る大きさ（約100mmを50cmで見たときと同じ）
     const CREDIT_CARD_MM = 85.6;   // 実寸合わせの基準
 
-    function optShowTimer() { return localStorage.getItem("ocShowTimer") === "1"; }
+    function optTimerDisplay() {
+      const v = localStorage.getItem("ocTimerDisplay");
+      return (v === "gauge" || v === "none") ? v : "numbers";
+    }
     function optCueOn() { return localStorage.getItem("ocCue") !== "0"; }
     function optRestSec() { return parseInt(localStorage.getItem("ocRestSec") ?? "10", 10) || 0; }
     function optViewDistCm() { return parseInt(localStorage.getItem("ocViewDistCm") ?? "50", 10) || 50; }
@@ -1089,19 +1132,40 @@
 
     function applyCardSize() {
       const el = document.getElementById("orangeCardFullscreen");
+      const bar = document.getElementById("stareProgress");
       if (!el) return;
+      const targets = bar ? [el, bar] : [el];
       const g = computeCardGeometry();
       if (!g) {
-        ["--card-w", "--card-h", "--card-maxw", "--card-maxh", "--circle-d", "--dot-d"]
-          .forEach(p => el.style.removeProperty(p));
+        targets.forEach(t => ["--card-w", "--card-h", "--card-maxw", "--card-maxh", "--circle-d", "--dot-d"]
+          .forEach(p => t.style.removeProperty(p)));
         return;
       }
-      el.style.setProperty("--card-w", g.wPx + "px");
+      targets.forEach(t => {
+        t.style.setProperty("--card-w", g.wPx + "px");
+        t.style.setProperty("--card-maxw", "none");
+      });
       el.style.setProperty("--card-h", g.hPx + "px");
-      el.style.setProperty("--card-maxw", "none");
       el.style.setProperty("--card-maxh", "none");
       el.style.setProperty("--circle-d", (g.wPx / 3) + "px");
       el.style.setProperty("--dot-d", (g.wPx / 30) + "px");
+    }
+
+    // 残り時間のゲージ。視線を動かさずに済むよう、カードのすぐ下に置いている
+    function startStareProgress(sec) {
+      const fill = document.getElementById("stareProgressFill");
+      if (!fill) return;
+      fill.style.transition = "none";
+      fill.style.width = "100%";
+      void fill.offsetWidth;                       // 一度描画させてから減らす
+      fill.style.transition = `width ${sec}s linear`;
+      fill.style.width = "0%";
+    }
+    function resetStareProgress() {
+      const fill = document.getElementById("stareProgressFill");
+      if (!fill) return;
+      fill.style.transition = "none";
+      fill.style.width = "100%";
     }
 
     // 記録に残す測定条件
@@ -1116,31 +1180,26 @@
     }
 
     // ===== 合図（目を閉じたままでも分かるように） =====
-    let cueCtx = null;
     function primeCueAudio() {
       if (!optCueOn()) return;
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        if (!cueCtx) cueCtx = new AC();
-        if (cueCtx.state === "suspended") cueCtx.resume();
-      } catch (e) {}
+      ensureAudioCtx();
     }
     function playCue(freq) {
       if (!optCueOn()) return;
       try { if (navigator.vibrate) navigator.vibrate(120); } catch (e) {}
       try {
-        if (!cueCtx) primeCueAudio();
-        if (!cueCtx) return;
-        const t = cueCtx.currentTime;
-        const osc = cueCtx.createOscillator();
-        const g = cueCtx.createGain();
+        const ctx = ensureAudioCtx();
+        if (!ctx) return;
+        duckBgm(1.0);                    // BGMに埋もれないように一瞬下げる
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
         osc.type = "sine";
         osc.frequency.value = freq || 880;
         g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.18, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.22, t + 0.015);
         g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
-        osc.connect(g); g.connect(cueCtx.destination);
+        osc.connect(g); g.connect(ctx.destination);
         osc.start(t); osc.stop(t + 0.36);
       } catch (e) {}
     }
@@ -1181,8 +1240,11 @@
 
       const stareSec = parseInt(document.getElementById("stareSec").value);
       const timerEl = document.getElementById("fullscreenTimer");
-      timerEl.style.display = optShowTimer() ? "" : "none";
+      const disp = optTimerDisplay();
+      timerEl.style.display = (disp === "numbers") ? "" : "none";
+      document.getElementById("stareProgress").style.display = (disp === "none") ? "none" : "";
       showOverlay("fullscreenOverlay");
+      startStareProgress(stareSec);
 
       // 経過時間はタイマーの回数ではなく時刻で測る（バックグラウンドでもズレない）
       const deadline = Date.now() + stareSec * 1000;
@@ -1226,6 +1288,7 @@
       ["fullscreenOverlay", "afterImageOverlay", "sharpnessOverlay", "restOverlay"].forEach(hideOverlay);
       const ref = document.getElementById("afterImageOverlay");
       if (ref) { ref.onpointerdown = null; ref.onclick = null; }
+      resetStareProgress();
       afterStart = null;
       currentSession = null;
       isTraining = false;
@@ -1250,7 +1313,8 @@
       hideOverlay("fullscreenOverlay");
       playCue(880);                       // 目を閉じる合図
       document.getElementById("skipFadeBtn").style.display = "none";
-      const show = optShowTimer() ? "" : "none";
+      resetStareProgress();
+      const show = (optTimerDisplay() === "numbers") ? "" : "none";
       document.getElementById("afterSecRow").style.display = show;
       document.getElementById("afterSecFadeRow").style.display = show;
 
@@ -1821,7 +1885,7 @@
     // ===== BACKUP / IMPORT / DELETE =====
     function handleBackupClick() {
       if (!sessions.length) { alert("⚠ バックアップするデータがありません。"); return; }
-      const data = { appVersion: "v12", schema: 2, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
+      const data = { appVersion: "v14", schema: 2, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
       const filename = `orange-card-backup-${new Date().toISOString().slice(0,10)}.json`;
       try {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -2132,7 +2196,7 @@
         }
 
         await driveWrite(token, syncFileId, {
-          appVersion: "v12",
+          appVersion: "v14",
           schema: 2,
           exportDate: new Date().toISOString(),
           totalSessions: sessions.length,
@@ -2149,61 +2213,170 @@
       }
     }
 
-    // ===== BINAURAL BEAT =====
-    let audioCtx = null, oscLeft = null, oscRight = null, gainNode = null, isBgmPlaying = false;
+    // ===== 集中用サウンド =====
+    // 3種類：ピンクノイズ（拍なし）／振幅変調トーン／バイノーラルビート
+    let audioCtx = null, bgmNodes = [], bgmMaster = null, isBgmPlaying = false;
 
-    function toggleBinauralBeat() {
+    function ensureAudioCtx() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!audioCtx) audioCtx = new AC();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        return audioCtx;
+      } catch (e) { return null; }
+    }
+
+    function bgmVolume() {
+      const el = document.getElementById("bgmVolume");
+      const v = el ? parseFloat(el.value) : 0.14;
+      return Number.isFinite(v) ? Math.max(0.0001, v) : 0.14;
+    }
+
+    // ピンクノイズを一度作ってループする（Paul Kellett の近似フィルタ）
+    function makePinkNoiseBuffer(ctx, seconds) {
+      const len = Math.floor(ctx.sampleRate * seconds);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < len; i++) {
+        const w = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + w * 0.0555179;
+        b1 = 0.99332 * b1 + w * 0.0750759;
+        b2 = 0.96900 * b2 + w * 0.1538520;
+        b3 = 0.86650 * b3 + w * 0.3104856;
+        b4 = 0.55000 * b4 + w * 0.5329522;
+        b5 = -0.7616 * b5 - w * 0.0168980;
+        d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+        b6 = w * 0.115926;
+      }
+      return buf;
+    }
+
+    function rampTo(param, value, seconds) {
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const safe = Math.max(0.0001, value);
+      param.cancelScheduledValues(t);
+      param.setValueAtTime(Math.max(0.0001, param.value), t);
+      param.exponentialRampToValueAtTime(safe, t + seconds);
+    }
+
+    function stopBgm(immediate) {
+      const fade = immediate ? 0.05 : 0.5;
+      if (bgmMaster && audioCtx) rampTo(bgmMaster.gain, 0.0001, fade);
+      const nodes = bgmNodes, master = bgmMaster;
+      bgmNodes = []; bgmMaster = null; isBgmPlaying = false;
+      setTimeout(() => {
+        nodes.forEach(n => {
+          try { if (n.stop) n.stop(); } catch (e) {}
+          try { n.disconnect(); } catch (e) {}
+        });
+        try { if (master) master.disconnect(); } catch (e) {}
+      }, fade * 1000 + 120);
       const btn = document.getElementById("bgmToggleBtn");
-      const statusEl = document.getElementById("bgmStatus");
-      const volSlider = document.getElementById("bgmVolume");
+      if (btn) { btn.textContent = "▶ 再生"; btn.classList.remove("danger"); }
+      setText("bgmStatus", "停止中");
+    }
 
-      if (isBgmPlaying) {
-        if (oscLeft) { oscLeft.stop(); oscLeft.disconnect(); oscLeft = null; }
-        if (oscRight) { oscRight.stop(); oscRight.disconnect(); oscRight = null; }
-        if (gainNode) { gainNode.disconnect(); gainNode = null; }
-        isBgmPlaying = false;
-        btn.textContent = "▶ BGM再生"; btn.classList.remove("danger");
-        statusEl.textContent = "停止中";
+    function toggleBgm() {
+      if (isBgmPlaying) { stopBgm(); return; }
+      const ctx = ensureAudioCtx();
+      if (!ctx) { alert("この端末では音を鳴らせませんでした。"); return; }
+
+      const mode = document.getElementById("bgmMode").value;
+      const beat = parseFloat(document.getElementById("bgmBeat").value) || 10;
+      const carrier = 432;
+      const nodes = [];
+      let status = "";
+
+      const master = ctx.createGain();
+      master.gain.value = 0.0001;
+      master.connect(ctx.destination);
+
+      try {
+        if (mode === "pink") {
+          const src = ctx.createBufferSource();
+          src.buffer = makePinkNoiseBuffer(ctx, 4);
+          src.loop = true;
+          const lp = ctx.createBiquadFilter();
+          lp.type = "lowpass"; lp.frequency.value = 1800;
+          src.connect(lp); lp.connect(master);
+          src.start();
+          nodes.push(src, lp);
+          status = "再生中：ピンクノイズ（拍なし・計測向き）";
+        } else if (mode === "am") {
+          // 搬送波の音量を拍の速さで上下させる（アイソクロニックトーンと同じ仲間）
+          const osc = ctx.createOscillator();
+          osc.type = "sine"; osc.frequency.value = carrier;
+          const am = ctx.createGain();
+          am.gain.value = 0.5;
+          const lfo = ctx.createOscillator();
+          lfo.type = "sine"; lfo.frequency.value = beat;
+          const lfoGain = ctx.createGain();
+          lfoGain.gain.value = 0.5;
+          lfo.connect(lfoGain); lfoGain.connect(am.gain);
+          osc.connect(am); am.connect(master);
+          osc.start(); lfo.start();
+          nodes.push(osc, lfo, lfoGain, am);
+          status = `再生中：振幅変調トーン ${carrier}Hz を ${beat}Hz で強弱`;
+        } else {
+          // 左右を確実に分けるため ChannelMerger を使う（パンの計算を通さない）
+          const merger = ctx.createChannelMerger(2);
+          const l = ctx.createOscillator(); l.type = "sine"; l.frequency.value = carrier;
+          const r = ctx.createOscillator(); r.type = "sine"; r.frequency.value = carrier + beat;
+          l.connect(merger, 0, 0);
+          r.connect(merger, 0, 1);
+          merger.connect(master);
+          l.start(); r.start();
+          nodes.push(l, r, merger);
+          status = `再生中：L ${carrier}Hz / R ${carrier + beat}Hz（差 ${beat}Hz・ヘッドホン必須）`;
+        }
+      } catch (e) {
+        try { master.disconnect(); } catch (e2) {}
+        alert("音を作れませんでした。");
         return;
       }
 
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtx) audioCtx = new AC();
-        else if (audioCtx.state === "suspended") audioCtx.resume();
+      bgmNodes = nodes; bgmMaster = master; isBgmPlaying = true;
+      rampTo(master.gain, bgmVolume(), 0.6);   // フェードインでプツッという音を防ぐ
 
-        const baseFreq = 432, beatFreq = 10;
-        gainNode = audioCtx.createGain();
-        gainNode.gain.value = volSlider ? parseFloat(volSlider.value) : 0.05;
-        gainNode.connect(audioCtx.destination);
-
-        oscLeft = audioCtx.createOscillator(); oscLeft.type = "sine"; oscLeft.frequency.value = baseFreq;
-        const panL = audioCtx.createStereoPanner(); panL.pan.value = -1;
-        oscLeft.connect(panL); panL.connect(gainNode);
-
-        oscRight = audioCtx.createOscillator(); oscRight.type = "sine"; oscRight.frequency.value = baseFreq + beatFreq;
-        const panR = audioCtx.createStereoPanner(); panR.pan.value = 1;
-        oscRight.connect(panR); panR.connect(gainNode);
-
-        const now = audioCtx.currentTime;
-        oscLeft.start(now); oscRight.start(now);
-
-        isBgmPlaying = true;
-        btn.textContent = "⏹ 停止"; btn.classList.add("danger");
-        statusEl.textContent = `再生中: L=${baseFreq}Hz / R=${baseFreq+beatFreq}Hz (差分${beatFreq}Hz)`;
-      } catch (e) { alert("オーディオの再生に失敗しました。"); }
+      const btn = document.getElementById("bgmToggleBtn");
+      if (btn) { btn.textContent = "⏹ 停止"; btn.classList.add("danger"); }
+      setText("bgmStatus", status);
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
+    // 合図が鳴る瞬間だけBGMを下げる
+    function duckBgm(seconds) {
+      if (!isBgmPlaying || !bgmMaster || !audioCtx) return;
+      const t = audioCtx.currentTime;
+      const v = bgmVolume();
+      bgmMaster.gain.cancelScheduledValues(t);
+      bgmMaster.gain.setValueAtTime(Math.max(0.0001, bgmMaster.gain.value), t);
+      bgmMaster.gain.exponentialRampToValueAtTime(Math.max(0.0001, v * 0.15), t + 0.06);
+      bgmMaster.gain.exponentialRampToValueAtTime(v, t + (seconds || 1.0));
+    }
+
+    function wireBgmControls() {
+      const mode = document.getElementById("bgmMode");
+      const beat = document.getElementById("bgmBeat");
       const vol = document.getElementById("bgmVolume");
-      if (vol) vol.addEventListener("input", e => {
-        if (isBgmPlaying && gainNode) gainNode.gain.setTargetAtTime(parseFloat(e.target.value), audioCtx.currentTime, 0.1);
-      });
-    });
+      if (!mode) return;
+      mode.value = localStorage.getItem("ocBgmMode") || "pink";
+      beat.value = localStorage.getItem("ocBgmBeat") || "10";
+      vol.value = localStorage.getItem("ocBgmVol") || "0.14";
+      const restart = () => { if (isBgmPlaying) { stopBgm(true); setTimeout(toggleBgm, 160); } };
+      mode.onchange = () => { localStorage.setItem("ocBgmMode", mode.value); restart(); };
+      beat.onchange = () => { localStorage.setItem("ocBgmBeat", beat.value); restart(); };
+      vol.oninput = () => {
+        localStorage.setItem("ocBgmVol", vol.value);
+        if (isBgmPlaying && bgmMaster && audioCtx) bgmMaster.gain.setTargetAtTime(bgmVolume(), audioCtx.currentTime, 0.1);
+      };
+    }
 
     window.addEventListener("beforeunload", () => {
-      if (isBgmPlaying) { try { oscLeft?.stop(); oscRight?.stop(); } catch(e){} }
-      if (audioCtx) { try { audioCtx.close(); } catch(e){} }
+      if (isBgmPlaying) stopBgm(true);
+      if (audioCtx) { try { audioCtx.close(); } catch (e) {} }
     });
   </script>
 </body>
