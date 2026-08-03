@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v14 - 残像トレーニング記録</title>
+  <title>Orange Card v15 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -66,6 +66,7 @@
     .fullscreen-overlay { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 99999; visibility: hidden; opacity: 0; transition: all 0.3s ease; }
     .fullscreen-overlay.show { visibility: visible !important; opacity: 1 !important; }
     .fullscreen-overlay.hidden { visibility: hidden !important; opacity: 0 !important; }
+    .fullscreen-overlay.instant, .overlay.instant { transition: none !important; }
     .fullscreen-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; width: 100%; height: 100%; }
     .card-stack { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
     .stare-progress { width: var(--card-w, 80vw); max-width: var(--card-maxw, 600px); height: 5px; border-radius: 999px; background: rgba(255,255,255,0.15); overflow: hidden; }
@@ -914,7 +915,7 @@
       <div class="card">
         <h2>ℹ️ アプリについて</h2>
         <div class="muted" style="line-height:1.8;">
-          <strong>Orange Card v14</strong> - 残像トレーニング記録ツール<br>
+          <strong>Orange Card v15</strong> - 残像トレーニング記録ツール<br>
           七田式オレンジカードの残像トレーニングを記録・可視化します。<br>
           医療機器ではありません。個人情報は一切収集していません。
         </div>
@@ -1211,8 +1212,31 @@
       if (restTimer !== null) { clearInterval(restTimer); restTimer = null; }
     }
 
-    function showOverlay(id) { const el = document.getElementById(id); if (el) { el.classList.remove("hidden"); el.classList.add("show"); } }
-    function hideOverlay(id) { const el = document.getElementById(id); if (el) { el.classList.remove("show"); el.classList.add("hidden"); } }
+    const FADE_MS = 320;   // .fullscreen-overlay の transition と合わせる
+
+    function showOverlay(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("instant", "hidden");
+      el.classList.add("show");
+    }
+
+    // instant = true で、フェードを待たずに即座に消す。
+    // 消えるまでの間に前の画面が透けて見えるのを防ぐために使う。
+    function hideOverlay(id, instant) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (instant) {
+        el.classList.add("instant");
+        el.classList.remove("show");
+        el.classList.add("hidden");
+        void el.offsetWidth;                   // 反映させてから transition を戻す
+        setTimeout(() => el.classList.remove("instant"), 0);
+      } else {
+        el.classList.remove("show");
+        el.classList.add("hidden");
+      }
+    }
 
     let setTotal = 1, setIndex = 0, restTimer = null;
 
@@ -1241,19 +1265,28 @@
       const stareSec = parseInt(document.getElementById("stareSec").value);
       const timerEl = document.getElementById("fullscreenTimer");
       const disp = optTimerDisplay();
+
+      // 表示する中身を先に整えてから画面を出す。
+      // 順番が逆だと、フェードインの間だけ前回の値（0 など）が見えてしまう。
+      timerEl.textContent = stareSec;
+      resetStareProgress();
       timerEl.style.display = (disp === "numbers") ? "" : "none";
       document.getElementById("stareProgress").style.display = (disp === "none") ? "none" : "";
-      showOverlay("fullscreenOverlay");
-      startStareProgress(stareSec);
 
-      // 経過時間はタイマーの回数ではなく時刻で測る（バックグラウンドでもズレない）
-      const deadline = Date.now() + stareSec * 1000;
-      timerEl.textContent = stareSec;
-      countdownTimer = setInterval(() => {
-        const left = Math.ceil((deadline - Date.now()) / 1000);
-        timerEl.textContent = Math.max(0, left);
-        if (left <= 0) { clearInterval(countdownTimer); countdownTimer = null; startAfterImage(); }
-      }, 200);
+      showOverlay("fullscreenOverlay");
+
+      // カードが完全に出てから数え始める。
+      // フェード中に始めると、その分だけ実際に見えていた時間が短くなる。
+      stareTimer = setTimeout(() => {
+        stareTimer = null;
+        startStareProgress(stareSec);
+        const deadline = Date.now() + stareSec * 1000;
+        countdownTimer = setInterval(() => {
+          const left = Math.ceil((deadline - Date.now()) / 1000);
+          timerEl.textContent = Math.max(0, left);
+          if (left <= 0) { clearInterval(countdownTimer); countdownTimer = null; startAfterImage(); }
+        }, 200);
+      }, FADE_MS);
     }
 
     // ===== セット間の休憩 =====
@@ -1267,17 +1300,26 @@
       restTimer = setInterval(() => {
         const left = Math.ceil((deadline - Date.now()) / 1000);
         setText("restTimer", Math.max(0, left));
-        if (left <= 0) { clearInterval(restTimer); restTimer = null; hideOverlay("restOverlay"); handleStartClick(); }
+        if (left <= 0) { clearInterval(restTimer); restTimer = null; closeRest(); handleStartClick(); }
       }, 200);
     }
+
+    // 休憩画面は半透明なので、消えきる前に次のカードが出ると
+    // 休憩の残り秒数が透けて重なって見える。即座に消し、文字も消しておく。
+    function closeRest() {
+      hideOverlay("restOverlay", true);
+      setText("restTimer", "");
+      setText("restProgress", "");
+    }
+
     function skipRest() {
       if (restTimer !== null) { clearInterval(restTimer); restTimer = null; }
-      hideOverlay("restOverlay");
+      closeRest();
       handleStartClick();
     }
     function stopSets() {
       if (restTimer !== null) { clearInterval(restTimer); restTimer = null; }
-      hideOverlay("restOverlay");
+      closeRest();
       setIndex = 0; setTotal = 1;
       updateSetIndicator();
     }
@@ -1285,7 +1327,10 @@
     function cancelTraining(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       clearAllTimers();
-      ["fullscreenOverlay", "afterImageOverlay", "sharpnessOverlay", "restOverlay"].forEach(hideOverlay);
+      ["fullscreenOverlay", "afterImageOverlay", "sharpnessOverlay", "restOverlay"]
+        .forEach(id => hideOverlay(id, true));
+      setText("restTimer", "");
+      setText("restProgress", "");
       const ref = document.getElementById("afterImageOverlay");
       if (ref) { ref.onpointerdown = null; ref.onclick = null; }
       resetStareProgress();
@@ -1310,7 +1355,9 @@
     }
 
     function startAfterImage() {
-      hideOverlay("fullscreenOverlay");
+      // 即座に消す。フェードで残すと、目を閉じる合図のあと 0.3 秒ぶん
+      // カードが光ったままになり、残像の測定に混ざる。
+      hideOverlay("fullscreenOverlay", true);
       playCue(880);                       // 目を閉じる合図
       document.getElementById("skipFadeBtn").style.display = "none";
       resetStareProgress();
@@ -1379,7 +1426,7 @@
       const ref = document.getElementById("afterImageOverlay");
       ref.onclick = null; ref.onpointerdown = null;
       afterStart = null;
-      hideOverlay("afterImageOverlay");
+      hideOverlay("afterImageOverlay", true);
       playCue(520);                       // 目を開けてよい合図
       releaseWakeLock();
       setTimeout(() => showSharpnessSelection(parseInt(document.getElementById("stareSec").value), afterSharpSec, afterFadeSec), 150);
@@ -1885,7 +1932,7 @@
     // ===== BACKUP / IMPORT / DELETE =====
     function handleBackupClick() {
       if (!sessions.length) { alert("⚠ バックアップするデータがありません。"); return; }
-      const data = { appVersion: "v14", schema: 2, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
+      const data = { appVersion: "v15", schema: 2, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
       const filename = `orange-card-backup-${new Date().toISOString().slice(0,10)}.json`;
       try {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -2196,7 +2243,7 @@
         }
 
         await driveWrite(token, syncFileId, {
-          appVersion: "v14",
+          appVersion: "v15",
           schema: 2,
           exportDate: new Date().toISOString(),
           totalSessions: sessions.length,
