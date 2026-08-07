@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v15 - 残像トレーニング記録</title>
+  <title>Orange Card v15.1 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -70,7 +70,8 @@
     .fullscreen-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; width: 100%; height: 100%; }
     .card-stack { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
     .stare-progress { width: var(--card-w, 80vw); max-width: var(--card-maxw, 600px); height: 5px; border-radius: 999px; background: rgba(255,255,255,0.15); overflow: hidden; }
-    .stare-progress-fill { height: 100%; width: 100%; background: var(--accent); border-radius: 999px; }
+    /* 残り時間ゲージ。所要時間は --stare-dur で渡す（prefers-reduced-motion でも止めない） */
+    .stare-progress-fill { height: 100%; width: 100%; background: var(--accent); border-radius: 999px; transition: width var(--stare-dur, 0s) linear; }
     .fullscreen-timer { font-size: 4rem; font-weight: 1000; color: var(--accent); text-shadow: 0 0 20px rgba(255,152,0,0.8); font-family: "Courier New", monospace; letter-spacing: 0.1em; }
     .fullscreen-label { font-size: 1.5rem; color: var(--accent); text-align: center; }
     .fullscreen-instruction { position: absolute; bottom: 2rem; color: var(--muted); font-size: 1rem; text-align: center; opacity: 0.7; }
@@ -161,7 +162,9 @@
     .opt-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.85rem; flex-wrap: wrap; color: var(--text); font-size: 0.92rem; }
     .opt-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
     .calib-box { border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin-top: 1rem; }
-    .calib-bar { height: 54px; border-radius: 6px; background: linear-gradient(135deg, #2b6cb0, #1e88e5); border: 2px solid #90caf9; max-width: 100%; }
+    /* 画面幅より広くしないと実寸に届かない端末があるので、はみ出しは横スクロールで見せる */
+    .calib-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 0.35rem; }
+    .calib-bar { height: 54px; border-radius: 6px; background: linear-gradient(135deg, #2b6cb0, #1e88e5); border: 2px solid #90caf9; }
     .calib-range { width: 100%; margin: 0.85rem 0 0.5rem; accent-color: var(--accent); }
     .cond-warn { border-left: 3px solid var(--danger); background: rgba(229,57,53,0.08); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.88rem; line-height: 1.6; color: var(--text); }
     .set-indicator { color: var(--accent); font-weight: 800; font-size: 0.9rem; margin-top: 0.6rem; }
@@ -175,7 +178,11 @@
     .sync-dot.ok { background: var(--green); }
     .sync-dot.busy { background: var(--accent); }
     .sync-dot.err { background: var(--danger); }
-    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+      /* ゲージだけは例外。ここを止めると残り時間の手がかりが完全になくなる */
+      .stare-progress-fill { transition: width var(--stare-dur, 0s) linear !important; }
+    }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     /* ===== RESPONSIVE ===== */
@@ -309,6 +316,7 @@
 
       <!-- Rest Between Sets -->
       <div id="restOverlay" class="overlay">
+        <button class="overlay-cancel" type="button" onclick="stopSets(event)">✕ 中止</button>
         <div class="overlay-inner">
           <div class="small" id="restProgress">1 / 3 回 終了</div>
           <div class="big">🌙 目を休めてください</div>
@@ -537,12 +545,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr data-stare="5" data-after="30"><td class="pattern-name">A</td><td>5</td><td>30</td><td>6.0倍</td><td>超高効率型：最小の凝視で長い残像を生成</td></tr>
-              <tr data-stare="10" data-after="30"><td class="pattern-name">B</td><td>10</td><td>30</td><td>3.0倍</td><td>高効率型：短い凝視で安定した残像</td></tr>
-              <tr data-stare="15" data-after="30"><td class="pattern-name">C</td><td>15</td><td>30</td><td>2.0倍</td><td>バランス型：凝視と残像のバランスが良い</td></tr>
-              <tr data-stare="20" data-after="30"><td class="pattern-name">D</td><td>20</td><td>30</td><td>1.5倍</td><td>標準型：十分な凝視で安定した残像</td></tr>
-              <tr data-stare="30" data-after="30"><td class="pattern-name">E</td><td>30</td><td>30</td><td>1.0倍</td><td>長凝視型：凝視時間に比例した残像</td></tr>
-              <tr data-stare="30" data-after="60"><td class="pattern-name">F</td><td>30</td><td>60</td><td>2.0倍</td><td>持久型：長い凝視と長い残像の両方</td></tr>
+              <tr data-pattern="A" data-stare="5" data-after="30"><td class="pattern-name">A</td><td>5</td><td>30</td><td>6.0倍</td><td>超高効率型：最小の凝視で長い残像を生成</td></tr>
+              <tr data-pattern="B" data-stare="10" data-after="30"><td class="pattern-name">B</td><td>10</td><td>30</td><td>3.0倍</td><td>高効率型：短い凝視で安定した残像</td></tr>
+              <tr data-pattern="C" data-stare="15" data-after="30"><td class="pattern-name">C</td><td>15</td><td>30</td><td>2.0倍</td><td>バランス型：凝視と残像のバランスが良い</td></tr>
+              <tr data-pattern="D" data-stare="20" data-after="30"><td class="pattern-name">D</td><td>20</td><td>30</td><td>1.5倍</td><td>標準型：十分な凝視で安定した残像</td></tr>
+              <tr data-pattern="E" data-stare="30" data-after="30"><td class="pattern-name">E</td><td>30</td><td>30</td><td>1.0倍</td><td>長凝視型：凝視時間に比例した残像</td></tr>
+              <tr data-pattern="F" data-stare="30" data-after="60"><td class="pattern-name">F</td><td>30</td><td>60</td><td>2.0倍</td><td>持久型：長い凝視と長い残像の両方</td></tr>
             </tbody>
           </table>
         </div>
@@ -864,12 +872,26 @@
           <div style="font-weight:700;margin-bottom:0.5rem;">カードの見かけの大きさをそろえる（任意）</div>
           <p class="muted" style="margin:0 0 0.85rem;line-height:1.7;font-size:0.85rem;">
             端末によって画面の細かさが違うので、同じ「画面の80%」でも実際の大きさは変わります。
-            下の青いバーの幅を、手元のクレジットカードの長辺（85.6mm）にぴったり合わせて保存すると、
+            下の青いバーの幅を、手元のクレジットカードの辺にぴったり合わせて保存すると、
             スマホでもPCでも目に映る大きさが同じになるようにカードを描きます。
           </p>
-          <div class="calib-bar" id="calibBar" style="width:340px;"></div>
-          <input class="calib-range" type="range" id="calibRange" min="120" max="1200" value="340">
+          <div class="opt-row">
+            <label style="flex:1;min-width:230px;">合わせる辺
+              <select id="calibEdge" style="width:100%;margin-top:0.35rem;">
+                <option value="85.6">長辺 85.6mm（横向きに置く）</option>
+                <option value="53.98">短辺 53.98mm（縦向きに置く・スマホ向き）</option>
+              </select>
+            </label>
+          </div>
+          <div class="calib-scroll">
+            <div class="calib-bar" id="calibBar" style="width:340px;"></div>
+          </div>
+          <input class="calib-range" type="range" id="calibRange" min="60" max="1600" value="340">
           <div class="muted" id="calibInfo" style="line-height:1.6;">未設定（画面の割合で表示しています）</div>
+          <p class="muted" style="margin:0.5rem 0 0;line-height:1.6;font-size:0.8rem;">
+            バーが画面からはみ出すときは、バーの上を横にスクロールすると続きが見えます。
+            スマホでは「短辺」のほうが画面に収まりやすく、合わせやすいです。
+          </p>
           <div class="row" style="margin-top:0.85rem;">
             <button id="calibSaveBtn" class="secondary">この幅で保存</button>
             <button id="calibClearBtn" class="secondary">設定を消す</button>
@@ -915,7 +937,7 @@
       <div class="card">
         <h2>ℹ️ アプリについて</h2>
         <div class="muted" style="line-height:1.8;">
-          <strong>Orange Card v15</strong> - 残像トレーニング記録ツール<br>
+          <strong>Orange Card v15.1</strong> - 残像トレーニング記録ツール<br>
           七田式オレンジカードの残像トレーニングを記録・可視化します。<br>
           医療機器ではありません。個人情報は一切収集していません。
         </div>
@@ -940,6 +962,8 @@
     let sessions = [];
     let stareTimer = null, afterTimer = null, afterStart = null;
     let afterSharpSec = null, afterFadeSec = null, afterClickStage = 0;
+    let stareEndTimer = null, sharpnessTimer = null;
+    let currentStareSec = 30;   // 開始時に確定させる（終了時に読み直すとズレる）
     let selectedSharpness = 5;
     let selectedAfterimageColor = null;
     let isTraining = false, currentSession = null;
@@ -949,25 +973,52 @@
     // ===== INIT =====
     window.addEventListener("load", initApp);
 
+    // 1つが失敗しても残りの初期化は続ける。
+    // （以前は Chart.js が読めないだけで、設定・同期・Escが丸ごと配線されないまま起動していた）
+    function step(name, fn) {
+      try { fn(); } catch (e) { console.error("初期化に失敗:", name, e); }
+    }
+
     function initApp() {
-      initTabs();
-      initSharpnessListeners();
-      loadSessions();
-      refreshDashboard();
-      // Show quick stats and mini chart if data exists
-      if (sessions.length > 0) {
-        document.getElementById("quickStats").style.display = "block";
-        document.getElementById("sessionHint").style.display = "none";
-        updateMiniChart();
-      }
-      wireDriveUi();
-      wireMeasurementSettings();
-      wireBgmControls();
-      applyCardSize();
-      updateSetIndicator();
-      wireGlobalEvents();
-      registerServiceWorker();
+      step("tabs", initTabs);
+      step("sharpness", initSharpnessListeners);
+      step("load", loadSessions);
+      step("dashboard", refreshDashboard);
+      step("quickStats", () => {
+        if (sessions.length > 0) {
+          document.getElementById("quickStats").style.display = "block";
+          document.getElementById("sessionHint").style.display = "none";
+          updateMiniChart();
+        }
+      });
+      step("driveUi", wireDriveUi);
+      step("measurement", wireMeasurementSettings);
+      step("bgm", wireBgmControls);
+      step("cardSize", applyCardSize);
+      step("setIndicator", updateSetIndicator);
+      step("globalEvents", wireGlobalEvents);
+      step("serviceWorker", registerServiceWorker);
+      step("chartCheck", warnIfChartMissing);
       waitForGoogleIdentity().then(initGoogleIdentity);
+    }
+
+    // グラフ描画ライブラリが用意できているか
+    function chartReady() { return typeof window.Chart === "function"; }
+
+    function warnIfChartMissing() {
+      if (chartReady()) return;
+      // グラフだけ出ない状態。記録も同期もそのまま使えることを伝える
+      ["quickStats", "afterImageChart", "efficiencyChart", "sharpnessChart"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const box = el.closest(".card") || el;
+        if (box.querySelector(".chart-missing")) return;
+        const p = document.createElement("div");
+        p.className = "muted chart-missing";
+        p.style.cssText = "font-size:0.85rem;padding:0.5rem 0;";
+        p.textContent = "グラフの表示に必要なファイルを読み込めませんでした（オフラインなど）。記録と同期は通常どおり使えます。";
+        box.appendChild(p);
+      });
     }
 
     function wireMeasurementSettings() {
@@ -997,12 +1048,22 @@
       dist.value = String(optViewDistCm());
       dist.onchange = () => { localStorage.setItem("ocViewDistCm", dist.value); applyCardSize(); updateCalibInfo(); };
 
-      const saved = optPxPerMm();
-      if (saved) range.value = String(Math.round(saved * CREDIT_CARD_MM));
-      bar.style.width = range.value + "px";
+      const edge = document.getElementById("calibEdge");
+      edge.value = String(optCalibEdgeMm());
+      const syncRangeToSaved = () => {
+        const saved = optPxPerMm();
+        if (saved) range.value = String(Math.round(saved * optCalibEdgeMm()));
+        bar.style.width = range.value + "px";
+      };
+      edge.onchange = () => {
+        localStorage.setItem("ocCalibEdgeMm", edge.value);
+        syncRangeToSaved();
+        updateCalibInfo();
+      };
+      syncRangeToSaved();
       range.oninput = () => { bar.style.width = range.value + "px"; };
       saveBtn.onclick = () => {
-        localStorage.setItem("ocPxPerMm", String(Number(range.value) / CREDIT_CARD_MM));
+        localStorage.setItem("ocPxPerMm", String(Number(range.value) / optCalibEdgeMm()));
         applyCardSize();
         updateCalibInfo();
       };
@@ -1021,11 +1082,18 @@
       if (!g) { el.textContent = "未設定（画面の割合で表示しています）"; return; }
       el.textContent = `${optViewDistCm()}cm から見て 幅${g.widthMm.toFixed(0)}mm・視角${g.angle.toFixed(1)}° で表示します`
         + (g.clamped ? "（画面に収まらないため縮めています）" : "");
+      const need = document.getElementById("calibRange");
+      if (need && Number(need.value) > (need.parentElement?.clientWidth || 0)) {
+        el.textContent += " ／ バーは画面をはみ出しています（横スクロールで確認できます）";
+      }
     }
 
     function wireGlobalEvents() {
       document.addEventListener("keydown", e => {
-        if (e.key !== "Escape" || !isTraining) return;
+        if (e.key !== "Escape") return;
+        // 休憩中は isTraining が false。ここでもEscでやめられるようにする
+        if (isResting()) { stopSets(); return; }
+        if (!isTraining) return;
         // 記録画面（測定済み）でのEscでは消さない。凝視中・残像計測中だけ中止する。
         if (document.getElementById("sharpnessOverlay").classList.contains("show")) return;
         cancelTraining();
@@ -1102,6 +1170,10 @@
     function optRestSec() { return parseInt(localStorage.getItem("ocRestSec") ?? "10", 10) || 0; }
     function optViewDistCm() { return parseInt(localStorage.getItem("ocViewDistCm") ?? "50", 10) || 50; }
     function optPxPerMm() { const v = parseFloat(localStorage.getItem("ocPxPerMm") || "0"); return v > 0 ? v : null; }
+    function optCalibEdgeMm() {
+      const v = parseFloat(localStorage.getItem("ocCalibEdgeMm") || "");
+      return (v === 53.98 || v === CREDIT_CARD_MM) ? v : CREDIT_CARD_MM;
+    }
 
     function deviceLabel() {
       let v = localStorage.getItem("ocDeviceLabel");
@@ -1123,7 +1195,7 @@
       if (!pxPerMm) return null;
       const distMm = optViewDistCm() * 10;
       let wPx = 2 * distMm * Math.tan((TARGET_ANGLE_DEG / 2) * Math.PI / 180) * pxPerMm;
-      let hPx = wPx * 0.75;
+      let hPx = wPx * CARD_ASPECT;
       const scale = Math.min(1, (window.innerWidth * 0.92) / wPx, (window.innerHeight * 0.72) / hPx);
       wPx *= scale; hPx *= scale;
       const widthMm = wPx / pxPerMm;
@@ -1131,17 +1203,22 @@
       return { wPx, hPx, widthMm, angle, clamped: scale < 1 };
     }
 
+    const CARD_ASPECT = 0.75;   // 実物のオレンジカードと同じ横長 4:3
+
+    // 較正していないときの大きさ。較正済みと同じ「横長・円=幅/3・点=幅/30」を保つ。
+    // （以前は 80vw × 60vh だったため、スマホでは縦長になり、
+    //   円の比率も較正の有無で 64% と 33% ほど違っていた）
+    function fallbackCardGeometry() {
+      const wPx = Math.min(window.innerWidth * 0.86, (window.innerHeight * 0.62) / CARD_ASPECT, 620);
+      return { wPx, hPx: wPx * CARD_ASPECT };
+    }
+
     function applyCardSize() {
       const el = document.getElementById("orangeCardFullscreen");
       const bar = document.getElementById("stareProgress");
       if (!el) return;
       const targets = bar ? [el, bar] : [el];
-      const g = computeCardGeometry();
-      if (!g) {
-        targets.forEach(t => ["--card-w", "--card-h", "--card-maxw", "--card-maxh", "--circle-d", "--dot-d"]
-          .forEach(p => t.style.removeProperty(p)));
-        return;
-      }
+      const g = computeCardGeometry() || fallbackCardGeometry();
       targets.forEach(t => {
         t.style.setProperty("--card-w", g.wPx + "px");
         t.style.setProperty("--card-maxw", "none");
@@ -1153,19 +1230,21 @@
     }
 
     // 残り時間のゲージ。視線を動かさずに済むよう、カードのすぐ下に置いている
+    // 所要時間は CSS変数で渡す。inline の transition だと
+    // prefers-reduced-motion の「* { transition: none !important }」に打ち消されてしまう
     function startStareProgress(sec) {
       const fill = document.getElementById("stareProgressFill");
       if (!fill) return;
-      fill.style.transition = "none";
+      fill.style.setProperty("--stare-dur", "0s");
       fill.style.width = "100%";
       void fill.offsetWidth;                       // 一度描画させてから減らす
-      fill.style.transition = `width ${sec}s linear`;
+      fill.style.setProperty("--stare-dur", sec + "s");
       fill.style.width = "0%";
     }
     function resetStareProgress() {
       const fill = document.getElementById("stareProgressFill");
       if (!fill) return;
-      fill.style.transition = "none";
+      fill.style.setProperty("--stare-dur", "0s");
       fill.style.width = "100%";
     }
 
@@ -1207,9 +1286,12 @@
 
     function clearAllTimers() {
       if (stareTimer !== null) { clearTimeout(stareTimer); stareTimer = null; }
+      if (stareEndTimer !== null) { clearTimeout(stareEndTimer); stareEndTimer = null; }
       if (afterTimer !== null) { clearInterval(afterTimer); afterTimer = null; }
       if (countdownTimer !== null) { clearInterval(countdownTimer); countdownTimer = null; }
       if (restTimer !== null) { clearInterval(restTimer); restTimer = null; }
+      // 中止したのに 0.15 秒後に記録画面が開いてしまうのを防ぐ
+      if (sharpnessTimer !== null) { clearTimeout(sharpnessTimer); sharpnessTimer = null; }
     }
 
     const FADE_MS = 320;   // .fullscreen-overlay の transition と合わせる
@@ -1262,7 +1344,8 @@
       updateSetIndicator();
       applyCardSize();
 
-      const stareSec = parseInt(document.getElementById("stareSec").value);
+      const stareSec = parseInt(document.getElementById("stareSec").value, 10) || 30;
+      currentStareSec = stareSec;
       const timerEl = document.getElementById("fullscreenTimer");
       const disp = optTimerDisplay();
 
@@ -1281,11 +1364,18 @@
         stareTimer = null;
         startStareProgress(stareSec);
         const deadline = Date.now() + stareSec * 1000;
+        // 表示の更新と、凝視の終了は別々に持つ。
+        // interval だけで終わりを判定すると、最大 200ms ぶん凝視が延びていた
         countdownTimer = setInterval(() => {
           const left = Math.ceil((deadline - Date.now()) / 1000);
           timerEl.textContent = Math.max(0, left);
-          if (left <= 0) { clearInterval(countdownTimer); countdownTimer = null; startAfterImage(); }
         }, 200);
+        stareEndTimer = setTimeout(() => {
+          stareEndTimer = null;
+          if (countdownTimer !== null) { clearInterval(countdownTimer); countdownTimer = null; }
+          timerEl.textContent = "0";
+          startAfterImage();
+        }, stareSec * 1000);
       }, FADE_MS);
     }
 
@@ -1317,12 +1407,15 @@
       closeRest();
       handleStartClick();
     }
-    function stopSets() {
+    function stopSets(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       if (restTimer !== null) { clearInterval(restTimer); restTimer = null; }
       closeRest();
       setIndex = 0; setTotal = 1;
       updateSetIndicator();
+      document.getElementById("startBtn").disabled = false;
     }
+    function isResting() { return document.getElementById("restOverlay")?.classList.contains("show"); }
 
     function cancelTraining(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -1383,7 +1476,7 @@
         const sharpEl = document.getElementById("afterSec");
         if (sharpEl) sharpEl.textContent = (afterSharpSec ?? elapsed).toFixed(1);
         const fadeEl = document.getElementById("afterSecFade");
-        if (fadeEl) fadeEl.textContent = (afterFadeSec ?? elapsed).toFixed(1);
+        if (fadeEl) fadeEl.textContent = (afterFadeSec ?? elapsed).toFixed(1);   // 計測中は経過秒
       }, 100);
 
       afterOverlay.onpointerdown = endAfterImage;
@@ -1415,12 +1508,14 @@
     function skipFadeStage(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       if (!afterStart || afterClickStage === 0) return;
-      afterFadeSec = afterSharpSec;
+      // 「測ったら鮮明と同じだった」と区別するため、とばした場合は未測定(null)として残す
+      afterFadeSec = null;
       finishAfterImage();
     }
 
     function finishAfterImage() {
-      document.getElementById("afterSecFade").textContent = Number(afterFadeSec || 0).toFixed(1);
+      document.getElementById("afterSecFade").textContent =
+        (afterFadeSec === null) ? "—" : Number(afterFadeSec || 0).toFixed(1);
       if (afterTimer !== null) { clearInterval(afterTimer); afterTimer = null; }
 
       const ref = document.getElementById("afterImageOverlay");
@@ -1429,7 +1524,11 @@
       hideOverlay("afterImageOverlay", true);
       playCue(520);                       // 目を開けてよい合図
       releaseWakeLock();
-      setTimeout(() => showSharpnessSelection(parseInt(document.getElementById("stareSec").value), afterSharpSec, afterFadeSec), 150);
+      if (sharpnessTimer !== null) clearTimeout(sharpnessTimer);
+      sharpnessTimer = setTimeout(() => {
+        sharpnessTimer = null;
+        showSharpnessSelection(currentStareSec, afterSharpSec, afterFadeSec);
+      }, 150);
     }
 
     function showSharpnessSelection(stareSec, sharpSec, fadeSec) {
@@ -1464,12 +1563,16 @@
       if (!session) { alert("記録を作成できませんでした。"); return; }
 
       sessions.push(session);
+      clearTombstones([session.id]);   // 消したはずのidと偶然ぶつかっても復活させない
       persistSessions();
 
       hideOverlay("sharpnessOverlay");
-      showResult(session);
-      updateMiniChart();
-      scheduleSync(1500);
+
+      // 表示系が失敗しても、トレーニングの進行は必ず続ける。
+      // （以前はここで例外が出ると開始ボタンが disabled のまま固まっていた）
+      try { showResult(session); } catch (e) { console.error(e); }
+      try { updateMiniChart(); } catch (e) { console.error(e); }
+      try { scheduleSync(1500); } catch (e) { console.error(e); }
 
       setTimeout(() => {
         isTraining = false;
@@ -1568,7 +1671,7 @@
 
     // ===== MINI CHART (training tab) =====
     function updateMiniChart() {
-      if (sessions.length === 0) return;
+      if (!chartReady() || sessions.length === 0) return;
       const last10 = sessions.slice(-10);
       const labels = last10.map(s => dateLabel(s));
       const data = last10.map(s => parseFloat(getEffectiveAfterSec(s).toFixed(1)));
@@ -1714,12 +1817,14 @@
         const row = document.createElement("tr");
         row.style.borderBottom = "1px solid var(--line)";
         const after = getEffectiveAfterSec(s);
-        const fade = Number(s.afterFadeSec ?? s.afterSec) || 0;
+        const rawFade = s.afterFadeSec ?? s.afterSec;
+        // とばした記録は「—」。0.0秒と見分けがつくようにする
+        const fadeText = (rawFade === null || rawFade === undefined) ? "—" : (Number(rawFade) || 0).toFixed(1) + "秒";
         const eff = (after / Math.max(1, s.stareSec)).toFixed(1);
         row.innerHTML = `
           <td style="padding:0.5rem">${new Date(s.timestamp).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
           <td style="padding:0.5rem">${s.stareSec}秒</td>
-          <td style="padding:0.5rem">${after.toFixed(1)} / ${fade.toFixed(1)}秒</td>
+          <td style="padding:0.5rem">${after.toFixed(1)}秒 / ${fadeText}</td>
           <td style="padding:0.5rem">${eff}倍</td>
           <td style="padding:0.5rem">${sharpTexts[s.sharpness] || "-"}</td>
           <td style="padding:0.5rem">${colorTexts[s.afterimageColor] || "-"}</td>`;
@@ -1735,7 +1840,7 @@
 
     // ===== CHARTS =====
     function updateCharts() {
-      if (!sessions.length) return;
+      if (!chartReady() || !sessions.length) return;
       const last20 = sessions.slice(-20);
 
       // Afterimage time chart
@@ -1867,7 +1972,9 @@
         const td = t => { const c = document.createElement("td"); c.textContent = t; return c; };
         tr.appendChild(td(g.s.deviceLabel || "不明"));
         tr.appendChild(td(g.n + "回"));
-        tr.appendChild(td(g.s.visualAngle ? `視角 ${g.s.visualAngle}°（幅${g.s.cardMm ?? "?"}mm）` : "未設定（画面の割合）"));
+        tr.appendChild(td(g.s.visualAngle
+          ? `視角 ${g.s.visualAngle}°` + (g.s.cardMm ? `（幅${g.s.cardMm}mm）` : "")
+          : "未設定（画面の割合）"));
         tr.appendChild(td(g.s.viewDistCm ? g.s.viewDistCm + "cm" : "-"));
         tbody.appendChild(tr);
       });
@@ -1895,7 +2002,11 @@
       buildConditionTable();
       // Highlight closest pattern in table
       const rows = document.querySelectorAll("#patternTable tbody tr");
-      rows.forEach(r => { r.classList.remove("highlight"); const badge = r.querySelector(".you-badge"); if (badge) badge.remove(); });
+      rows.forEach(r => {
+        r.classList.remove("highlight");
+        const cell = r.querySelector(".pattern-name");
+        if (cell) cell.textContent = r.dataset.pattern || cell.textContent.trim();
+      });
 
       if (sessions.length < 3) {
         document.getElementById("currentPatternInfo").innerHTML = "データが3件以上たまるとパターン判定が表示されます。";
@@ -1910,12 +2021,13 @@
       const pattern = getClosestPattern(avgStare, avgAfter);
 
       if (pattern) {
+        // 行の名前セルの文字と比べていたが、バッジを外すと "E " と空白が残り、
+        // 2回目以降ずっと一致しなくなっていた。data属性で照合する
         rows.forEach(r => {
-          if (r.querySelector(".pattern-name")?.textContent === pattern.name) {
-            r.classList.add("highlight");
-            const nameCell = r.querySelector(".pattern-name");
-            nameCell.innerHTML = pattern.name + ' <span class="you-badge">あなた</span>';
-          }
+          if (r.dataset.pattern !== pattern.name) return;
+          r.classList.add("highlight");
+          const nameCell = r.querySelector(".pattern-name");
+          if (nameCell) nameCell.innerHTML = pattern.name + ' <span class="you-badge">あなた</span>';
         });
       }
 
@@ -1932,7 +2044,7 @@
     // ===== BACKUP / IMPORT / DELETE =====
     function handleBackupClick() {
       if (!sessions.length) { alert("⚠ バックアップするデータがありません。"); return; }
-      const data = { appVersion: "v15", schema: 2, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
+      const data = { appVersion: "v15", schema: 3, exportDate: new Date().toISOString(), totalSessions: sessions.length, sessions };
       const filename = `orange-card-backup-${new Date().toISOString().slice(0,10)}.json`;
       try {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -1962,10 +2074,12 @@
                 .map(s => normalizeSession(legacy ? migrateLegacySharpness(s) : s))
                 .filter(Boolean);
               const before = sessions.length;
+              // 手動で読み込んだものは「戻したい」意思表示なので、削除済みの印を外す
+              clearTombstones(incoming.map(s => s.id));
               sessions = mergeSessions(incoming);
               persistSessions();
               refreshDashboard();
-              updateMiniChart();
+              try { updateMiniChart(); } catch (e2) {}
               scheduleSync(500);
               alert(`読み込みました。${sessions.length - before}件を追加して、合計${sessions.length}件です。`);
             } catch (err) { alert("このJSONを読み取れませんでした。"); }
@@ -1983,21 +2097,38 @@
     }
 
     function handleDeleteClick() {
-      if (!confirm("すべての記録を削除します。取り消せません。続けますか？")) return;
+      const n = sessions.length;
+      const msg = driveEnabled()
+        ? `すべての記録（${n}件）を削除します。取り消せません。\n同期している端末からも削除されます。続けますか？`
+        : `すべての記録（${n}件）を削除します。取り消せません。続けますか？`;
+      if (!confirm(msg)) return;
+      addTombstones(sessions.map(s => s.id));   // 同期で戻ってこないようにする
       sessions = [];
       localStorage.removeItem("orangeCardSessions");
       refreshDashboard();
-      updateMiniChart();
-      if (driveEnabled()) syncNow({ overwrite: true }); // Driveの内容も空にする
-      alert("すべての記録を削除しました。もう片方の端末でも削除してください。");
+      try { updateMiniChart(); } catch (e) {}
+      if (driveEnabled()) {
+        syncNow().then(() => alert("すべての記録を削除しました。同期にも反映しました。"))
+                 .catch(() => alert("記録は削除しましたが、同期に反映できませんでした。オンラインのときに設定タブから「今すぐ同期」を押してください。"));
+      } else {
+        alert("すべての記録を削除しました。");
+      }
     }
 
     function loadSessions() {
+      loadTombstones();
       const stored = localStorage.getItem("orangeCardSessions");
       if (!stored) return;
       try {
         const parsed = JSON.parse(stored);
-        sessions = Array.isArray(parsed) ? parsed.map(normalizeSession).filter(Boolean) : [];
+        const list = Array.isArray(parsed) ? parsed.map(normalizeSession).filter(Boolean) : [];
+        // 決めうちidに移行した記録を保存し直しておく（次回以降の突き合わせのため）
+        const seen = new Set();
+        sessions = list.filter(s => {
+          if (deletedIds.has(s.id) || seen.has(s.id)) return false;
+          seen.add(s.id); return true;
+        });
+        if (sessions.length !== list.length || stored !== JSON.stringify(sessions)) persistSessions();
       } catch (e) { sessions = []; }
     }
 
@@ -2012,37 +2143,72 @@
       return Math.min(hi, Math.max(lo, n));
     }
 
+    // null / undefined / "" は「未設定」。Number(null) は 0 になってしまうので、先に弾く。
+    // （これを見落としていたため、較正していない記録の視角が全部 0.1° になっていた）
+    function optionalNum(v, lo, hi, fallback) {
+      if (v === null || v === undefined || v === "") return null;
+      const n = Number(v);
+      if (!Number.isFinite(n)) return null;
+      return clampNum(n, lo, hi, fallback);
+    }
+
     // すべての記録に id を持たせ、値を数値に正規化する（同期の突き合わせと表示の安全のため）
     function normalizeSession(s) {
       if (!s || typeof s !== "object") return null;
       if (typeof s.timestamp !== "string" && !(s.timestamp instanceof Date)) return null;
       let ts;
       try { ts = new Date(s.timestamp).toISOString(); } catch (e) { return null; }
+      if (!ts || ts === "Invalid Date") return null;
       const sharp = Number(s.afterSharpSec ?? s.afterSec);
-      const fade = Number(s.afterFadeSec ?? s.afterSec);
+      const sharpVal = Number.isFinite(sharp) ? Math.max(0, sharp) : 0;
+      // 「残存の計測をとばした」記録は null のまま残す
+      const rawFade = s.afterFadeSec ?? s.afterSec;
+      const fade = Number(rawFade);
+      const stare = clampNum(s.stareSec, 1, 600, 10);
       return {
-        id: (typeof s.id === "string" && s.id) ? s.id : newId(),
+        // id が無いファイルは内容から決めうちで作る。
+        // 毎回ランダムに振ると、同じバックアップを読み直すたびに別物として増えてしまう
+        id: (typeof s.id === "string" && s.id) ? s.id : `oc:${ts}|${stare}|${sharpVal}`,
         timestamp: ts,
-        stareSec: clampNum(s.stareSec, 1, 600, 10),
-        afterSharpSec: Number.isFinite(sharp) ? Math.max(0, sharp) : 0,
-        afterFadeSec: Number.isFinite(fade) ? Math.max(0, fade) : 0,
+        stareSec: stare,
+        afterSharpSec: sharpVal,
+        afterFadeSec: (rawFade === null || rawFade === undefined || !Number.isFinite(fade)) ? null : Math.max(0, fade),
         sharpness: clampNum(s.sharpness, 1, 5, 1),
         afterimageColor: clampNum(s.afterimageColor, 1, 5, 1),
         note: typeof s.note === "string" ? s.note.slice(0, 80) : "",
         deviceLabel: typeof s.deviceLabel === "string" ? s.deviceLabel.slice(0, 32) : "",
-        viewDistCm: Number.isFinite(Number(s.viewDistCm)) ? clampNum(s.viewDistCm, 5, 300, 50) : null,
-        visualAngle: Number.isFinite(Number(s.visualAngle)) ? clampNum(s.visualAngle, 0.1, 90, 10) : null
+        viewDistCm: optionalNum(s.viewDistCm, 5, 300, 50),
+        cardMm: optionalNum(s.cardMm, 1, 2000, 100),        // 以前は保存時に捨てられていた
+        visualAngle: optionalNum(s.visualAngle, 0.1, 90, 10)
       };
     }
+
+    // ===== 削除の記録（tombstone）=====
+    // 消したidを覚えておかないと、もう片方の端末と同期した瞬間に全部戻ってきてしまう
+    let deletedIds = new Set();
+    const MAX_TOMBSTONES = 5000;
+
+    function loadTombstones() {
+      try {
+        const raw = JSON.parse(localStorage.getItem("ocDeletedIds") || "[]");
+        deletedIds = new Set(Array.isArray(raw) ? raw.filter(x => typeof x === "string") : []);
+      } catch (e) { deletedIds = new Set(); }
+    }
+    function persistTombstones() {
+      const arr = [...deletedIds].slice(-MAX_TOMBSTONES);
+      deletedIds = new Set(arr);
+      try { localStorage.setItem("ocDeletedIds", JSON.stringify(arr)); } catch (e) {}
+    }
+    function addTombstones(ids) { ids.forEach(id => { if (id) deletedIds.add(id); }); persistTombstones(); }
+    function clearTombstones(ids) { ids.forEach(id => deletedIds.delete(id)); persistTombstones(); }
 
     // 端末をまたいだ統合：id が同じものは1件として扱い、時刻順に並べ直す
     function mergeSessions(incoming) {
       const map = new Map();
-      const keyOf = s => s.id || `${s.timestamp}|${s.stareSec}|${s.afterSharpSec}`;
       [...sessions, ...incoming].forEach(s => {
-        if (!s) return;
-        const k = keyOf(s);
-        if (!map.has(k)) map.set(k, s);
+        if (!s || !s.id) return;
+        if (deletedIds.has(s.id)) return;          // 削除済みは戻さない
+        if (!map.has(s.id)) map.set(s.id, s);
       });
       return [...map.values()].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     }
@@ -2117,12 +2283,12 @@
         return;
       }
       if (driveEnabled()) {
-        // 前回接続済みなら、画面を出さずにトークンだけ取り直す
-        tokenWaiters.push(() => syncNow());
-        tokenClient.requestAccessToken({ prompt: "" });
-        setTimeout(() => {
-          if (!accessToken) setDriveStatus("再接続が必要です。「Googleに接続」を押してください", "err");
-        }, 8000);
+        // 前回接続済みなら、画面を出さずにトークンだけ取り直す。
+        // ensureToken 経由にして、応答が返らないときも待ち行列に居座らないようにする
+        ensureToken(false).then(t => {
+          if (t) syncNow().catch(() => {});
+          else setDriveStatus("再接続が必要です。「Googleに接続」を押してください", "err");
+        });
       }
     }
 
@@ -2158,8 +2324,11 @@
 
     function connectDrive() {
       if (!tokenClient) { setDriveStatus("Googleのライブラリを読み込めていません", "err"); return; }
-      tokenWaiters.push(() => syncNow());
-      tokenClient.requestAccessToken({ prompt: "consent" });
+      setDriveStatus("Googleに接続しています…", "busy");
+      ensureToken(true).then(t => {
+        if (t) syncNow({ interactive: true }).catch(() => {});
+        else setDriveStatus("接続できませんでした。もう一度お試しください", "err");
+      });
     }
 
     function disconnectDrive() {
@@ -2167,6 +2336,7 @@
       accessToken = null;
       tokenExpiry = 0;
       syncFileId = null;
+      tokenWaiters = [];
       clearTimeout(syncTimer);
       setDriveStatus("接続を解除しました。この端末の記録はそのまま残ります。");
     }
@@ -2216,11 +2386,27 @@
     function scheduleSync(delay = 2000) {
       if (!driveEnabled()) return;
       clearTimeout(syncTimer);
-      syncTimer = setTimeout(() => syncNow(), delay);
+      syncTimer = setTimeout(() => { syncNow().catch(() => {}); }, delay);
     }
 
-    async function syncNow(opts = {}) {
-      if (syncing) { setDriveStatus("同期中です…", "busy"); return; }
+    // 同期は必ず1本ずつ順番に流す。
+    // 以前は syncing = true を await のあとに立てていたため同時実行が素通りし、
+    // 同期ファイルが複数作られて記録が分裂する状態だった。
+    let syncQueue = Promise.resolve();
+    let queuedCount = 0;
+
+    function syncNow(opts = {}) {
+      // 自動同期がすでに待っているなら重ねない（手動と削除反映は必ず通す）
+      if (queuedCount > 0 && !opts.interactive) return syncQueue;
+      queuedCount++;
+      syncQueue = syncQueue
+        .catch(() => {})
+        .then(() => doSync(opts))
+        .finally(() => { queuedCount--; });
+      return syncQueue;
+    }
+
+    async function doSync(opts = {}) {
       if (!driveEnabled() && !opts.interactive) return;
       if (!navigator.onLine) { setDriveStatus("オフラインです。つながったら自動で同期します", "err"); return; }
 
@@ -2230,31 +2416,39 @@
       syncing = true;
       setDriveStatus("同期中…", "busy");
       try {
-        if (!syncFileId) syncFileId = (await driveFindFile(token)) || (await driveCreateFile(token));
-
-        if (!opts.overwrite) {
-          const remote = await driveRead(token, syncFileId);
-          const raw = Array.isArray(remote) ? remote : (remote?.sessions || []);
-          const incoming = (Array.isArray(raw) ? raw : []).map(normalizeSession).filter(Boolean);
-          sessions = mergeSessions(incoming);
-          persistSessions();
-          refreshDashboard();
-          updateMiniChart();
+        if (!syncFileId) {
+          syncFileId = await driveFindFile(token);
+          // 作る直前にもう一度だけ探す（別タブが先に作っていることがある）
+          if (!syncFileId) syncFileId = (await driveFindFile(token)) || (await driveCreateFile(token));
         }
+
+        const remote = await driveRead(token, syncFileId);
+        const raw = Array.isArray(remote) ? remote : (remote?.sessions || []);
+        // 相手側で消された記録も引き継ぐ
+        const remoteDeleted = Array.isArray(remote?.deletedIds) ? remote.deletedIds : [];
+        if (remoteDeleted.length) addTombstones(remoteDeleted);
+        const incoming = (Array.isArray(raw) ? raw : []).map(normalizeSession).filter(Boolean);
+        sessions = mergeSessions(incoming);
+        persistSessions();
+        refreshDashboard();
+        try { updateMiniChart(); } catch (e) {}
 
         await driveWrite(token, syncFileId, {
           appVersion: "v15",
-          schema: 2,
+          schema: 3,
           exportDate: new Date().toISOString(),
           totalSessions: sessions.length,
-          sessions
+          sessions,
+          deletedIds: [...deletedIds]
         });
         localStorage.setItem("ocLastSync", new Date().toISOString());
         setDriveStatus("同期しました（" + sessions.length + "件・" + new Date().toLocaleTimeString("ja-JP") + "）", "ok");
       } catch (e) {
         const msg = String(e?.message || e);
         if (msg.includes("401") || msg.includes("403")) { accessToken = null; tokenExpiry = 0; }
+        if (msg.includes("404")) syncFileId = null;   // ファイルが消えていたら次回作り直す
         setDriveStatus("同期できませんでした：" + msg, "err");
+        throw e;
       } finally {
         syncing = false;
       }
@@ -2268,10 +2462,13 @@
       try {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return null;
+        // 閉じたコンテキストを使い回すと、以後どの音も無言で鳴らなくなる
+        // （ページを離れて戻ってきたときに起きる）
+        if (audioCtx && audioCtx.state === "closed") { audioCtx = null; bgmNodes = []; bgmMaster = null; isBgmPlaying = false; }
         if (!audioCtx) audioCtx = new AC();
         if (audioCtx.state === "suspended") audioCtx.resume();
         return audioCtx;
-      } catch (e) { return null; }
+      } catch (e) { audioCtx = null; return null; }
     }
 
     function bgmVolume() {
@@ -2337,9 +2534,12 @@
       const nodes = [];
       let status = "";
 
-      const master = ctx.createGain();
-      master.gain.value = 0.0001;
-      master.connect(ctx.destination);
+      let master;
+      try {
+        master = ctx.createGain();
+        master.gain.value = 0.0001;
+        master.connect(ctx.destination);
+      } catch (e) { alert("この端末では音を鳴らせませんでした。"); return; }
 
       try {
         if (mode === "pink") {

@@ -1,14 +1,20 @@
-// Orange Card v15 - オフラインで開けるようにするためのキャッシュ
-const CACHE = "orange-card-v15";
+// Orange Card v15.1 - オフラインで開けるようにするためのキャッシュ
+const CACHE = "orange-card-v15-1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(SHELL))
-      .catch(() => {})
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // addAll は1つでも失敗すると全部入らない。
+    // 以前は catch で握りつぶしていたので、オフラインが丸ごと効かないのに気づけなかった。
+    const failed = [];
+    await Promise.all(SHELL.map(async url => {
+      try { await cache.add(new Request(url, { cache: "reload" })); }
+      catch (e) { failed.push(url); }
+    }));
+    if (failed.length) console.warn("[sw] キャッシュできなかったファイル:", failed);
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", event => {
@@ -35,9 +41,15 @@ self.addEventListener("fetch", event => {
       const cache = await caches.open(CACHE);
       const hit = await cache.match(req);
       if (hit) return hit;
-      const res = await fetch(req);
-      cache.put(req, res.clone());
-      return res;
+      try {
+        const res = await fetch(req);
+        // 保存に失敗しても配信は続ける
+        cache.put(req, res.clone()).catch(() => {});
+        return res;
+      } catch (e) {
+        // オフラインで未キャッシュ。グラフだけ出ない状態でアプリは動く
+        return new Response("", { status: 504, statusText: "offline" });
+      }
     })());
     return;
   }
@@ -48,7 +60,7 @@ self.addEventListener("fetch", event => {
   event.respondWith((async () => {
     const cached = await caches.match(req);
     const network = fetch(req).then(res => {
-      caches.open(CACHE).then(c => c.put(req, res.clone())).catch(() => {});
+      if (res && res.ok) caches.open(CACHE).then(c => c.put(req, res.clone())).catch(() => {});
       return res;
     }).catch(() => cached);
     return cached || network;
