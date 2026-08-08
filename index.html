@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v15.1 - 残像トレーニング記録</title>
+  <title>Orange Card v15.2 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -201,6 +201,122 @@
       .result-grid { grid-template-columns: 1fr; }
       .stat-grid { grid-template-columns: 1fr; }
     }
+    /* ===== イメージ訓練（8週間）===== */
+    :root {
+      --im-img: #3987e5;   /* イメージ判定 */
+      --im-aft: #d95926;   /* 残像判定 */
+    }
+    .im-tiles { display:grid; grid-template-columns:repeat(2,1fr); gap:0.6rem; }
+    @media (min-width:640px){ .im-tiles { grid-template-columns:repeat(4,1fr); } }
+    .im-tile { background:rgba(255,255,255,0.03); border:1px solid var(--line);
+      border-radius:10px; padding:0.7rem 0.8rem; }
+    .im-tile .k { font-size:0.72rem; color:var(--muted); font-weight:700; letter-spacing:.02em; }
+    .im-tile .v { font-size:1.65rem; font-weight:800; line-height:1.15; margin-top:0.15rem; }
+    .im-tile .u { font-size:0.75rem; color:var(--muted); font-weight:600; margin-left:2px; }
+
+    .im-bar { height:4px; background:var(--line); border-radius:3px; overflow:hidden; margin:0.6rem 0 1rem; }
+    .im-bar i { display:block; height:100%; background:var(--accent); transition:width .3s; }
+
+    .im-note { border-radius:10px; padding:0.75rem 0.9rem; font-size:0.86rem; line-height:1.7;
+      border:1px solid var(--line); background:rgba(255,255,255,0.03); margin:0.75rem 0; }
+    .im-note.warn { border-left:3px solid var(--accent2); }
+    .im-note.good { border-left:3px solid var(--green); }
+    .im-note.crit { border-left:3px solid var(--danger); }
+
+    .im-menu { display:block; width:100%; text-align:left; margin-top:0.55rem;
+      background:rgba(255,255,255,0.04); border:1px solid var(--line); color:var(--text);
+      border-radius:11px; padding:0.85rem 1rem; cursor:pointer; font:inherit; }
+    .im-menu:hover { border-color:var(--accent); }
+    .im-menu .t { font-weight:800; font-size:0.98rem; }
+    .im-menu .d { font-size:0.8rem; color:var(--muted); line-height:1.6; margin-top:0.15rem; }
+
+    .im-seg { display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.35rem; }
+    .im-seg button { flex:1 1 auto; min-width:62px; font:inherit; font-size:0.86rem; font-weight:700;
+      padding:0.55rem 0.5rem; border-radius:9px; border:1px solid var(--line);
+      background:rgba(255,255,255,0.03); color:var(--muted); cursor:pointer; }
+    .im-seg button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#1a1206; }
+    .im-field-label { display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-top:1rem; }
+    .im-field-label .h { display:block; font-weight:400; color:var(--muted); font-size:0.76rem;
+      margin-top:0.15rem; line-height:1.6; }
+
+    /* --- stage overlay --- */
+    .im-stage { position:fixed; inset:0; z-index:9000; display:none; flex-direction:column;
+      background:var(--bg); }
+    .im-stage.on { display:flex; }
+    .im-stage-top { display:flex; align-items:center; gap:0.8rem; padding:0.7rem 1rem;
+      padding-top:calc(0.7rem + env(safe-area-inset-top)); border-bottom:1px solid var(--line); }
+    .im-stage-top .t { font-size:0.85rem; font-weight:800; }
+    .im-stage-top .p { font-size:0.76rem; color:var(--muted); }
+    .im-quit { background:none; border:1px solid var(--line); color:var(--muted);
+      width:34px; height:34px; border-radius:9px; cursor:pointer; font-size:1rem; line-height:1;
+      display:grid; place-items:center; padding:0; }
+    .im-stage-body { flex:1; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; gap:1.1rem; padding:1.1rem; text-align:center; overflow-y:auto; }
+    .im-stage-foot { padding:0.8rem 1rem calc(0.9rem + env(safe-area-inset-bottom));
+      border-top:1px solid var(--line); display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; }
+    .im-fld { width:min(76vw,320px); aspect-ratio:1; border-radius:14px; display:grid;
+      place-items:center; overflow:hidden; border:1px solid var(--line); }
+    .im-fld svg { width:74%; height:74%; display:block; }
+    .im-word { font-size:clamp(28px,8.5vw,50px); font-weight:800; letter-spacing:.06em; }
+    .im-count { font-size:clamp(42px,14vw,80px); font-weight:800; line-height:1;
+      font-variant-numeric:tabular-nums; }
+    .im-instr { font-size:1.05rem; font-weight:800; max-width:30ch; line-height:1.6; }
+    .im-sub { font-size:0.84rem; color:var(--muted); max-width:34ch; line-height:1.75; margin-top:-0.5rem; }
+    .im-scale { display:grid; grid-template-columns:repeat(6,1fr); gap:0.4rem; width:min(92vw,400px); }
+    .im-scale button { aspect-ratio:1; border-radius:11px; border:1px solid var(--line);
+      background:rgba(255,255,255,0.04); color:var(--text); font:inherit; font-size:1.15rem;
+      font-weight:800; cursor:pointer; }
+    .im-scale button:hover { border-color:var(--accent); background:rgba(255,152,0,0.12); }
+    .im-scalelab { display:flex; justify-content:space-between; width:min(92vw,400px);
+      font-size:0.7rem; color:var(--muted); margin-top:-0.7rem; }
+    .im-vbtns { display:grid; gap:0.5rem; width:min(92vw,400px); }
+    .im-vbtns button { text-align:left; padding:0.85rem 1rem; border-radius:11px;
+      border:1px solid var(--line); background:rgba(255,255,255,0.04); color:var(--text);
+      font:inherit; font-size:0.95rem; font-weight:700; cursor:pointer; }
+    .im-vbtns button:hover { border-color:var(--accent); }
+    .im-vbtns button .d { display:block; font-size:0.76rem; font-weight:400; color:var(--muted);
+      margin-top:0.15rem; line-height:1.6; }
+    .im-vbtns button.bi { border-left:3px solid var(--im-img); }
+    .im-vbtns button.ba { border-left:3px solid var(--im-aft); }
+    .im-sum { display:flex; gap:1.4rem; justify-content:center; flex-wrap:wrap; }
+    .im-sum .k { font-size:0.72rem; color:var(--muted); font-weight:700; }
+    .im-sum .v { font-size:1.8rem; font-weight:800; }
+
+    /* --- charts --- */
+    .im-chart { position:relative; }
+    .im-chart svg { width:100%; height:auto; display:block; overflow:visible; }
+    .im-legend { display:flex; gap:1rem; flex-wrap:wrap; font-size:0.78rem;
+      color:var(--muted); margin-bottom:0.6rem; }
+    .im-legend i { width:10px; height:10px; border-radius:3px; display:inline-block;
+      margin-right:5px; vertical-align:-1px; }
+    .im-tip { position:absolute; pointer-events:none; background:var(--card);
+      border:1px solid var(--line); border-radius:8px; padding:0.4rem 0.6rem; font-size:0.76rem;
+      box-shadow:0 6px 18px rgba(0,0,0,.5); opacity:0; transition:opacity .12s;
+      white-space:nowrap; z-index:5; color:var(--text); }
+    .im-tip.on { opacity:1; }
+    .im-empty { text-align:center; color:var(--muted); font-size:0.83rem; padding:2rem 0.6rem; line-height:1.8; }
+
+    .im-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+    .im-table th { text-align:left; font-size:0.7rem; color:var(--muted); font-weight:700;
+      padding:0.4rem 0.45rem; border-bottom:1px solid var(--line); white-space:nowrap; }
+    .im-table td { padding:0.5rem 0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);
+      vertical-align:top; font-variant-numeric:tabular-nums; }
+    .im-pill { display:inline-block; font-size:0.68rem; font-weight:800; padding:1px 7px;
+      border-radius:99px; border:1px solid currentColor; white-space:nowrap; }
+    .im-pill.i { color:var(--im-img); }
+    .im-pill.a { color:var(--im-aft); }
+    .im-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    details.im-tv { margin-top:0.6rem; }
+    details.im-tv summary { font-size:0.76rem; color:var(--muted); cursor:pointer; }
+
+    /* タブが5つに増えたぶん、狭い画面では折り返さず横スクロールにする
+       （2段に折り返すとヘッダーが厚くなって本文が押し下げられるため） */
+    @media (max-width: 900px) {
+      .nav { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+             scrollbar-width: none; padding-bottom: 2px; }
+      .nav::-webkit-scrollbar { display: none; }
+      .tab { flex: 0 0 auto; }
+    }
   </style>
 </head>
 <body>
@@ -213,6 +329,7 @@
         <button class="tab active" data-tab="training">トレーニング</button>
         <button class="tab" data-tab="dashboard">記録</button>
         <button class="tab" data-tab="analysis">分析</button>
+        <button class="tab" data-tab="imagery">イメージ</button>
         <button class="tab" data-tab="settings">設定</button>
       </nav>
     </div>
@@ -926,8 +1043,25 @@
           <input id="importFile" type="file" accept="application/json" style="display:none;">
           <button id="deleteBtn" class="danger" onclick="handleDeleteClick()">🗑 全削除</button>
         </div>
+        <div style="margin-top:1.1rem;padding-top:0.9rem;border-top:1px solid var(--line);">
+          <div style="font-weight:700;margin-bottom:0.5rem;">🧠 イメージ訓練（8週間）</div>
+          <div class="row">
+            <button id="imJsonBtn" class="secondary">📦 JSONで書き出し</button>
+            <button id="imImportBtn" class="secondary">📥 読み込んで統合</button>
+            <input id="imImportFile" type="file" accept="application/json" style="display:none;">
+            <button id="imCsvBtn" class="secondary">📄 CSVで書き出し</button>
+            <button id="imDeleteBtn" class="danger">🗑 イメージ訓練だけ全削除</button>
+          </div>
+          <p class="muted" style="margin-top:0.7rem;line-height:1.7;">
+            上の3つのボタンはオレンジカードの記録が対象で、こちらはイメージ訓練の記録が対象です。
+            どちらの「全削除」も、もう一方には影響しません。<br>
+            読み込みは上書きではなく統合です。同期ファイルのJSONをそのまま読ませても通ります。
+          </p>
+        </div>
         <p class="muted" style="margin-top:0.75rem;line-height:1.7;">
           読み込みは上書きではなく統合です。同じ記録が二重に増えることはありません。<br>
+          このボタン列はオレンジカードの記録が対象です。
+          イメージ訓練の記録は同じカードの下側に、別のボタン列があります。<br>
           同期を使わない場合、記録はこのブラウザの中だけに残ります。
           iPhoneのSafariでは、ホーム画面に追加していないサイトのデータが約7日で消えることがあります。
           共有ボタンから「ホーム画面に追加」しておくと安全です。
@@ -937,13 +1071,137 @@
       <div class="card">
         <h2>ℹ️ アプリについて</h2>
         <div class="muted" style="line-height:1.8;">
-          <strong>Orange Card v15.1</strong> - 残像トレーニング記録ツール<br>
-          七田式オレンジカードの残像トレーニングを記録・可視化します。<br>
+          <strong>Orange Card v15.2</strong> - 残像トレーニング記録ツール<br>
+          七田式オレンジカードの残像トレーニングと、8週間の視覚イメージ訓練を記録・可視化します。<br>
           医療機器ではありません。個人情報は一切収集していません。
         </div>
       </div>
     </section>
+    <!-- ================= イメージ訓練（8週間） ================= -->
+    <section id="imagery" class="view hidden">
+
+      <div class="card">
+        <h2>🧠 視覚イメージ訓練（8週間）</h2>
+        <p class="muted" style="line-height:1.8;margin:0 0 0.9rem;">
+          オレンジカードが「残像の持続」を測るのに対して、こちらは
+          <strong>心的イメージと残像を切り分ける</strong>ための訓練です。
+          期限を8週間に切って、効いたかどうかを自分で判定します。
+        </p>
+        <div id="imHome"></div>
+      </div>
+
+      <div class="card">
+        <h2>今日のメニュー</h2>
+        <p class="muted" style="line-height:1.8;margin:0 0 0.6rem;">
+          1回 10〜15分が目安です。長くやるほど良いという性質のものではありません。
+        </p>
+        <div id="imMenu"></div>
+      </div>
+
+      <div class="card">
+        <h2>この回の条件</h2>
+        <p class="muted" style="line-height:1.8;margin:0 0 0.4rem;">
+          残像とイメージを切り分けるための設定です。判定が「残像」に偏るときは、
+          コントラストを下げて待ち時間を伸ばしてください。
+        </p>
+        <div id="imOpts"></div>
+      </div>
+
+      <div class="card">
+        <h2>鮮明度の推移</h2>
+        <p class="muted" style="line-height:1.8;margin:0 0 0.7rem;">
+          その日の全試行の平均（0〜5）。自己申告なので、上がっても採点が甘くなっただけの可能性は残ります。
+        </p>
+        <div class="im-chart" id="imChartLine"></div>
+        <details class="im-tv"><summary>数値で見る</summary><div class="im-scroll" id="imTblLine"></div></details>
+      </div>
+
+      <div class="card">
+        <h2>週ごとの判定</h2>
+        <div class="im-legend">
+          <span><i style="background:var(--im-img)"></i>イメージ（保てた）</span>
+          <span><i style="background:var(--im-aft)"></i>残像（一緒に動いた）</span>
+        </div>
+        <p class="muted" style="line-height:1.8;margin:0 0 0.7rem;">
+          青が増え、橙が減っていれば意味のある変化です。橙ばかりなら、見ているのは残像です。
+        </p>
+        <div class="im-chart" id="imChartBar"></div>
+        <details class="im-tv"><summary>数値で見る</summary><div class="im-scroll" id="imTblBar"></div></details>
+      </div>
+
+      <div class="card">
+        <h2>週次レビュー</h2>
+        <p class="muted" style="line-height:1.8;margin:0 0 0.7rem;">
+          数字は自動集計です。気づきと判定だけ、週末に埋めてください。
+        </p>
+        <div class="im-scroll" id="imWeekly"></div>
+      </div>
+
+      <div class="card">
+        <h2>記録</h2>
+        <div class="im-scroll" id="imLog"></div>
+      </div>
+
+      <div class="card">
+        <h2>開始前チェック（ベースライン）</h2>
+        <p class="muted" style="line-height:1.8;margin:0 0 0.5rem;">
+          訓練前の状態を残しておかないと、後から「変わったかどうか」を判定できません。
+        </p>
+        <div id="imBaseline"></div>
+      </div>
+
+      <div class="card">
+        <h2>8週間後の読み方</h2>
+        <table class="im-table">
+          <tr><td style="width:36%"><strong>平均鮮明度が上がった／イ判定が増えた</strong></td>
+              <td>訓練が効いている可能性があります。ただし自己申告なので、慣れによる採点の甘さも混ざります。VVIQの再測定と合わせて見てください。</td></tr>
+          <tr><td><strong>残判定ばかりが並んでいる</strong></td>
+              <td>見えているのは残像です。コントラストを下げる、待ち時間を10秒にするなど条件を変えてください。それでも変わらなければ中止で構いません。</td></tr>
+          <tr><td><strong>何も動いていない</strong></td>
+              <td>8週間やって動かなければ、そこで終了です。これはあなたの努力不足ではありません。先天性アファンタジアに対して再現性のある訓練法は、現時点で確立されていません。</td></tr>
+          <tr><td><strong>そもそも困りごとが減っていない</strong></td>
+              <td>目的がBだった場合、像が見えることと困りごとの解決は別問題です。外部化（描く・撮る・図にする）と、空間や言語での符号化に切り替えるほうが効きます。</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>2つの訓練を並べて見る</h2>
+        <div class="im-legend">
+          <span><i style="background:var(--im-aft)"></i>残像の持続（オレンジカード）</span>
+          <span><i style="background:var(--im-img)"></i>イメージの鮮明度（イメージ訓練）</span>
+        </div>
+        <p class="muted" style="line-height:1.8;margin:0 0 0.7rem;">
+          イメージ訓練の開始日を1日目として、同じ週の目盛りに並べています。
+          単位が違うので上下2段に分けてあります（1本の軸に重ねると嘘になります）。
+        </p>
+        <div class="im-chart" id="imCross"></div>
+        <div id="imCrossRead"></div>
+        <div class="muted" style="line-height:1.9;font-size:0.86rem;margin-top:0.8rem;">
+          オレンジカード（七田式）は<strong>残像そのものを鍛える</strong>方法で、
+          イメージ訓練は<strong>残像を除いたうえで心的イメージを測る</strong>方法です。
+          同じ現象を逆向きに扱っています。<br><br>
+          この図で見たいのは「残像の持続が伸びたとき、随意的なイメージも一緒に伸びるのか」。
+          これは七田式の主張の要にあたる部分ですが、査読を経た研究で確かめられたものはありません。
+          答えが出る保証はない、という前提でどうぞ。
+        </div>
+      </div>
+
+    </section>
   </main>
+
+  <!-- ===== イメージ訓練：進行中のオーバーレイ ===== -->
+  <div class="im-stage" id="imStage" role="dialog" aria-modal="true" aria-label="イメージ訓練">
+    <div class="im-stage-top">
+      <button class="im-quit" id="imQuit" title="中断" aria-label="中断">✕</button>
+      <div>
+        <div class="t" id="imStageTitle">段階1</div>
+        <div class="p" id="imStageProg">試行 1 / 10</div>
+      </div>
+    </div>
+    <div class="im-bar" style="margin:0"><i id="imStageBar" style="width:0%"></i></div>
+    <div class="im-stage-body" id="imStageBody"></div>
+    <div class="im-stage-foot" id="imStageFoot"></div>
+  </div>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
@@ -981,6 +1239,7 @@
 
     function initApp() {
       step("tabs", initTabs);
+      step("imagery", imInit);
       step("sharpness", initSharpnessListeners);
       step("load", loadSessions);
       step("dashboard", refreshDashboard);
@@ -1091,6 +1350,8 @@
     function wireGlobalEvents() {
       document.addEventListener("keydown", e => {
         if (e.key !== "Escape") return;
+        // イメージ訓練が開いているときは、まずそちらを閉じる
+        if (document.getElementById("imStage").classList.contains("on")) { imQuit(); return; }
         // 休憩中は isTraining が false。ここでもEscでやめられるようにする
         if (isResting()) { stopSets(); return; }
         if (!isTraining) return;
@@ -1136,6 +1397,7 @@
           document.getElementById(name).classList.remove("hidden");
           if (name === "dashboard") refreshDashboard();
           if (name === "analysis") refreshAnalysis();
+          if (name === "imagery") { try { imRender(); } catch (e) { console.error(e); } }
         };
       });
     }
@@ -2429,18 +2691,31 @@
         if (remoteDeleted.length) addTombstones(remoteDeleted);
         const incoming = (Array.isArray(raw) ? raw : []).map(normalizeSession).filter(Boolean);
         sessions = mergeSessions(incoming);
+        // イメージ訓練の記録も同じファイルに相乗りしている
+        try { imSyncApply(remote); } catch (e) { console.error("イメージ訓練の同期に失敗:", e); }
         persistSessions();
         refreshDashboard();
         try { updateMiniChart(); } catch (e) {}
 
-        await driveWrite(token, syncFileId, {
+        // イメージ訓練の分を落とさずに書き戻す。
+        // 取れなかったときは、リモートにあった値をそのまま返して消さない。
+        let imPart;
+        try { imPart = imSyncPayload(); }
+        catch (e) {
+          imPart = {
+            imagerySessions: Array.isArray(remote?.imagerySessions) ? remote.imagerySessions : [],
+            imageryDeletedIds: Array.isArray(remote?.imageryDeletedIds) ? remote.imageryDeletedIds : [],
+            imageryMeta: remote?.imageryMeta ?? null
+          };
+        }
+        await driveWrite(token, syncFileId, Object.assign({
           appVersion: "v15",
-          schema: 3,
+          schema: 4,
           exportDate: new Date().toISOString(),
           totalSessions: sessions.length,
           sessions,
           deletedIds: [...deletedIds]
-        });
+        }, imPart));
         localStorage.setItem("ocLastSync", new Date().toISOString());
         setDriveStatus("同期しました（" + sessions.length + "件・" + new Date().toLocaleTimeString("ja-JP") + "）", "ok");
       } catch (e) {
@@ -2619,6 +2894,897 @@
         localStorage.setItem("ocBgmVol", vol.value);
         if (isBgmPlaying && bgmMaster && audioCtx) bgmMaster.gain.setTargetAtTime(bgmVolume(), audioCtx.currentTime, 0.1);
       };
+    }
+
+    /* ============================================================
+       視覚イメージ訓練（8週間）
+       オレンジカードが「残像の持続」を測るのに対し、こちらは
+       心的イメージと残像を切り分けて記録する。データは別系統だが、
+       Drive同期は同じファイルに相乗りする。
+       ============================================================ */
+
+    let imSessions = [];
+    let imDeleted = new Set();
+    let imMeta = null;
+    let imRun = null;
+    let imTimer = null;
+
+    const IM_LS_SESSIONS = "ocImagerySessions";
+    const IM_LS_DELETED  = "ocImageryDeleted";
+    const IM_LS_META     = "ocImageryMeta";
+
+    const IM_STAGES = {
+      1: { name: "段階1　図形", kind: "shape",
+           desc: "アプリがランダムな図形を出します。目をそらして待ってから思い浮かべてください。",
+           obs: "この図形を見てください" },
+      2: { name: "段階2　部分連鎖", kind: "own", obsSec: 10,
+           desc: "手元の対象（写真・本・部屋の物）の一部分に注目します。対象はご自分で用意してください。",
+           obs: "対象の「一部分」だけに注目してください" },
+      3: { name: "段階3　全体像", kind: "own", obsSec: 20,
+           desc: "複数の部分を順に見てから、全体像を思い浮かべます。",
+           obs: "対象の複数の部分を順に見てください" },
+      4: { name: "段階4　文字のみ", kind: "word",
+           desc: "画像を見ずに、単語だけから思い浮かべます。手がかりを減らした検索練習です。",
+           obs: "この言葉を読んでください" }
+    };
+
+    const IM_SHAPES = [
+      ["円",     '<circle cx="50" cy="50" r="34"/>'],
+      ["三角",   '<polygon points="50,14 86,80 14,80"/>'],
+      ["四角",   '<rect x="18" y="18" width="64" height="64"/>'],
+      ["長方形", '<rect x="12" y="30" width="76" height="40"/>'],
+      ["十字",   '<polygon points="38,12 62,12 62,38 88,38 88,62 62,62 62,88 38,88 38,62 12,62 12,38 38,38"/>'],
+      ["星",     '<polygon points="50,10 61,38 91,38 67,56 76,86 50,68 24,86 33,56 9,38 39,38"/>'],
+      ["半円",   '<path d="M12,66 A38,38 0 0 1 88,66 Z"/>'],
+      ["ひし形", '<polygon points="50,10 88,50 50,90 12,50"/>'],
+      ["六角形", '<polygon points="50,10 85,30 85,70 50,90 15,70 15,30"/>'],
+      ["矢印",   '<polygon points="12,40 56,40 56,20 90,50 56,80 56,60 12,60"/>'],
+      ["L字",    '<polygon points="20,14 44,14 44,64 84,64 84,86 20,86"/>'],
+      ["T字",    '<polygon points="14,16 86,16 86,38 61,38 61,86 39,86 39,38 14,38"/>'],
+      ["台形",   '<polygon points="28,20 72,20 90,78 10,78"/>'],
+      ["五角形", '<polygon points="50,10 88,38 74,84 26,84 12,38"/>'],
+      ["リング", '<path d="M50,12A38,38 0 1 0 50.1,12Z M50,32A18,18 0 1 1 49.9,32Z" fill-rule="evenodd"/>']
+    ];
+    // 残像は明暗差が大きいほど強く出る。慣れたら「低」に下げて切り分けやすくする。
+    const IM_CONTRAST = {
+      high: { bg: "#ffffff", fg: "#111111", label: "高" },
+      mid:  { bg: "#ededed", fg: "#8d8d8d", label: "中" },
+      low:  { bg: "#d9d9d9", fg: "#b6b6b6", label: "低" }
+    };
+    const IM_WORDS = ["りんご","自転車","猫","傘","消しゴム","急須","靴下","ひまわり","扇風機","洗濯ばさみ",
+      "郵便ポスト","信号機","消防車","観覧車","鳥居","だるま","招き猫","こけし","風鈴","蚊取り線香",
+      "目覚まし時計","はさみ","ホチキス","電卓","蛇口","やかん","フライパン","まな板","おにぎり","たい焼き",
+      "かき氷","寿司","ラーメン","たこ焼き","ギター","ピアノ","トランペット","太鼓","折り鶴","風車",
+      "凧","けん玉","竹とんぼ","そろばん","ランドセル","下駄","浴衣","提灯","自動販売機","象",
+      "キリン","ペンギン","カブトムシ","てんとう虫","カタツムリ","金魚","満月","雪だるま","灯台","井戸"];
+
+    const imRnd = n => Math.floor(Math.random() * n);
+    const imEsc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+    const imPad = n => String(n).padStart(2, "0");
+    const imISO = d => `${d.getFullYear()}-${imPad(d.getMonth()+1)}-${imPad(d.getDate())}`;
+    const imToday = () => imISO(new Date());
+    const imParse = s => { const p = String(s).split("-").map(Number); return new Date(p[0], p[1]-1, p[2]); };
+    const imDayDiff = (a, b) => Math.round((imParse(b) - imParse(a)) / 86400000);
+    const imFmt = s => { if (!s) return "—"; const d = imParse(s); return `${d.getMonth()+1}/${d.getDate()}`; };
+    const imHasV = t => typeof t.v === "number";
+    const imCSS = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
+
+    function imBlankMeta() {
+      return {
+        baseline: { startDate:"", vviq:"", dream:"", type:"", senses:"", goal:"", trouble:"", success:"" },
+        settings: { showMs:500, gapSec:5, contrast:"mid", trials:10, eyes:"open" },
+        weekNotes: {}, weekJudge: {}, postVviq: "", updatedAt: 0
+      };
+    }
+
+    // ---------- 保存 ----------
+    function imLoad() {
+      imMeta = imBlankMeta();
+      try {
+        const m = JSON.parse(localStorage.getItem(IM_LS_META) || "null");
+        if (m && typeof m === "object") {
+          imMeta = Object.assign(imBlankMeta(), m);
+          imMeta.baseline = Object.assign(imBlankMeta().baseline, m.baseline || {});
+          imMeta.settings = Object.assign(imBlankMeta().settings, m.settings || {});
+        }
+      } catch (e) {}
+      try {
+        const d = JSON.parse(localStorage.getItem(IM_LS_DELETED) || "[]");
+        imDeleted = new Set(Array.isArray(d) ? d.filter(x => typeof x === "string") : []);
+      } catch (e) { imDeleted = new Set(); }
+      try {
+        const raw = JSON.parse(localStorage.getItem(IM_LS_SESSIONS) || "[]");
+        const seen = new Set();
+        imSessions = (Array.isArray(raw) ? raw : []).map(imNormalize).filter(s => {
+          if (!s || imDeleted.has(s.id) || seen.has(s.id)) return false;
+          seen.add(s.id); return true;
+        });
+      } catch (e) { imSessions = []; }
+    }
+    function imPersist() {
+      try {
+        localStorage.setItem(IM_LS_SESSIONS, JSON.stringify(imSessions));
+        localStorage.setItem(IM_LS_DELETED, JSON.stringify([...imDeleted].slice(-5000)));
+        localStorage.setItem(IM_LS_META, JSON.stringify(imMeta));
+      } catch (e) {
+        alert("イメージ訓練の記録を保存できませんでした。設定タブから書き出しておいてください。");
+      }
+    }
+    function imTouchMeta() { imMeta.updatedAt = Date.now(); imPersist(); imScheduleSync(); }
+    function imScheduleSync() { try { scheduleSync(800); } catch (e) {} }
+
+    // オレンジカード側と同じ考え方：idで突き合わせ、消したidは覚えておく
+    function imNormalize(s) {
+      if (!s || typeof s !== "object") return null;
+      let date = typeof s.date === "string" ? s.date : "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        try { date = imISO(new Date(s.timestamp)); } catch (e) { return null; }
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+      const stage = Math.min(4, Math.max(1, Number(s.stage) || 1));
+      const trials = (Array.isArray(s.trials) ? s.trials : []).map(t => ({
+        v: (t && typeof t.v === "number" && t.v >= 0 && t.v <= 5) ? Math.round(t.v) : null,
+        verdict: ["img","aft","unk","none"].includes(t && t.verdict) ? t.verdict : null
+      }));
+      return {
+        id: (typeof s.id === "string" && s.id) ? s.id : `im:${date}|${stage}|${trials.length}|${s.sec || 0}`,
+        date, stage, trials,
+        sec: Math.max(0, Number(s.sec) || 0),
+        note: typeof s.note === "string" ? s.note.slice(0, 120) : "",
+        eyes: s.eyes === "closed" ? "closed" : "open",
+        contrast: IM_CONTRAST[s.contrast] ? s.contrast : "mid",
+        gapSec: Math.min(60, Math.max(0, Number(s.gapSec) || 5)),
+        showMs: Math.min(60000, Math.max(0, Number(s.showMs) || 500)),
+        deviceLabel: typeof s.deviceLabel === "string" ? s.deviceLabel.slice(0, 32) : ""
+      };
+    }
+    function imMerge(incoming) {
+      const map = new Map();
+      [...imSessions, ...incoming].forEach(s => {
+        if (!s || !s.id || imDeleted.has(s.id)) return;
+        if (!map.has(s.id)) map.set(s.id, s);
+      });
+      return [...map.values()].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+    }
+
+    // ---------- Drive同期の相乗り ----------
+    function imSyncPayload() {
+      return {
+        imagerySessions: imSessions,
+        imageryDeletedIds: [...imDeleted],
+        imageryMeta: imMeta
+      };
+    }
+    function imSyncApply(remote) {
+      if (!remote || typeof remote !== "object") return;
+      if (Array.isArray(remote.imageryDeletedIds)) {
+        remote.imageryDeletedIds.forEach(id => { if (typeof id === "string") imDeleted.add(id); });
+      }
+      if (Array.isArray(remote.imagerySessions)) {
+        imSessions = imMerge(remote.imagerySessions.map(imNormalize).filter(Boolean));
+      }
+      // ベースラインと設定は「あとから書いたほう」を採用する
+      const rm = remote.imageryMeta;
+      if (rm && typeof rm === "object" && Number(rm.updatedAt || 0) > Number(imMeta.updatedAt || 0)) {
+        imMeta = Object.assign(imBlankMeta(), rm);
+        imMeta.baseline = Object.assign(imBlankMeta().baseline, rm.baseline || {});
+        imMeta.settings = Object.assign(imBlankMeta().settings, rm.settings || {});
+      }
+      imPersist();
+      try { imRender(); } catch (e) {}
+    }
+
+    // ---------- 集計 ----------
+    function imStart() { return imMeta.baseline.startDate || (imSessions[0] && imSessions[0].date) || ""; }
+    function imDayIndex(date) { const s = imStart(); if (!s) return 0; const n = imDayDiff(s, date) + 1; return n >= 1 ? n : 0; }
+    function imWeekOf(date) { const d = imDayIndex(date); return d ? Math.floor((d - 1) / 7) + 1 : 0; }
+    function imCurrentDay() { const s = imStart(); return s ? Math.max(1, imDayDiff(s, imToday()) + 1) : 0; }
+    function imAllTrials() { return imSessions.flatMap(s => s.trials); }
+
+    function imDayAverages() {
+      const m = new Map();
+      imSessions.forEach(s => s.trials.filter(imHasV).forEach(t => {
+        if (!m.has(s.date)) m.set(s.date, []);
+        m.get(s.date).push(t.v);
+      }));
+      return [...m.entries()]
+        .map(([date, a]) => ({ date, day: imDayIndex(date), avg: a.reduce((x,y)=>x+y,0)/a.length, n: a.length }))
+        .filter(r => r.day > 0).sort((a,b) => a.day - b.day);
+    }
+    function imWeekStats() {
+      const out = [];
+      for (let w = 1; w <= 8; w++) {
+        const ss = imSessions.filter(s => imWeekOf(s.date) === w);
+        const ts = ss.flatMap(s => s.trials);
+        const vs = ts.filter(imHasV).map(t => t.v);
+        out.push({ w,
+          days: new Set(ss.map(s => s.date)).size,
+          mins: Math.round(ss.reduce((a,s) => a + (s.sec||0), 0) / 60),
+          avg: vs.length ? vs.reduce((a,b)=>a+b,0)/vs.length : null,
+          max: vs.length ? Math.max(...vs) : null,
+          img: ts.filter(t => t.verdict === "img").length,
+          aft: ts.filter(t => t.verdict === "aft").length,
+          trials: ts.length });
+      }
+      return out;
+    }
+
+    /* ================= 訓練の進行 ================= */
+    function imClearTimer() { if (imTimer) { clearInterval(imTimer); clearTimeout(imTimer); imTimer = null; } }
+    const imC = () => IM_CONTRAST[imMeta.settings.contrast] || IM_CONTRAST.mid;
+
+    function imShapeSVG(sh, fg) {
+      return `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(${sh.rot} 50 50)" fill="${fg}">${sh.path}</g></svg>`;
+    }
+    function imRandomShape() {
+      const p = IM_SHAPES[imRnd(IM_SHAPES.length)];
+      return { name: p[0], path: p[1], rot: [0,15,30,45,60,90,120,135,180,210,270][imRnd(11)] };
+    }
+
+    function imStartSession(stage) {
+      if (typeof isTraining !== "undefined" && isTraining) {
+        alert("オレンジカードの計測中です。先にそちらを終わらせてください。");
+        return;
+      }
+      imRun = { stage, n: imMeta.settings.trials, i: 0, trials: [], t0: Date.now(), cur: null };
+      document.getElementById("imStage").classList.add("on");
+      document.getElementById("imStageTitle").textContent = IM_STAGES[stage].name;
+      imNextTrial();
+    }
+    function imEndSession(keep) {
+      imClearTimer();
+      if (keep && imRun && imRun.trials.length) {
+        if (!imMeta.baseline.startDate) imMeta.baseline.startDate = imToday();
+        imSessions.push(imNormalize({
+          id: (typeof newId === "function") ? newId() : "im-" + Date.now().toString(36),
+          date: imToday(), stage: imRun.stage,
+          sec: Math.round((Date.now() - imRun.t0) / 1000),
+          trials: imRun.trials, note: "",
+          eyes: imMeta.settings.eyes, contrast: imMeta.settings.contrast,
+          gapSec: imMeta.settings.gapSec, showMs: imMeta.settings.showMs,
+          deviceLabel: (typeof deviceLabel === "function") ? deviceLabel() : ""
+        }));
+        imSessions.sort((a,b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+        imMeta.updatedAt = Date.now();
+        imPersist();
+        imScheduleSync();
+      }
+      imRun = null;
+      document.getElementById("imStage").classList.remove("on");
+      imRender();
+    }
+    function imNextTrial() {
+      if (!imRun) return;
+      if (imRun.i >= imRun.n) return imScreenFinish();
+      imRun.i++;
+      const kind = IM_STAGES[imRun.stage].kind;
+      imRun.cur = { v: null, verdict: null,
+        shape: kind === "shape" ? imRandomShape() : null,
+        word:  kind === "word"  ? IM_WORDS[imRnd(IM_WORDS.length)] : null };
+      document.getElementById("imStageProg").textContent = `試行 ${imRun.i} / ${imRun.n}`;
+      document.getElementById("imStageBar").style.width = ((imRun.i - 1) / imRun.n * 100) + "%";
+      imScreenReady();
+    }
+    function imPaint(body, foot) {
+      document.getElementById("imStageBody").innerHTML = body;
+      document.getElementById("imStageFoot").innerHTML = foot || "";
+    }
+    function imFld(inner, bg) { return `<div class="im-fld" style="background:${bg}">${inner}</div>`; }
+    function imFoot(id) { return document.querySelector("#imStageFoot #" + id); }
+
+    function imScreenReady() {
+      const st = IM_STAGES[imRun.stage];
+      const extra = st.kind === "own" ? `<div class="im-sub">${st.obs}。準備ができたら開始してください。</div>` : "";
+      imPaint(`<div class="im-instr">試行 ${imRun.i} の準備</div>${extra}
+        ${imFld('<div style="color:#8a8a8a;font-size:0.85rem">準備</div>', imC().bg)}`,
+        `<button id="imGo">開始</button><button id="imSkip" class="secondary">この試行を飛ばす</button>`);
+      imFoot("imGo").onclick = imScreenCountdown;
+      imFoot("imSkip").onclick = imNextTrial;
+    }
+    function imScreenCountdown() {
+      let k = 3;
+      const draw = () => imPaint(`<div class="im-instr">画面を見てください</div>
+        ${imFld(`<div class="im-count" style="color:${imC().fg}">${k}</div>`, imC().bg)}`, "");
+      draw();
+      imTimer = setInterval(() => { k--; if (k === 0) { imClearTimer(); imScreenObserve(); } else draw(); }, 800);
+    }
+    function imScreenObserve() {
+      const st = IM_STAGES[imRun.stage], c = imC();
+      if (st.kind === "shape") {
+        imPaint(`<div class="im-instr">${st.obs}</div>${imFld(imShapeSVG(imRun.cur.shape, c.fg), c.bg)}`, "");
+        imTimer = setTimeout(imScreenGap, imMeta.settings.showMs);
+      } else if (st.kind === "word") {
+        imPaint(`<div class="im-instr">${st.obs}</div>
+          ${imFld(`<div class="im-word" style="color:${c.fg}">${imEsc(imRun.cur.word)}</div>`, c.bg)}`,
+          `<button id="imGo">読んだ</button>`);
+        imFoot("imGo").onclick = imScreenGap;
+      } else {
+        let k = st.obsSec;
+        const draw = () => {
+          imPaint(`<div class="im-instr">${st.obs}</div>
+            <div class="im-sub">目を動かさず、その部分だけを見続けてください。</div>
+            ${imFld(`<div class="im-count" style="color:${c.fg}">${k}</div>`, c.bg)}`,
+            `<button id="imNow" class="secondary">もう十分</button>`);
+          imFoot("imNow").onclick = () => { imClearTimer(); imScreenGap(); };
+        };
+        draw();
+        imTimer = setInterval(() => { k--; if (k <= 0) { imClearTimer(); imScreenGap(); } else draw(); }, 1000);
+      }
+    }
+    // ここがこの訓練の要。見た直後に思い浮かべると、残像を「見えた」と数えてしまう。
+    function imScreenGap() {
+      imClearTimer();
+      let k = imMeta.settings.gapSec;
+      const draw = () => imPaint(`<div class="im-instr">目をそらして待つ</div>
+        <div class="im-sub">何も思い浮かべずに待ちます。この空白が残像を消すためのものです。</div>
+        ${imFld(`<div class="im-count" style="color:#9a9a9a">${k}</div>`, imC().bg)}`, "");
+      draw();
+      imTimer = setInterval(() => { k--; if (k <= 0) { imClearTimer(); imScreenRecall(); } else draw(); }, 1000);
+    }
+    function imScreenRecall() {
+      const st = IM_STAGES[imRun.stage];
+      const what = st.kind === "shape" ? "さっきの図形"
+                 : st.kind === "word"  ? `「${imEsc(imRun.cur.word)}」` : "さっき見たもの";
+      imPaint(`<div class="im-instr">${what}を思い浮かべてください</div>
+        <div class="im-sub">急がなくて構いません。できてもできなくても、次で正直に答えてください。</div>
+        ${imFld('<div style="color:#8a8a8a;font-size:0.8rem">— 思い浮かべる —</div>', imC().bg)}`,
+        `<button id="imGo">次へ</button>`);
+      imFoot("imGo").onclick = imScreenRate;
+    }
+    function imScreenRate() {
+      imPaint(`<div class="im-instr">どのくらい鮮明でしたか？</div>
+        <div class="im-scale">${[0,1,2,3,4,5].map(n => `<button data-imv="${n}">${n}</button>`).join("")}</div>
+        <div class="im-scalelab"><span>0 何も見えない</span><span>5 実物のよう</span></div>`, "");
+      document.querySelectorAll("#imStageBody [data-imv]").forEach(b => b.onclick = () => {
+        imRun.cur.v = Number(b.dataset.imv);
+        if (imRun.cur.v === 0) { imRun.cur.verdict = "none"; return imCommit(); }
+        imScreenVerdict();
+      });
+    }
+    function imScreenVerdict() {
+      imPaint(`<div class="im-instr">視線を左右に動かしてください</div>
+        <div class="im-sub">見えている像はどうなりましたか。ここが訓練の要です。</div>
+        <div class="im-vbtns">
+          <button class="bi" data-imk="img">像を保てた／自分で動かせた
+            <span class="d">視線と無関係に留まった → 心的イメージ</span></button>
+          <button class="ba" data-imk="aft">視線と一緒に動いた
+            <span class="d">目に焼き付いた像 → 残像。イメージではありません</span></button>
+          <button data-imk="unk">判定できなかった
+            <span class="d">はっきりしない時はこれで構いません</span></button>
+        </div>`, "");
+      document.querySelectorAll("#imStageBody [data-imk]").forEach(b => b.onclick = () => {
+        imRun.cur.verdict = b.dataset.imk; imCommit();
+      });
+    }
+    function imCommit() {
+      imRun.trials.push({ v: imRun.cur.v, verdict: imRun.cur.verdict });
+      if (IM_STAGES[imRun.stage].kind === "shape") return imScreenFeedback();
+      imNextTrial();
+    }
+    function imScreenFeedback() {
+      const c = imC();
+      imPaint(`<div class="im-instr">正解の図形</div>
+        <div class="im-sub">思い浮かべた像と見比べてください。答え合わせをすると定着しやすくなります。</div>
+        ${imFld(imShapeSVG(imRun.cur.shape, c.fg), c.bg)}`,
+        `<button id="imGo">次の試行へ</button>`);
+      imFoot("imGo").onclick = imNextTrial;
+    }
+    function imScreenFinish() {
+      document.getElementById("imStageBar").style.width = "100%";
+      document.getElementById("imStageProg").textContent = `${imRun.n} 試行 完了`;
+      const ts = imRun.trials, vs = ts.filter(imHasV).map(t => t.v);
+      const avg = vs.length ? (vs.reduce((a,b)=>a+b,0)/vs.length).toFixed(1) : "—";
+      const img = ts.filter(t => t.verdict === "img").length;
+      const aft = ts.filter(t => t.verdict === "aft").length;
+      let msg = "";
+      if (aft > img && aft >= 3)
+        msg = `<div class="im-note warn" style="text-align:left;max-width:34ch">
+          <strong>残像の判定が多めです。</strong>見えているのは心的イメージではない可能性があります。
+          コントラストを下げるか、待ち時間を伸ばして試してください。</div>`;
+      else if (img >= 3)
+        msg = `<div class="im-note good" style="text-align:left;max-width:34ch">
+          <strong>「像を保てた」が ${img} 回。</strong>この判定が週を追って増えているかを、週次レビューで確認してください。</div>`;
+      imPaint(`<div class="im-instr">おつかれさまでした</div>
+        <div class="im-sum">
+          <div><div class="k">平均鮮明度</div><div class="v">${avg}</div></div>
+          <div><div class="k">イメージ</div><div class="v" style="color:var(--im-img)">${img}</div></div>
+          <div><div class="k">残像</div><div class="v" style="color:var(--im-aft)">${aft}</div></div>
+        </div>${msg}`,
+        `<button id="imDone">記録して終わる</button>`);
+      imFoot("imDone").onclick = () => imEndSession(true);
+    }
+    function imQuit() {
+      if (!imRun) return imEndSession(false);
+      const n = imRun.trials.length;
+      if (!n) return imEndSession(false);
+      imEndSession(confirm(`${n} 試行ぶんを記録して中断しますか？（キャンセルすると破棄します）`));
+    }
+
+    /* ================= グラフ ================= */
+    function imHover(box, svg, hits, fmt) {
+      const tip = box.querySelector(".im-tip");
+      if (!tip) return;
+      const move = e => {
+        const p = e.touches ? e.touches[0] : e;
+        const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+        const x = (p.clientX - r.left) / r.width * vb.width;
+        let best = null, bd = 1e9;
+        hits.forEach(h => { const d = Math.abs(h.x - x); if (d < bd) { bd = d; best = h; } });
+        if (!best || bd > 60) { tip.classList.remove("on"); return; }
+        tip.innerHTML = fmt(best); tip.classList.add("on");
+        const px = best.x / vb.width * r.width, py = best.y / vb.height * r.height;
+        tip.style.left = Math.max(2, Math.min(r.width - tip.offsetWidth - 2, px - tip.offsetWidth / 2)) + "px";
+        tip.style.top = Math.max(0, py - tip.offsetHeight - 10) + "px";
+        const c = svg.querySelector(".im-cross");
+        if (c) { c.setAttribute("x1", best.x); c.setAttribute("x2", best.x); c.style.opacity = 1; }
+      };
+      const out = () => { tip.classList.remove("on");
+        const c = svg.querySelector(".im-cross"); if (c) c.style.opacity = 0; };
+      svg.addEventListener("mousemove", move);
+      svg.addEventListener("mouseleave", out);
+      svg.addEventListener("touchmove", e => { move(e); e.preventDefault(); }, { passive: false });
+      svg.addEventListener("touchend", out);
+    }
+    function imLineChart(box, rows) {
+      if (!rows.length) { box.innerHTML = `<div class="im-empty">記録がまだありません。<br>訓練を1回やると、ここに推移が出ます。</div>`; return; }
+      const W=600,H=250,L=34,R=26,T=14,B=30;
+      const maxDay = Math.max(8, ...rows.map(r => r.day));
+      const X = d => L + (d-1)/Math.max(1, maxDay-1) * (W-L-R);
+      const Y = v => T + (1 - v/5) * (H-T-B);
+      const grid = imCSS("--line"), muted = imCSS("--muted"), col = imCSS("--im-img");
+      let s = "";
+      [0,1,2,3,4,5].forEach(v => { s += `<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${grid}" stroke-width="1"/>
+        <text x="${L-8}" y="${Y(v)+4}" text-anchor="end" font-size="13" fill="${muted}">${v}</text>`; });
+      for (let w = 1; w <= Math.ceil(maxDay/7); w++) {
+        const d = (w-1)*7+1; if (d > maxDay) break;
+        s += `<text x="${X(d)}" y="${H-8}" text-anchor="middle" font-size="13" fill="${muted}">${w}週</text>`;
+      }
+      s += `<line class="im-cross" y1="${T}" y2="${H-B}" x1="0" x2="0" stroke="${muted}" stroke-width="1" style="opacity:0"/>`;
+      s += `<path d="${rows.map((r,i) => `${i?"L":"M"}${X(r.day).toFixed(1)},${Y(r.avg).toFixed(1)}`).join(" ")}"
+        fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      rows.forEach(r => { s += `<circle cx="${X(r.day).toFixed(1)}" cy="${Y(r.avg).toFixed(1)}" r="4.5"
+        fill="${col}" stroke="${imCSS("--card")}" stroke-width="2"/>`; });
+      const last = rows[rows.length-1];
+      s += `<text x="${Math.min(W-R, X(last.day)+9)}" y="${Y(last.avg)-9}" font-size="13.5" font-weight="700"
+        fill="${imCSS("--text")}" text-anchor="${X(last.day) > W-70 ? "end" : "start"}">${last.avg.toFixed(1)}</text>`;
+      box.innerHTML = `<div class="im-tip"></div><svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`;
+      imHover(box, box.querySelector("svg"), rows.map(r => ({ x:X(r.day), y:Y(r.avg), r })),
+        h => `<strong>${h.r.day}日目</strong>（${imFmt(h.r.date)}）<br>平均鮮明度 <strong>${h.r.avg.toFixed(1)}</strong>　${h.r.n}試行`);
+    }
+    function imBarChart(box, weeks) {
+      if (!weeks.some(w => w.img + w.aft > 0)) { box.innerHTML = `<div class="im-empty">判定がまだありません。</div>`; return; }
+      const W=600,H=250,L=34,R=14,T=14,B=30;
+      const max = Math.max(3, ...weeks.map(w => Math.max(w.img, w.aft)));
+      const step = (W-L-R)/8, bw = Math.min(26, step/2 - 3);
+      const Y = v => T + (1 - v/max) * (H-T-B);
+      const grid = imCSS("--line"), muted = imCSS("--muted");
+      const cI = imCSS("--im-img"), cA = imCSS("--im-aft");
+      let s = "";
+      [...new Set([0, Math.ceil(max/2), max])].forEach(v => {
+        s += `<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${grid}" stroke-width="1"/>
+          <text x="${L-8}" y="${Y(v)+4}" text-anchor="end" font-size="13" fill="${muted}">${v}</text>`; });
+      const hits = [];
+      weeks.forEach((w, i) => {
+        const cx = L + step*i + step/2;
+        [[w.img, cI, -1], [w.aft, cA, 1]].forEach(([v, col, side]) => {
+          if (v <= 0) return;
+          const x = cx + side + (side < 0 ? -bw : 0), y = Y(v);
+          s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}"
+            height="${((H-B)-y).toFixed(1)}" rx="4" fill="${col}"/>`;
+        });
+        hits.push({ x: cx, y: Y(Math.max(w.img, w.aft)), w });
+        s += `<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="13" fill="${muted}">${w.w}</text>`;
+      });
+      s += `<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="${muted}" stroke-width="1"/>`;
+      box.innerHTML = `<div class="im-tip"></div><svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`;
+      imHover(box, box.querySelector("svg"), hits,
+        h => `<strong>第${h.w.w}週</strong><br>イメージ <strong>${h.w.img}</strong>　残像 <strong>${h.w.aft}</strong>`);
+    }
+
+
+    /* ---- 2つの訓練を同じ週軸に並べる ----
+       残像の持続（秒）と イメージの鮮明度（0〜5）は単位が違うので、
+       1つの軸に重ねてはいけない。上下2段に分けて、週だけを揃える。 */
+    function imCrossWeeks() {
+      const st = imStart();
+      if (!st) return null;
+      const oc = (typeof sessions !== "undefined" && Array.isArray(sessions)) ? sessions : [];
+      const out = [];
+      for (let w = 1; w <= 8; w++) {
+        const imTs = imSessions.filter(s => imWeekOf(s.date) === w).flatMap(s => s.trials);
+        const imV = imTs.filter(imHasV).map(t => t.v);
+        const ocV = oc.filter(s => {
+          let d; try { d = imISO(new Date(s.timestamp)); } catch (e) { return false; }
+          return imWeekOf(d) === w;
+        }).map(s => (typeof getEffectiveAfterSec === "function")
+              ? getEffectiveAfterSec(s) : Number(s.afterSharpSec) || 0)
+          .filter(v => v > 0);
+        out.push({ w,
+          im: imV.length ? imV.reduce((a,b)=>a+b,0)/imV.length : null, imN: imV.length,
+          oc: ocV.length ? ocV.reduce((a,b)=>a+b,0)/ocV.length : null, ocN: ocV.length });
+      }
+      return out;
+    }
+
+    // 前の週と比べて同じ向きに動いたか。相関を出すには週が少なすぎるので、
+    // 「何週中何週で向きが揃ったか」だけを数える。
+    function imAgreement(rows) {
+      let same = 0, diff = 0;
+      let prev = null;
+      rows.forEach(r => {
+        if (r.im === null || r.oc === null) return;
+        if (prev) {
+          const di = r.im - prev.im, dO = r.oc - prev.oc;
+          if (Math.abs(di) > 0.05 && Math.abs(dO) > 0.05) {
+            if ((di > 0) === (dO > 0)) same++; else diff++;
+          }
+        }
+        prev = r;
+      });
+      return { same, diff, n: same + diff };
+    }
+
+    function imCrossChart(box, rows) {
+      const both = rows.filter(r => r.im !== null && r.oc !== null).length;
+      if (!rows.some(r => r.oc !== null)) {
+        box.innerHTML = `<div class="im-empty">この8週間のあいだにオレンジカードの記録がありません。<br>
+          両方を続けると、ここに並べて出ます。</div>`; return;
+      }
+      if (!rows.some(r => r.im !== null)) {
+        box.innerHTML = `<div class="im-empty">イメージ訓練の記録がまだありません。</div>`; return;
+      }
+      const W = 600, H = 330, L = 40, R = 16;
+      const PA = { t: 16, b: 148 }, PB = { t: 190, b: 300 };   // 上段=残像、下段=イメージ
+      const grid = imCSS("--line"), muted = imCSS("--muted");
+      const cA = imCSS("--im-aft"), cI = imCSS("--im-img");
+      const X = w => L + (w - 1) / 7 * (W - L - R);
+      let s = "";
+
+      function panel(p, vals, max, col, label, unit, fmt) {
+        const Y = v => p.t + (1 - v / max) * (p.b - p.t);
+        s += `<text x="${L}" y="${p.t - 5}" font-size="12.5" font-weight="700" fill="${muted}">${label}</text>`;
+        [0, max/2, max].forEach(v => {
+          s += `<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${grid}" stroke-width="1"/>
+            <text x="${L-7}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="${muted}">${fmt(v)}</text>`;
+        });
+        const pts = vals.filter(r => r.v !== null);
+        if (pts.length > 1) {
+          s += `<path d="${pts.map((r,i) => `${i?"L":"M"}${X(r.w).toFixed(1)},${Y(r.v).toFixed(1)}`).join(" ")}"
+            fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+        }
+        pts.forEach(r => { s += `<circle cx="${X(r.w).toFixed(1)}" cy="${Y(r.v).toFixed(1)}" r="4.5"
+          fill="${col}" stroke="${imCSS("--card")}" stroke-width="2"/>`; });
+        if (pts.length === 1) {
+          s += `<text x="${X(pts[0].w)+9}" y="${Y(pts[0].v)+4}" font-size="11.5" fill="${muted}">1週ぶんのみ</text>`;
+        }
+        return Y;
+      }
+
+      const ocMax = Math.max(5, ...rows.map(r => r.oc || 0)) * 1.1;
+      const YA = panel(PA, rows.map(r => ({ w:r.w, v:r.oc })), ocMax, cA,
+        "残像の持続（秒）　オレンジカード", "秒", v => v.toFixed(0));
+      const YB = panel(PB, rows.map(r => ({ w:r.w, v:r.im })), 5, cI,
+        "イメージの鮮明度（0〜5）　イメージ訓練", "", v => v.toFixed(0));
+
+      for (let w = 1; w <= 8; w++)
+        s += `<text x="${X(w)}" y="${H-8}" text-anchor="middle" font-size="13" fill="${muted}">${w}</text>`;
+      s += `<text x="${L-7}" y="${H-8}" text-anchor="end" font-size="11.5" fill="${muted}">週</text>`;
+      s += `<line class="im-cross" y1="${PA.t}" y2="${PB.b}" x1="0" x2="0" stroke="${muted}" stroke-width="1" style="opacity:0"/>`;
+
+      box.innerHTML = `<div class="im-tip"></div><svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`;
+      imHover(box, box.querySelector("svg"),
+        rows.map(r => ({ x: X(r.w), y: r.oc !== null ? YA(r.oc) : PA.t, r })),
+        h => `<strong>第${h.r.w}週</strong><br>` +
+             `残像の持続 <strong>${h.r.oc !== null ? h.r.oc.toFixed(1) + "秒" : "—"}</strong>（${h.r.ocN}回）<br>` +
+             `イメージ鮮明度 <strong>${h.r.im !== null ? h.r.im.toFixed(1) : "—"}</strong>（${h.r.imN}試行）`);
+      return both;
+    }
+
+    function imRenderCross() {
+      const box = document.getElementById("imCross");
+      const read = document.getElementById("imCrossRead");
+      if (!box || !read) return;
+      const rows = imCrossWeeks();
+      if (!rows) {
+        box.innerHTML = `<div class="im-empty">イメージ訓練を1回やって開始日が決まると、ここに出ます。</div>`;
+        read.innerHTML = ""; return;
+      }
+      const both = imCrossChart(box, rows);
+      const ag = imAgreement(rows);
+      let txt;
+      if (!both || both < 2) {
+        txt = `両方の記録がそろっている週がまだ ${both || 0} 週です。
+          並べて読むには、同じ週に両方を続ける必要があります。`;
+      } else if (ag.n === 0) {
+        txt = `そろっているのは ${both} 週ですが、週をまたいだ動きがほとんどありません。`;
+      } else {
+        txt = `そろっている ${both} 週のうち、前の週と比べて<strong>同じ向きに動いたのが ${ag.same} 回、
+          逆向きが ${ag.diff} 回</strong>でした。`;
+      }
+      read.innerHTML = `<div class="im-note">${txt}<br><br>
+        <strong>これは転移の証拠にはなりません。</strong>週が数個ある程度では、
+        偶然どちらにも転びます。同じ時期に両方やっていれば、体調や生活の変化で
+        一緒に動くこともあります。「気になる動きがあるかどうか」を眺めるための図として使ってください。
+        残像の持続を伸ばすと随意的なイメージも伸びるのかは、査読を経た研究で確かめられたものがありません。</div>`;
+    }
+
+    /* ================= 描画 ================= */
+    const IM_BASE_FIELDS = [
+      ["startDate","開始日","date","空欄なら最初の訓練の日が1日目になります"],
+      ["vviq","VVIQ 得点（16〜80）","number","点数より「完全にゼロか／弱いがゼロでないか」を見ます"],
+      ["dream","夢では映像を見るか","sel|はい|いいえ|わからない|夢を覚えていない","見るなら回路は動いていて、随意的なアクセスだけが効いていない可能性があります"],
+      ["type","タイプ","sel|先天性（昔から）|後天性（途中から）|不明","後天性なら、訓練より先に医療機関にご相談ください"],
+      ["senses","他の感覚のイメージ","sel|視覚のみ弱い|音も弱い|ほぼ全感覚弱い|わからない","視覚だけか全感覚かで話が変わります"],
+      ["goal","目的","sel|A 像を見たい|B 実務の困りごと|両方","Bなら訓練より代償戦略のほうが費用対効果が高いです"],
+      ["trouble","今困っていること","area","具体的に。8週間後にこれが変わったかを見ます"],
+      ["success","何が起きたら「成功」か","area","先に決めておく。後から基準を動かさないため"]
+    ];
+
+    function imRender() {
+      if (!document.getElementById("imHome")) return;
+      const d = imCurrentDay(), st = imStart();
+      const ws = imWeekStats(), rows = imDayAverages(), ts = imAllTrials();
+      const img = ts.filter(t => t.verdict === "img").length;
+      const aft = ts.filter(t => t.verdict === "aft").length;
+      const vs = ts.filter(imHasV).map(t => t.v);
+      const avg = vs.length ? (vs.reduce((a,b)=>a+b,0)/vs.length).toFixed(1) : "—";
+      const days = new Set(imSessions.map(s => s.date)).size;
+
+      let notes = "";
+      if (!st) notes += `<div class="im-note"><strong>まだ始まっていません。</strong>
+        下の「今日のメニュー」から1回やると、その日が1日目になります。
+        先に開始前チェックを埋めておくと、8週間後に比較できます。</div>`;
+      if (d >= 56) notes += `<div class="im-note crit"><strong>8週間が経過しました。</strong>ここで判定してください。
+        平均鮮明度と「イメージ」判定の回数が動いていなければ、そこで終了です。
+        これはあなたの努力不足ではありません。延長はしないでください。</div>`;
+      if (ts.length >= 10) {
+        if (aft > img * 1.5) notes += `<div class="im-note warn"><strong>残像の判定が優勢です。</strong>
+          いま見えているものは心的イメージではない可能性があります。コントラストを「低」に、
+          待ち時間を10秒に変えて、それでも同じかを確かめてください。</div>`;
+        else if (img > aft * 1.5) notes += `<div class="im-note good"><strong>「像を保てた」判定が優勢です。</strong>
+          ただし自己判定なので、週次レビューで回数が実際に増えているかを見てください。</div>`;
+      }
+
+      document.getElementById("imHome").innerHTML = `${notes}
+        <div style="font-weight:800;font-size:1.05rem;margin-top:0.4rem;">
+          ${st ? `${d} 日目 ／ 56 日` : "8週間の実験"}</div>
+        <div class="muted" style="font-size:0.82rem;">
+          ${st ? `開始 ${imFmt(st)}　第 ${Math.min(8, Math.ceil(d/7))} 週${d <= 56 ? `　残り ${56-d} 日` : "　期間終了"}` : "期限を切って、効いたかどうかを自分で判定します。"}</div>
+        <div class="im-bar"><i style="width:${Math.min(100, d/56*100)}%"></i></div>
+        <div class="im-tiles">
+          <div class="im-tile"><div class="k">実施日数</div><div class="v">${days}<span class="u">日</span></div></div>
+          <div class="im-tile"><div class="k">平均鮮明度</div><div class="v">${avg}<span class="u">/5</span></div></div>
+          <div class="im-tile"><div class="k">イメージ判定</div><div class="v" style="color:var(--im-img)">${img}</div></div>
+          <div class="im-tile"><div class="k">残像判定</div><div class="v" style="color:var(--im-aft)">${aft}</div></div>
+        </div>`;
+
+      document.getElementById("imMenu").innerHTML = [1,2,3,4].map(n =>
+        `<button class="im-menu" data-imstage="${n}">
+           <span class="t">${IM_STAGES[n].name}</span>
+           <span class="d">${IM_STAGES[n].desc}</span></button>`).join("");
+      document.querySelectorAll("[data-imstage]").forEach(b =>
+        b.onclick = () => imStartSession(Number(b.dataset.imstage)));
+
+      const s = imMeta.settings;
+      const seg = (id, opts, cur) => `<div class="im-seg" id="${id}">` +
+        opts.map(([k, l]) => `<button data-imopt="${k}" aria-pressed="${String(cur) === String(k)}">${l}</button>`).join("") + `</div>`;
+      document.getElementById("imOpts").innerHTML = `
+        <label class="im-field-label">図形のコントラスト
+          <span class="h">高いほど残像が出やすくなります。慣れたら下げてください。</span></label>
+        ${seg("imSegC", Object.entries(IM_CONTRAST).map(([k,v]) => [k, v.label]), s.contrast)}
+        <label class="im-field-label">目をそらして待つ時間
+          <span class="h">元の方法は「チラ見してすぐ」ですが、それだと残像を見ている可能性が高いので空けます。</span></label>
+        ${seg("imSegG", [[3,"3 秒"],[5,"5 秒"],[10,"10 秒"]], s.gapSec)}
+        <label class="im-field-label">図形を見せる時間</label>
+        ${seg("imSegS", [[250,"250ms"],[500,"500ms"],[1000,"1秒"],[3000,"3秒"]], s.showMs)}
+        <label class="im-field-label">1セッションの試行数</label>
+        ${seg("imSegT", [[5,"5"],[10,"10"],[15,"15"],[20,"20"]], s.trials)}
+        <label class="im-field-label">目</label>
+        ${seg("imSegE", [["open","開けたまま"],["closed","閉じる"]], s.eyes)}`;
+      const bind = (id, key, num) => {
+        const el = document.getElementById(id); if (!el) return;
+        el.querySelectorAll("button").forEach(b => b.onclick = () => {
+          imMeta.settings[key] = num ? Number(b.dataset.imopt) : b.dataset.imopt;
+          el.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+          imTouchMeta();
+        });
+      };
+      bind("imSegC","contrast",false); bind("imSegG","gapSec",true);
+      bind("imSegS","showMs",true); bind("imSegT","trials",true); bind("imSegE","eyes",false);
+
+      imLineChart(document.getElementById("imChartLine"), rows);
+      imBarChart(document.getElementById("imChartBar"), ws);
+      document.getElementById("imTblLine").innerHTML = rows.length
+        ? `<table class="im-table"><thead><tr><th>日</th><th>日付</th><th>平均</th><th>試行</th></tr></thead><tbody>` +
+          rows.map(r => `<tr><td>${r.day}</td><td>${imFmt(r.date)}</td><td>${r.avg.toFixed(1)}</td><td>${r.n}</td></tr>`).join("") +
+          `</tbody></table>` : `<div class="im-empty">なし</div>`;
+      document.getElementById("imTblBar").innerHTML =
+        `<table class="im-table"><thead><tr><th>週</th><th>イメージ</th><th>残像</th><th>試行</th></tr></thead><tbody>` +
+        ws.map(w => `<tr><td>${w.w}</td><td>${w.img}</td><td>${w.aft}</td><td>${w.trials}</td></tr>`).join("") + `</tbody></table>`;
+
+      const cur = Math.min(8, Math.max(1, Math.ceil((d || 1) / 7)));
+      document.getElementById("imWeekly").innerHTML =
+        `<table class="im-table"><thead><tr><th>週</th><th>日数</th><th>分</th><th>平均</th><th>最高</th><th>イ</th><th>残</th><th>気づき</th><th>判定</th></tr></thead><tbody>` +
+        ws.map(w => `<tr${w.w === cur ? ' style="background:rgba(255,152,0,0.07)"' : ""}>
+          <td><strong>${w.w}</strong></td><td>${w.days || "—"}</td><td>${w.mins || "—"}</td>
+          <td><strong>${w.avg !== null ? w.avg.toFixed(1) : "—"}</strong></td><td>${w.max !== null ? w.max : "—"}</td>
+          <td style="color:var(--im-img)">${w.img || "—"}</td><td style="color:var(--im-aft)">${w.aft || "—"}</td>
+          <td><input class="note-input" type="text" data-imwn="${w.w}" value="${imEsc(imMeta.weekNotes[w.w] || "")}"
+               placeholder="変化・気づき" style="min-width:130px"></td>
+          <td><select data-imwj="${w.w}" style="min-width:92px">${["","継続","調整して継続","中止"]
+               .map(o => `<option ${(imMeta.weekJudge[w.w] || "") === o ? "selected" : ""}>${o}</option>`).join("")}</select></td>
+        </tr>`).join("") + `</tbody></table>`;
+      document.querySelectorAll("[data-imwn]").forEach(i => i.onchange = () => {
+        imMeta.weekNotes[i.dataset.imwn] = i.value.slice(0, 200); imTouchMeta(); });
+      document.querySelectorAll("[data-imwj]").forEach(i => i.onchange = () => {
+        imMeta.weekJudge[i.dataset.imwj] = i.value; imTouchMeta(); });
+
+      const list = [...imSessions].sort((a,b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+      document.getElementById("imLog").innerHTML = list.length
+        ? `<table class="im-table"><thead><tr><th>日</th><th>日付</th><th>メニュー</th><th>分</th><th>平均</th><th>判定</th><th>条件</th><th>メモ</th><th></th></tr></thead><tbody>` +
+          list.map(x => {
+            const v = x.trials.filter(imHasV).map(t => t.v);
+            const a = v.length ? (v.reduce((p,q)=>p+q,0)/v.length).toFixed(1) : "—";
+            const i2 = x.trials.filter(t => t.verdict === "img").length;
+            const a2 = x.trials.filter(t => t.verdict === "aft").length;
+            return `<tr><td>${imDayIndex(x.date) || "—"}</td><td>${imFmt(x.date)}</td>
+              <td>${IM_STAGES[x.stage].name.replace("　"," ")}</td>
+              <td>${Math.max(1, Math.round((x.sec||0)/60))}</td><td><strong>${a}</strong></td>
+              <td>${i2 ? `<span class="im-pill i">イ ${i2}</span> ` : ""}${a2 ? `<span class="im-pill a">残 ${a2}</span>` : ""}${!i2 && !a2 ? "—" : ""}</td>
+              <td class="muted" style="font-size:0.72rem;white-space:nowrap">${IM_CONTRAST[x.contrast].label}／${x.gapSec}秒</td>
+              <td><input class="note-input" type="text" data-imnote="${x.id}" value="${imEsc(x.note)}"
+                   placeholder="気づいたこと" style="min-width:130px"></td>
+              <td><button class="secondary" data-imdel="${x.id}" style="padding:0.25rem 0.5rem;font-size:0.72rem">削除</button></td></tr>`;
+          }).join("") + `</tbody></table>`
+        : `<div class="im-empty">まだ記録がありません。</div>`;
+      document.querySelectorAll("[data-imnote]").forEach(i => i.onchange = () => {
+        const x = imSessions.find(y => y.id === i.dataset.imnote);
+        if (x) { x.note = i.value.slice(0, 120); imPersist(); imScheduleSync(); }
+      });
+      document.querySelectorAll("[data-imdel]").forEach(b => b.onclick = () => {
+        if (!confirm("この回の記録を削除しますか？")) return;
+        imDeleted.add(b.dataset.imdel);
+        imSessions = imSessions.filter(x => x.id !== b.dataset.imdel);
+        imPersist(); imScheduleSync(); imRender();
+      });
+
+      const b = imMeta.baseline;
+      document.getElementById("imBaseline").innerHTML = IM_BASE_FIELDS.map(f => {
+        const [k, label, type, hint] = f, val = imEsc(b[k] || "");
+        let input;
+        if (type.startsWith("sel")) {
+          input = `<select data-imb="${k}" style="width:100%"><option value=""></option>` +
+            type.split("|").slice(1).map(o => `<option ${b[k] === o ? "selected" : ""}>${o}</option>`).join("") + `</select>`;
+        } else if (type === "area") {
+          input = `<textarea class="note-input" data-imb="${k}" rows="2" style="width:100%">${val}</textarea>`;
+        } else {
+          input = `<input class="note-input" type="${type}" data-imb="${k}" value="${val}" style="width:100%">`;
+        }
+        return `<label class="im-field-label">${label}<span class="h">${hint}</span></label>${input}`;
+      }).join("") +
+      `<label class="im-field-label">VVIQ 得点（8週間後）
+        <span class="h">同じ質問紙をもう一度。開始前と比べます。</span></label>
+       <input class="note-input" type="number" id="imPostVviq" value="${imEsc(imMeta.postVviq)}" style="width:100%">`;
+      document.querySelectorAll("[data-imb]").forEach(i => i.onchange = () => {
+        imMeta.baseline[i.dataset.imb] = i.value.slice(0, 500); imTouchMeta();
+        if (i.dataset.imb === "startDate") imRender();
+      });
+      const pv = document.getElementById("imPostVviq");
+      if (pv) pv.onchange = () => { imMeta.postVviq = pv.value; imTouchMeta(); };
+    
+      try { imRenderCross(); } catch (e) { console.error("クロス分析の描画に失敗:", e); }
+    }
+
+    function imExportCSV() {
+      const V = { img:"イメージ", aft:"残像", unk:"判定不能", none:"何も見えず" };
+      const L = ["日,日付,メニュー,秒,コントラスト,待ち秒,試行番号,鮮明度,残像判定,メモ"];
+      [...imSessions].sort((a,b) => a.date.localeCompare(b.date)).forEach(s => {
+        s.trials.forEach((t, i) => L.push([imDayIndex(s.date) || "", s.date,
+          IM_STAGES[s.stage].name.replace("　"," "), s.sec || "", IM_CONTRAST[s.contrast].label,
+          s.gapSec, i+1, t.v ?? "", V[t.verdict] || "",
+          `"${(s.note||"").replace(/"/g,'""')}"`].join(",")));
+      });
+      const blob = new Blob(["﻿" + L.join("\n")], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `imagery-training-${imToday()}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+
+
+    // ---------- 書き出し / 読み込み / 全削除（イメージ訓練のぶんだけ） ----------
+    function imDownload(name, text, mime) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+      a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+    function imExportJSON() {
+      if (!imSessions.length && !imMeta.baseline.startDate) {
+        alert("書き出すイメージ訓練の記録がありません。"); return;
+      }
+      imDownload(`imagery-training-backup-${imToday()}.json`, JSON.stringify({
+        appVersion: "v15.2", schema: 4, kind: "imagery",
+        exportDate: new Date().toISOString(),
+        totalSessions: imSessions.length,
+        imagerySessions: imSessions,
+        imageryDeletedIds: [...imDeleted],
+        imageryMeta: imMeta
+      }, null, 2), "application/json");
+      alert(`書き出しました：${imSessions.length}件`);
+    }
+    // 同期ファイルをそのまま読ませても通るようにしておく（キーが同じなので）
+    function imImportJSON(file) {
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const o = JSON.parse(r.result);
+          const raw = Array.isArray(o) ? o : o?.imagerySessions;
+          if (!Array.isArray(raw)) { alert("このファイルにイメージ訓練の記録が入っていません。"); return; }
+          const incoming = raw.map(imNormalize).filter(Boolean);
+          const before = imSessions.length;
+          // 手で読み込むのは「戻したい」という意思表示なので、削除済みの印を外す
+          incoming.forEach(s => imDeleted.delete(s.id));
+          imSessions = imMerge(incoming);
+          // 手動の読み込みでは、同期のような「あとから書いたほう優先」は使わない。
+          // 全削除のあとに戻すと、消した側の updatedAt のほうが新しくて
+          // 開始日やベースラインが戻ってこなくなるため。
+          // 空欄になっているところだけ、読み込んだ値で埋める。
+          const rm = o?.imageryMeta;
+          if (rm && typeof rm === "object") {
+            const b = rm.baseline || {};
+            Object.keys(imMeta.baseline).forEach(k => {
+              if (!imMeta.baseline[k] && b[k]) imMeta.baseline[k] = b[k];
+            });
+            ["weekNotes", "weekJudge"].forEach(key => {
+              const src = rm[key] || {};
+              Object.keys(src).forEach(w => { if (!imMeta[key][w] && src[w]) imMeta[key][w] = src[w]; });
+            });
+            if (!imMeta.postVviq && rm.postVviq) imMeta.postVviq = rm.postVviq;
+            if (rm.settings && typeof rm.settings === "object")
+              imMeta.settings = Object.assign(imMeta.settings, rm.settings);
+            imMeta.updatedAt = Date.now();   // 他の端末にも戻したことを伝える
+          }
+          imPersist(); imScheduleSync(); imRender();
+          alert(`読み込みました。${imSessions.length - before}件を追加して、合計${imSessions.length}件です。`);
+        } catch (e) { alert("このJSONを読み取れませんでした。"); }
+      };
+      r.readAsText(file);
+    }
+    function imDeleteAll() {
+      const n = imSessions.length;
+      if (!n && !imMeta.baseline.startDate) { alert("消すイメージ訓練の記録がありません。"); return; }
+      const msg = (typeof driveEnabled === "function" && driveEnabled())
+        ? `イメージ訓練の記録（${n}件）と開始前チェックを削除します。取り消せません。\n同期している端末からも削除されます。続けますか？`
+        : `イメージ訓練の記録（${n}件）と開始前チェックを削除します。取り消せません。続けますか？`;
+      if (!confirm(msg)) return;
+      imSessions.forEach(s => imDeleted.add(s.id));   // 同期で戻ってこないようにする
+      imSessions = [];
+      imMeta = imBlankMeta();
+      imMeta.updatedAt = Date.now();
+      imPersist(); imScheduleSync(); imRender();
+      alert("イメージ訓練の記録を削除しました。オレンジカードの記録はそのままです。");
+    }
+
+    function imInit() {
+      imLoad();
+      const q = document.getElementById("imQuit");
+      if (q) q.onclick = imQuit;
+      const c = document.getElementById("imCsvBtn");
+      if (c) c.onclick = imExportCSV;
+      const j = document.getElementById("imJsonBtn");
+      if (j) j.onclick = imExportJSON;
+      const ib = document.getElementById("imImportBtn");
+      const ifl = document.getElementById("imImportFile");
+      if (ib && ifl) {
+        ib.onclick = () => ifl.click();
+        ifl.onchange = e => { const f = e.target.files[0]; if (f) imImportJSON(f); e.target.value = ""; };
+      }
+      const dl = document.getElementById("imDeleteBtn");
+      if (dl) dl.onclick = imDeleteAll;
+      imRender();
     }
 
     window.addEventListener("beforeunload", () => {

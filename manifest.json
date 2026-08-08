@@ -1,7 +1,7 @@
 {
   "name": "Orange Card - 残像トレーニング記録",
   "short_name": "Orange Card",
-  "description": "オレンジカードの残像トレーニングを記録・可視化するツール",
+  "description": "オレンジカードの残像トレーニングと8週間の視覚イメージ訓練を記録・可視化するツール",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
