@@ -220,6 +220,27 @@
     .watch-note { position: absolute; left: 0; right: 0; bottom: 2.2rem; text-align: center; color: #3a3f4a; font-size: 0.85rem; line-height: 1.8; padding: 0 1.5rem; }
     .watch-count { position: absolute; left: 0; right: 0; top: 45%; text-align: center; color: #23262e; font-size: 3.5rem; font-weight: 900; }
 
+    /* ===== v16: 進め方の説明 ===== */
+    .howto { border: 1px solid var(--line); border-radius: 14px; background: var(--card); padding: 1rem; margin-bottom: 1rem; }
+    .howto > summary { cursor: pointer; font-weight: 700; color: var(--accent); list-style: none; font-size: 1rem; }
+    .howto > summary::-webkit-details-marker { display: none; }
+    .howto > summary::before { content: "▸ "; }
+    .howto[open] > summary::before { content: "▾ "; }
+    .steps { display: flex; flex-direction: column; gap: 0.85rem; margin-top: 1.1rem; }
+    .step { display: flex; gap: 0.75rem; align-items: flex-start; }
+    .step-n { flex-shrink: 0; width: 2.9rem; text-align: center; font-weight: 800; font-size: 0.75rem; color: #111; background: var(--accent); border-radius: 8px; padding: 0.32rem 0; line-height: 1.3; }
+    .step-n.prep { background: var(--line); color: var(--muted); }
+    .step-b { flex: 1; min-width: 0; }
+    .step-t { font-weight: 700; font-size: 0.94rem; margin-bottom: 0.3rem; line-height: 1.5; }
+    .step-b p { margin: 0 0 0.35rem; font-size: 0.86rem; line-height: 1.8; color: var(--muted); }
+    .step-b p.why { color: #8ab4f8; }
+    .step-b p.why::before { content: "→ "; }
+    .howto-key { border: 1px solid var(--accent); border-radius: 10px; padding: 0.85rem 0.9rem; margin-top: 1.1rem; background: rgba(255,152,0,0.06); font-size: 0.88rem; line-height: 1.85; }
+    .howto-key .k { font-weight: 800; color: var(--accent); display: block; margin-bottom: 0.4rem; }
+    .howto-key ul { margin: 0.3rem 0 0; padding-left: 1.2rem; }
+    .howto-key li { margin-bottom: 0.3rem; }
+    .howto-warn { border-left: 3px solid var(--danger); background: rgba(233,30,99,0.07); padding: 0.85rem 0.9rem; border-radius: 6px; margin-top: 0.85rem; font-size: 0.88rem; line-height: 1.85; }
+
     /* ===== v16: 3択などのセグメント ===== */
     .seg { display: flex; gap: 0.45rem; flex-wrap: wrap; }
     .seg button { flex: 1; min-width: 5.5rem; background: transparent; border: 2px solid var(--line); color: var(--text); border-radius: 10px; padding: 0.6rem 0.5rem; font-size: 0.88rem; font-weight: 600; }
@@ -315,6 +336,88 @@
           1回に長くやるより、<strong style="color:var(--accent);">短いものを1日に数回</strong>のほうが向いています。
         </p>
       </div>
+
+      <details class="howto" id="howtoBox">
+        <summary>この練習の進め方（初めての方はこちら）</summary>
+        <div>
+          <p class="muted" style="margin:0.9rem 0 0;font-size:0.87rem;line-height:1.8;">
+            全部で2分ほどです。画面の指示どおりに進むので、覚える必要はありません。
+            <strong style="color:var(--text);">目を閉じたまま操作する場面があるので、そこだけ先に読んでおくと安心です。</strong>
+          </p>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-n prep">準備<br>5秒</div>
+              <div class="step-b">
+                <div class="step-t">まぶたの裏の色を確かめます</div>
+                <p>目を閉じて待ち、赤橙っぽく見えたかどうかを答えます。</p>
+                <p class="why">まぶたは赤い光をよく通します。明るい部屋だと、<strong>カードを見なくてもオレンジが見えてしまいます。</strong>暗い部屋かアイマスクが理想です。</p>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-n">1<br>15秒</div>
+              <div class="step-b">
+                <div class="step-t">色を見る（目は開けたまま）</div>
+                <p>カードの色をよく見ます。「みかんより少し赤い」など、言葉にしながら見てください。まばたきは自由です。</p>
+                <p class="why">あとで脳が使う「絵の具」を用意しています。<strong>残像のことは、まだ忘れていて大丈夫です。</strong></p>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-n">2<br>15秒</div>
+              <div class="step-b">
+                <div class="step-t">足場をつくる（目は開けたまま）</div>
+                <p>色を見るのはやめて、中心の点のあたりをぼんやり眺めます。ピントは合わせなくて構いません。まばたきも自由です。</p>
+                <p class="why">映像を置く「場所の目印」を作っています。合図が鳴ったら目を閉じてください。</p>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-n">3<br>8秒</div>
+              <div class="step-b">
+                <div class="step-t">力を抜く（目を閉じて）</div>
+                <p>息を細く長く吐きながら、眼の奥とまぶたの力を手放します。</p>
+                <p class="why">ここが一番大事です。<strong>視覚野が静かなほど、心に浮かぶ映像は鮮明になります。</strong></p>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-n">4<br>自由</div>
+              <div class="step-b">
+                <div class="step-t">ただ眺める（目を閉じたまま）</div>
+                <p>画面は真っ黒になります。まぶたの裏に補色（青緑）が見えても、<strong>追いかけないでください。</strong>
+                   補色が薄れたあたりで「その場所にオレンジがある」という前提だけを置いて、眺めています。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="howto-key">
+            <span class="k">4のときの操作（目を閉じたままできます）</span>
+            <ul>
+              <li>何か変わったと思ったら、<strong>画面のどこでも軽く触る</strong>。何回でも、0回でも構いません</li>
+              <li>終わったら、<strong>そのまま1秒ほど押し続ける</strong>と終了します</li>
+            </ul>
+            「いま何が起きたか」を目を閉じたまま判断する必要はありません。
+            目を開けてから、押したところに意味をつけます。
+          </div>
+
+          <div class="howto-warn">
+            <strong>いちばん大事なこと</strong><br>
+            補色（青緑）を長く保とうとしないでください。あれは網膜が疲れているだけの現象で、力を入れても伸びません。
+            そして<strong>伸ばそうとする力みが、次に来るはずのものを潰します。</strong>
+            補色が消えていくのは失敗ではなく、正しい進行です。
+          </div>
+
+          <p class="muted" style="margin:0.9rem 0 0;font-size:0.85rem;line-height:1.8;">
+            <strong style="color:var(--text);">ときどき混ざる回について：</strong>
+            10回に1回ほど、カードを出さない回と、オレンジ以外の色を出す回があります。
+            記録が済んでから、どちらだったかをお知らせします。
+            「見えなかった」も大事な記録なので、気にせずいつも通りやってください。
+            くわしくは「分析」タブに書いてあります。
+          </p>
+        </div>
+      </details>
 
       <div class="card" id="resultCard" style="display:none; position:relative;">
         <button onclick="document.getElementById('resultCard').style.display='none'"
@@ -897,11 +1000,10 @@
         </div>
 
         <div class="opt-row">
-          <label style="flex:1;min-width:240px;">計測中の時間表示
+          <label style="flex:1;min-width:240px;">足場をつくる時間のゲージ
             <select id="optTimerDisplaySel" style="width:100%;margin-top:0.35rem;">
-              <option value="gauge" selected>ゲージだけ</option>
-              <option value="numbers">数字とゲージ</option>
-              <option value="none">表示しない</option>
+              <option value="gauge" selected>ゲージを出す</option>
+              <option value="none">出さない</option>
             </select>
           </label>
         </div>
@@ -1059,8 +1161,17 @@
       step("indicator", updateSetIndicator);
       step("global", wireGlobalEvents);
       step("sw", registerServiceWorker);
+      step("howto", wireHowto);
       step("chartCheck", warnIfChartMissing);
       waitForGoogleIdentity().then(initGoogleIdentity);
+    }
+
+    // 進め方の説明。初回は開いた状態、以後は本人の選択を覚えておく
+    function wireHowto() {
+      const d = el("howtoBox"); if (!d) return;
+      const saved = localStorage.getItem("ocHowtoOpen");
+      d.open = (saved === null) ? true : (saved === "1");
+      d.addEventListener("toggle", () => localStorage.setItem("ocHowtoOpen", d.open ? "1" : "0"));
     }
 
     function warnIfChartMissing() {
@@ -1207,18 +1318,19 @@
         label: oneOf(t?.label, ["negGone", "posCame", "posGone", "changed", "unknown"], "unknown")
       })) : [];
 
+      const kind = oneOf(s.trialKind, ["normal", "color", "blank"], "normal");
       return {
         schema: 16,
         id: (typeof s.id === "string" && s.id) ? s.id : `oc16:${ts}`,
         timestamp: ts,
         // 提示条件
-        trialKind: oneOf(s.trialKind, ["normal", "color", "blank"], "normal"),
-        cardColor: s.trialKind === "blank" ? null : oneOf(s.cardColor, Object.keys(STIM_COLORS), "orange"),
+        trialKind: kind,
+        cardColor: kind === "blank" ? null : oneOf(s.cardColor, Object.keys(STIM_COLORS), "orange"),
         anchorSec: clampNum(s.anchorSec, 1, 300, 15),
         observeSec: clampNum(s.observeSec, 0, 300, OBSERVE_SEC),
         relaxPhase: !!s.relaxPhase,
         // 環境
-        roomLight: oneOf(s.roomLight, ["dark", "dim", "bright"], "dim"),
+        roomLight: oneOf(s.roomLight, ["dark", "bright"], "dark"),
         eyeMask: !!s.eyeMask,
         envCheckSaw: oneOf(s.envCheckSaw, ["dark", "reddish"], "dark"),
         // 計測（生データ）
@@ -1276,6 +1388,7 @@
     // ===== 保存 =====
     const KEY_V16 = "ocSessionsV16";
     const KEY_V15 = "orangeCardSessions";
+    let legacyLoadOk = true;
 
     function loadSessions() {
       loadTombstones();
@@ -1292,7 +1405,11 @@
         const raw = JSON.parse(localStorage.getItem(KEY_V15) || "[]");
         legacySessions = (Array.isArray(raw) ? raw : []).map(normalizeLegacy)
           .filter(Boolean).filter(s => !deletedIds.has(s.id)).sort(byTime);
-      } catch (e) { legacySessions = []; }
+      } catch (e) {
+        legacySessions = [];
+        legacyLoadOk = false;   // 壊れた旧データを空で上書きしないための印
+        console.error("旧データを読めませんでした。上書きは行いません。", e);
+      }
     }
 
     function byTime(a, b) { return new Date(a.timestamp) - new Date(b.timestamp); }
@@ -1300,7 +1417,8 @@
     function persistSessions() {
       try {
         localStorage.setItem(KEY_V16, JSON.stringify(sessions));
-        localStorage.setItem(KEY_V15, JSON.stringify(legacySessions));
+        // 旧データの読み込みに失敗していた場合、空配列で上書きして消してしまわない
+        if (legacyLoadOk) localStorage.setItem(KEY_V15, JSON.stringify(legacySessions));
         return true;
       } catch (e) {
         alert("保存できませんでした。設定タブから書き出しておいてください。（記録は消していません）");
@@ -1339,35 +1457,6 @@
     }
     function addTombstones(ids) { ids.forEach(id => { if (id) deletedIds.add(id); }); persistTombstones(); }
     function clearTombstones(ids) { ids.forEach(id => deletedIds.delete(id)); persistTombstones(); }
-
-    // 端末をまたいだ統合：id が同じものは1件として扱い、時刻順に並べ直す
-    function mergeSessions(incoming) {
-      const map = new Map();
-      [...sessions, ...incoming].forEach(s => {
-        if (!s || !s.id) return;
-        if (deletedIds.has(s.id)) return;          // 削除済みは戻さない
-        if (!map.has(s.id)) map.set(s.id, s);
-      });
-      return [...map.values()].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    }
-
-    function persistSessions() {
-      try {
-        localStorage.setItem("orangeCardSessions", JSON.stringify(sessions));
-        return true;
-      } catch (e) {
-        alert("保存できませんでした。設定タブから書き出しておいてください。（記録は消していません）");
-        return false;
-      }
-    }
-
-    function movingAverage(arr, w) {
-      return arr.map((_, i) => {
-        const from = Math.max(0, i - w + 1);
-        const slice = arr.slice(from, i + 1);
-        return parseFloat((slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(2));
-      });
-    }
 
     // ===== 計測の設定 =====
     const TARGET_ANGLE_DEG = 10;   // 目に映る大きさ（約100mmを50cmで見たときと同じ）
@@ -1487,8 +1576,23 @@
       const d = new Date(); d.setHours(0, 0, 0, 0);
       const key = "ocRelaxDay:" + d.getTime();
       let v = localStorage.getItem(key);
-      if (v === null) { v = Math.random() < 0.5 ? "1" : "0"; localStorage.setItem(key, v); }
+      if (v === null) {
+        v = Math.random() < 0.5 ? "1" : "0";
+        localStorage.setItem(key, v);
+        pruneRelaxDays(d.getTime());
+      }
       return v === "1";
+    }
+
+    // 割り当ての履歴は記録側にも残るので、鍵は直近90日分だけ持っておけば足りる
+    function pruneRelaxDays(todayMs) {
+      const cutoff = todayMs - 90 * 86400000;
+      const drop = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("ocRelaxDay:") && Number(k.slice(11)) < cutoff) drop.push(k);
+      }
+      drop.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     }
 
     function updateSetIndicator() {
@@ -1541,6 +1645,7 @@
     }
 
     function pickEnv(v) {
+      if (!run) return;                 // 中止した直後などに押されても落ちないように
       run.envCheckSaw = v;
       document.querySelectorAll("#envSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
       el("envNext").disabled = false;
@@ -1552,7 +1657,7 @@
     }
 
     function envDone() {
-      if (!run.envCheckSaw) return;
+      if (!run || !run.envCheckSaw) return;
       lastEnv = { saw: run.envCheckSaw, light: run.roomLight, mask: run.eyeMask };
       hidePhase("phEnv", true);
       startObserve();
@@ -1679,7 +1784,11 @@
     }
 
     function onWatchDown(e) {
-      if (e) e.preventDefault();
+      if (e) {
+        e.preventDefault();
+        // 指がずれても pointerup を必ず受け取る（取りこぼすと長押し扱いで終了してしまう）
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+      }
       if (holdTimer) clearTimeout(holdTimer);
       holdTimer = setTimeout(() => { holdTimer = null; endWatch(); }, HOLD_MS);
     }
@@ -1955,7 +2064,8 @@
         isRunning = false;
         el("startBtn").disabled = false;
         run = null; form = null;
-        if (setIndex < setTotal) startRest();
+        // setIndex が 0 のときに次を始めてしまわないよう、進行中であることを確かめる
+        if (setIndex > 0 && setIndex < setTotal) startRest();
         else { setIndex = 0; setTotal = 1; updateSetIndicator(); }
       }, 400));
     }
@@ -2090,7 +2200,7 @@
       tb.innerHTML = "";
       const posT = { yes: "出た", unsure: "自信なし", no: "出ず" };
       const effT = { 1: "楽", 2: "少し", 3: "かなり" };
-      const lightT = { dark: "暗い", dim: "薄暗い", bright: "明るい" };
+      const lightT = { dark: "暗い", bright: "明るい" };
       sessions.slice(-12).reverse().forEach(s => {
         const tr = document.createElement("tr");
         tr.style.borderBottom = "1px solid var(--line)";
@@ -2361,6 +2471,14 @@
         if (v) localStorage.setItem("ocDeviceLabel", v);
         dev.value = deviceLabel();
       };
+
+      const anc = el("anchorSec"), setc = el("setCount");
+      anc.value = localStorage.getItem("ocAnchorSec") || "15";
+      if (!anc.value) anc.value = "15";
+      anc.onchange = () => localStorage.setItem("ocAnchorSec", anc.value);
+      setc.value = localStorage.getItem("ocSetCount") || "1";
+      if (!setc.value) setc.value = "1";
+      setc.onchange = () => localStorage.setItem("ocSetCount", setc.value);
 
       const td = el("optTimerDisplaySel");
       td.value = optTimerDisplay();
