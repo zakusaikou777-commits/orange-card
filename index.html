@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v16 - 残像トレーニング記録</title>
+  <title>Orange Card v16.4 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -212,6 +212,10 @@
     .phase-body { font-size: 0.95rem; color: var(--text); line-height: 1.8; }
     .phase-hint { font-size: 0.85rem; color: var(--muted); line-height: 1.7; }
     .phase-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin-top: 0.4rem; }
+    .phase-purpose { font-size: 0.82rem; color: #8ab4f8; line-height: 1.75; max-width: 30rem; }
+    .phase-purpose b { color: #a9c8fb; }
+    .phase-purpose .lbl { display: inline-block; border: 1px solid #3d5a80; color: #8ab4f8; border-radius: 4px;
+                          font-size: 0.68rem; padding: 0.05rem 0.32rem; margin-right: 0.4rem; vertical-align: 1px; }
     .colorword { background: rgba(255,152,0,0.1); border: 1px solid var(--line); border-radius: 10px; padding: 0.6rem 0.8rem; font-size: 0.95rem; color: var(--accent); }
 
     /* 傍観フェーズ：画面は真っ黒のまま、どこを触っても記録 */
@@ -219,6 +223,22 @@
     .watch-screen.show { visibility: visible; opacity: 1; }
     .watch-note { position: absolute; left: 0; right: 0; bottom: 2.2rem; text-align: center; color: #3a3f4a; font-size: 0.85rem; line-height: 1.8; padding: 0 1.5rem; }
     .watch-count { position: absolute; left: 0; right: 0; top: 45%; text-align: center; color: #23262e; font-size: 3.5rem; font-weight: 900; }
+
+    /* ===== v16: バージョン表示と更新のお知らせ ===== */
+    .ver { font-size: 0.7rem; color: var(--muted); font-weight: 600; margin-left: 0.45rem; letter-spacing: 0.02em; }
+    .updbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 99995; background: var(--accent); color: #111;
+              padding: 0.7rem 1rem; display: none; align-items: center; justify-content: center; gap: 0.75rem;
+              flex-wrap: wrap; font-weight: 700; font-size: 0.9rem; box-shadow: 0 -4px 20px rgba(0,0,0,0.5); }
+    .updbar.show { display: flex; }
+    .updbar button { background: #111; color: var(--accent); padding: 0.4rem 0.9rem; font-size: 0.85rem; }
+    .updbar button:hover { background: #000; transform: none; }
+    .changelog { font-size: 0.88rem; line-height: 1.85; }
+    .changelog h4 { color: var(--accent); font-size: 0.92rem; margin: 1rem 0 0.35rem; }
+    .changelog h4:first-child { margin-top: 0; }
+    .changelog ul { margin: 0; padding-left: 1.25rem; color: var(--muted); }
+    .changelog li { margin-bottom: 0.3rem; }
+    .changelog .cur { display: inline-block; background: var(--accent); color: #111; font-size: 0.68rem;
+                      font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; vertical-align: middle; }
 
     /* ===== v16: 進め方の説明 ===== */
     .howto { border: 1px solid var(--line); border-radius: 14px; background: var(--card); padding: 1rem; margin-bottom: 1rem; }
@@ -234,7 +254,8 @@
     .step-t { font-weight: 700; font-size: 0.94rem; margin-bottom: 0.3rem; line-height: 1.5; }
     .step-b p { margin: 0 0 0.35rem; font-size: 0.86rem; line-height: 1.8; color: var(--muted); }
     .step-b p.why { color: #8ab4f8; }
-    .step-b p.why::before { content: "→ "; }
+    .step-b p.why::before { content: "なぜ"; border: 1px solid #3d5a80; border-radius: 4px; font-size: 0.68rem;
+                            padding: 0.05rem 0.32rem; margin-right: 0.4rem; vertical-align: 1px; display: inline-block; }
     .howto-key { border: 1px solid var(--accent); border-radius: 10px; padding: 0.85rem 0.9rem; margin-top: 1.1rem; background: rgba(255,152,0,0.06); font-size: 0.88rem; line-height: 1.85; }
     .howto-key .k { font-weight: 800; color: var(--accent); display: block; margin-bottom: 0.4rem; }
     .howto-key ul { margin: 0.3rem 0 0; padding-left: 1.2rem; }
@@ -290,7 +311,7 @@
 
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="brand">🟠 オレンジカード</div>
+      <div class="brand">🟠 オレンジカード<span class="ver" id="verChip"></span></div>
       <nav class="nav">
         <button class="tab active" data-tab="training">練習</button>
         <button class="tab" data-tab="dashboard">記録</button>
@@ -388,6 +409,8 @@
                 <div class="step-t">ただ眺める（目を閉じたまま）</div>
                 <p>画面は真っ黒になります。まぶたの裏に補色（青緑）が見えても、<strong>追いかけないでください。</strong>
                    補色が薄れたあたりで「その場所にオレンジがある」という前提だけを置いて、眺めています。</p>
+                <p class="why">補色が薄れる時間は、視野のその場所が「読み取れない状態」になる時間です。
+                   <strong>脳が欠けたところを補おうとするのは、このとき</strong>です。用意しておいた色と場所が、ここで使われます。</p>
               </div>
             </div>
           </div>
@@ -438,6 +461,7 @@
           <div class="phase-title">目を閉じて、5秒待ってください</div>
           <div class="phase-body" id="envCount">5</div>
           <div class="phase-hint">まぶたの裏が、いま何色に見えているかを見ます。</div>
+          <div class="phase-purpose"><span class="lbl">目的</span>部屋が明るすぎないかを確かめます。<b>まぶたは赤い光をよく通す</b>ので、明るい部屋だとカードを見なくてもオレンジが見えてしまいます。</div>
           <div id="envAsk" style="display:none;width:100%;">
             <div class="phase-body" style="margin-bottom:0.8rem;">まぶたの裏は、どちらに近かったですか？</div>
             <div class="seg" id="envSeg">
@@ -464,6 +488,7 @@
           <div class="phase-body">色をよく見てください。まばたきは自由です</div>
           <div class="colorword" id="colorWord">みかんより少し赤い／ムラのないベタ塗り</div>
           <div class="phase-hint">残像のことは、まだ忘れていて大丈夫です</div>
+          <div class="phase-purpose"><span class="lbl">目的</span>あとで脳が使う<b>「絵の具」</b>を用意しています。色を覚えていないと、いざというときに塗る材料がありません。</div>
         </div>
       </div>
 
@@ -478,6 +503,7 @@
           </div>
           <div class="phase-body" id="anchorGuide">中心の点のあたりを、ぼんやり眺めてください</div>
           <div class="phase-hint">ピントは合わせなくて構いません。まばたきも自由です<br>合図が鳴ったら目を閉じてください</div>
+          <div class="phase-purpose"><span class="lbl">目的</span>映像を置く<b>「場所の目印」</b>を作っています。暗闇にゼロから思い浮かべるより、足場があるほうが楽です。</div>
         </div>
       </div>
 
@@ -487,6 +513,7 @@
           <div class="phase-step">3 / 4 ── 力を抜く</div>
           <div class="phase-title" id="relaxLine">目を閉じたまま、息を長く吐いてください</div>
           <div class="phase-hint">眼の奥と、まぶたの力を手放します</div>
+          <div class="phase-purpose"><span class="lbl">目的</span><b>視覚野を静かにします。</b>静かなほど、心に浮かぶ映像は鮮明になります（実験で確かめられています）。ここが一番効くところです。</div>
         </div>
       </div>
 
@@ -495,7 +522,8 @@
         <div class="watch-count" id="watchCount"></div>
         <div class="watch-note" id="watchNote">
           何か変わったら、画面のどこでもいいので触ってください<br>
-          終わったら長めに押し続けます
+          終わったら長めに押し続けます<br><br>
+          補色は追いかけないでください。消えていくのが正しい進行です
         </div>
       </div>
 
@@ -1104,14 +1132,32 @@
       <div class="card">
         <h2>ℹ️ このアプリについて</h2>
         <div class="muted" style="line-height:1.8;">
-          <strong>Orange Card v16</strong><br>
+          <strong>Orange Card <span id="verFull"></span></strong><br>
           補色が消えたあとに何が起きるかを記録する道具です。<br>
           効果を保証するものではありません。医療機器ではありません。個人情報は収集していません。<br>
           考え方の根拠は「分析」タブに書いてあります。
         </div>
+        <div class="row" style="margin-top:0.85rem;">
+          <button id="checkUpdBtn" class="secondary" onclick="checkForUpdate()">更新を確認</button>
+        </div>
+        <div class="muted" id="updStatus" style="margin-top:0.6rem;font-size:0.85rem;"></div>
+        <p class="muted" style="margin-top:0.75rem;line-height:1.7;font-size:0.82rem;">
+          画面が古いままのときは、この端末に前の版が残っています。
+          「更新を確認」を押すか、ページを2回続けて開き直してください。
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>📝 更新履歴</h2>
+        <div class="changelog" id="changelog"></div>
       </div>
     </section>
   </main>
+
+  <div class="updbar" id="updBar">
+    <span>新しいバージョンが届いています</span>
+    <button type="button" onclick="location.reload()">再読み込み</button>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <script defer src="https://accounts.google.com/gsi/client"></script>
@@ -1161,9 +1207,124 @@
       step("indicator", updateSetIndicator);
       step("global", wireGlobalEvents);
       step("sw", registerServiceWorker);
+      step("version", renderVersion);
       step("howto", wireHowto);
       step("chartCheck", warnIfChartMissing);
       waitForGoogleIdentity().then(initGoogleIdentity);
+    }
+
+    // =====================================================================
+    // バージョンと更新
+    // =====================================================================
+    const APP_VERSION = "16.4";
+
+    const CHANGELOG = [
+      { v: "16.4", date: "2026-09-06", items: [
+        "練習中の各画面に「目的」を表示するようにしました（なぜこの手順なのかが、その場で分かります）",
+        "進め方の説明で、理由の行に「なぜ」のラベルを付けました",
+        "傍観の画面に「補色は追いかけないでください」を常時表示するようにしました"
+      ]},
+      { v: "16.3", date: "2026-09-06", items: [
+        "バージョン表示と更新履歴を追加しました",
+        "新しい版が届いたときに、画面下でお知らせするようにしました",
+        "端末に前の版が残って画面が更新されない問題を直しました（キャッシュの名前を版ごとに分けました）"
+      ]},
+      { v: "16.2", date: "2026-09-06", items: [
+        "記録がリロードで消えていた問題を修正しました（旧版の保存処理が混ざっていました）",
+        "旧データの読み込みに失敗したとき、空データで上書きしてしまう問題を修正",
+        "傍観フェーズで指がずれると、長押し扱いで勝手に終了する問題を修正",
+        "中止した直後に環境チェックのボタンを押すと落ちる問題を修正",
+        "足場の秒数と繰り返し回数を覚えるようにしました",
+        "選んでも意味のない設定項目（数字とゲージ）を削除",
+        "分析の表から一部の記録が黙って抜け落ちる問題を修正"
+      ]},
+      { v: "16.1", date: "2026-09-06", items: [
+        "練習タブに、各フェーズの進め方の説明を追加しました",
+        "目を閉じたままの操作（軽く触る／長押しで終了）を先に読めるようにしました"
+      ]},
+      { v: "16.0", date: "2026-09-06", items: [
+        "主な指標を「正色が出た割合」と「力まずにできた割合」に変えました",
+        "効率比・自己ベスト・パターンA〜F判定を廃止しました（力む方向に誘導していたため）",
+        "脱力フェーズ（閉眼8秒）を追加しました",
+        "傍観フェーズのタップを「何か変わった」だけにして、意味づけは開眼後に行う形にしました",
+        "カードを出さない回と、別の色を出す回を混ぜるようにしました",
+        "脱力の有無を、アプリが日ごとにランダムに割り当てるようにしました",
+        "環境チェック（まぶたの裏の色）を追加しました",
+        "分析タブを、あなたのデータと読みものの2段構成にしました",
+        "v15までの記録は「旧指標」として残しています"
+      ]},
+      { v: "15.1", date: "2026-08-07", items: [
+        "グラフ用ファイルが読めないとき、アプリが操作不能になる問題を修正",
+        "同期が同時に走ると保存ファイルが複数できる問題を修正",
+        "較正していない記録の視角が 0.1° として保存される問題を修正",
+        "スマホで較正バーがカードの実寸まで伸びない問題を修正",
+        "全削除が同期で元に戻ってしまう問題を修正"
+      ]}
+    ];
+
+    function renderVersion() {
+      setText("verChip", "v" + APP_VERSION);
+      setText("verFull", "v" + APP_VERSION);
+      const box = el("changelog");
+      if (!box) return;
+      box.innerHTML = "";
+      CHANGELOG.forEach((rel, i) => {
+        const h = document.createElement("h4");
+        h.textContent = `v${rel.v}　${rel.date}`;
+        if (i === 0) { const b = document.createElement("span"); b.className = "cur"; b.textContent = "いま使っている版"; h.appendChild(b); }
+        const ul = document.createElement("ul");
+        rel.items.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+        box.appendChild(h); box.appendChild(ul);
+      });
+    }
+
+    let swReg = null;
+    let updateReady = false;
+
+    function registerServiceWorker() {
+      if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
+      navigator.serviceWorker.register("sw.js").then(reg => {
+        swReg = reg;
+        // 待機中の版がすでにあれば、その場で知らせる
+        if (reg.waiting && navigator.serviceWorker.controller) showUpdateBar();
+        reg.addEventListener("updatefound", () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener("statechange", () => {
+            // controller がある = 前の版で開いている → 中身が入れ替わったことを知らせる
+            if (nw.state === "installed" && navigator.serviceWorker.controller) showUpdateBar();
+          });
+        });
+        reg.update().catch(() => {});
+      }).catch(() => {});
+    }
+
+    function showUpdateBar() {
+      updateReady = true;
+      const bar = el("updBar");
+      if (bar) bar.classList.add("show");
+      setText("updStatus", "新しい版が届いています。再読み込みしてください。");
+    }
+
+    function checkForUpdate() {
+      if (!("serviceWorker" in navigator) || location.protocol === "file:") {
+        setText("updStatus", "この開き方では更新の確認ができません（https で公開したURLから開いてください）。");
+        return;
+      }
+      if (updateReady) { showUpdateBar(); return; }
+      setText("updStatus", "確認しています…");
+      const done = reg => {
+        if (!reg) { setText("updStatus", "確認できませんでした。時間をおいて試してください。"); return; }
+        reg.update().then(() => {
+          setTimeout(() => {
+            // 検知は updatefound 側でも起きるので、そちらが先なら上書きしない
+            if (updateReady || reg.waiting || reg.installing) showUpdateBar();
+            else setText("updStatus", `最新です（v${APP_VERSION}）。`);
+          }, 1200);
+        }).catch(() => setText("updStatus", "確認できませんでした。オフラインかもしれません。"));
+      };
+      if (swReg) done(swReg);
+      else navigator.serviceWorker.getRegistration().then(done).catch(() => done(null));
     }
 
     // 進め方の説明。初回は開いた状態、以後は本人の選択を覚えておく
@@ -1183,11 +1344,6 @@
       p.style.cssText = "font-size:0.85rem;padding:0.5rem 0;";
       p.textContent = "グラフの表示に必要なファイルを読み込めませんでした（オフラインなど）。記録と同期は通常どおり使えます。";
       box.appendChild(p);
-    }
-
-    function registerServiceWorker() {
-      if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
-      navigator.serviceWorker.register("sw.js").catch(() => {});
     }
 
     function wireGlobalEvents() {
