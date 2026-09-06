@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v16.5 - 残像トレーニング記録</title>
+  <title>Orange Card v16.6 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1215,6 +1215,7 @@
       step("global", wireGlobalEvents);
       step("sw", registerServiceWorker);
       step("version", renderVersion);
+      step("rescued", noticeRescued);
       step("howto", wireHowto);
       step("chartCheck", warnIfChartMissing);
       waitForGoogleIdentity().then(initGoogleIdentity);
@@ -1223,9 +1224,13 @@
     // =====================================================================
     // バージョンと更新
     // =====================================================================
-    const APP_VERSION = "16.5";
+    const APP_VERSION = "16.6";
 
     const CHANGELOG = [
+      { v: "16.6", date: "2026-09-06", items: [
+        "v16.0〜16.2 の不具合で、この端末の中で行き場を失っていた記録を拾い直すようにしました",
+        "拾い直したときは、練習タブでお知らせします"
+      ]},
       { v: "16.5", date: "2026-09-06", items: [
         "同期の保存先を v16 専用のファイルに分けました。v15 のままの端末が同期しても、新しい記録が壊れなくなります",
         "v15 で作った記録は、初回の同期で自動的に引き継ぎます",
@@ -1345,6 +1350,19 @@
       const saved = localStorage.getItem("ocHowtoOpen");
       d.open = (saved === null) ? true : (saved === "1");
       d.addEventListener("toggle", () => localStorage.setItem("ocHowtoOpen", d.open ? "1" : "0"));
+    }
+
+    // 拾い直した記録があれば、黙って直さずに知らせる
+    function noticeRescued() {
+      if (!rescuedCount) return;
+      const host = el("sessionHint");
+      if (!host) return;
+      const d = document.createElement("div");
+      d.className = "callout";
+      d.style.cssText = "text-align:left;margin:0 0 1rem;";
+      d.innerHTML = `<strong>${rescuedCount}件の記録を復旧しました。</strong><br>` +
+        "以前の不具合で、記録が正しくない場所に保存されていました。読み込み直して「記録」タブに戻してあります。";
+      host.parentNode.insertBefore(d, host);
     }
 
     function warnIfChartMissing() {
@@ -1557,6 +1575,7 @@
     const KEY_V16 = "ocSessionsV16";
     const KEY_V15 = "orangeCardSessions";
     let legacyLoadOk = true;
+    let rescuedCount = 0;   // 不具合で行き場を失っていた記録を拾えた件数
 
     function loadSessions() {
       loadTombstones();
@@ -1571,8 +1590,19 @@
       } catch (e) { sessions = []; }
       try {
         const raw = JSON.parse(localStorage.getItem(KEY_V15) || "[]");
-        legacySessions = (Array.isArray(raw) ? raw : []).map(normalizeLegacy)
-          .filter(Boolean).filter(s => !deletedIds.has(s.id)).sort(byTime);
+        // v16.0〜16.2 の不具合で、v16 の記録がこちら側に書き込まれていることがある。
+        // 形を見て振り分け、v16 のものは新指標として拾い直す
+        const list = (Array.isArray(raw) ? raw : []).map(normalizeAny).filter(Boolean)
+          .filter(s => !deletedIds.has(s.id));
+        legacySessions = list.filter(s => s.schema === 15).sort(byTime);
+        const rescued = list.filter(s => s.schema === 16);
+        if (rescued.length) {
+          const seen = new Set(sessions.map(x => x.id));
+          rescued.forEach(x => { if (!seen.has(x.id)) { sessions.push(x); seen.add(x.id); } });
+          sessions.sort(byTime);
+          rescuedCount = rescued.length;
+          persistSessions();      // 正しい保存先へ移し替える
+        }
       } catch (e) {
         legacySessions = [];
         legacyLoadOk = false;   // 壊れた旧データを空で上書きしないための印
