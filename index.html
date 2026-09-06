@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v16.4 - 残像トレーニング記録</title>
+  <title>Orange Card v16.5 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1112,6 +1112,13 @@
           <button id="driveDisconnectBtn" class="secondary">接続を解除</button>
         </div>
         <div class="muted" id="driveStatus" style="margin-top:0.85rem;"><span class="sync-dot"></span>未接続</div>
+        <div class="callout" style="margin-top:0.85rem;font-size:0.85rem;">
+          <strong>使っている端末は、すべて v16 以降にしてください。</strong><br>
+          v15 のままの端末があると、その端末は v16 の記録（試行の種類・正色・力みなど）を読めません。
+          そのため v16 は保存先のファイルを分けてあり、<strong>古い端末が新しい記録を壊すことはありません</strong>。
+          ただし、その端末とは記録が別々になります。<br>
+          v15 で作った記録は、初回の同期で自動的に引き継がれます。
+        </div>
       </div>
 
       <div class="card">
@@ -1216,9 +1223,14 @@
     // =====================================================================
     // バージョンと更新
     // =====================================================================
-    const APP_VERSION = "16.4";
+    const APP_VERSION = "16.5";
 
     const CHANGELOG = [
+      { v: "16.5", date: "2026-09-06", items: [
+        "同期の保存先を v16 専用のファイルに分けました。v15 のままの端末が同期しても、新しい記録が壊れなくなります",
+        "v15 で作った記録は、初回の同期で自動的に引き継ぎます",
+        "先の版で保存された記録を見つけたときは、上書きせずに知らせるようにしました"
+      ]},
       { v: "16.4", date: "2026-09-06", items: [
         "練習中の各画面に「目的」を表示するようにしました（なぜこの手順なのかが、その場で分かります）",
         "進め方の説明で、理由の行に「なぜ」のラベルを付けました",
@@ -2742,7 +2754,11 @@
     // 「承認済みのJavaScript生成元」を自分のドメインだけに絞っておいてください。
     const CLIENTID = "312868081144-1c6gjkal8rgllhi8iqgblbgjarc058jc.apps.googleusercontent.com";
     const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
-    const SYNC_FILENAME = "orange-card-data.json";
+    // v16 は自分専用のファイルに書く。
+    // 同じファイルを共有すると、まだ v15 のままの端末が同期したときに
+    // v16 の項目（試行の種類・正色・力み・タップ）を剥ぎ取って書き戻し、記録が壊れる。
+    const SYNC_FILENAME = "orange-card-v16.json";
+    const SYNC_FILENAME_LEGACY = "orange-card-data.json";   // v15 までのファイル。読むだけ
 
     let tokenClient = null;
     let accessToken = null;
@@ -2854,19 +2870,19 @@
       return res;
     }
 
-    async function driveFindFile(token) {
-      const q = encodeURIComponent("name='" + SYNC_FILENAME + "' and trashed=false");
+    async function driveFindFile(token, name) {
+      const q = encodeURIComponent("name='" + (name || SYNC_FILENAME) + "' and trashed=false");
       const res = await driveFetch(token,
         "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id)&q=" + q);
       const json = await res.json();
       return json.files?.[0]?.id || null;
     }
 
-    async function driveCreateFile(token) {
+    async function driveCreateFile(token, name) {
       const res = await driveFetch(token, "https://www.googleapis.com/drive/v3/files?fields=id", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: SYNC_FILENAME, parents: ["appDataFolder"], mimeType: "application/json" })
+        body: JSON.stringify({ name: name || SYNC_FILENAME, parents: ["appDataFolder"], mimeType: "application/json" })
       });
       return (await res.json()).id;
     }
@@ -2927,18 +2943,41 @@
         }
 
         const remote = await driveRead(token, syncFileId);
+
+        // 先の版が書いたファイルなら、こちらの理解できない項目を消してしまうので上書きしない
+        if (remote && Number(remote.schema) > 16) {
+          setDriveStatus("このアプリより新しい版で保存された記録があります。上書きを避けました。アプリを更新してください。", "err");
+          return;
+        }
+
         const raw = Array.isArray(remote) ? remote : (remote?.sessions || []);
         // 相手側で消された記録も引き継ぐ
         const remoteDeleted = Array.isArray(remote?.deletedIds) ? remote.deletedIds : [];
         if (remoteDeleted.length) addTombstones(remoteDeleted);
-        const incoming = (Array.isArray(raw) ? raw : []).map(normalizeAny).filter(Boolean);
+        let incoming = (Array.isArray(raw) ? raw : []).map(normalizeAny).filter(Boolean);
+
+        // v15 までのファイルも読む（引き継ぎ用）。こちらには書き戻さない
+        let legacyFound = 0;
+        try {
+          const legacyId = await driveFindFile(token, SYNC_FILENAME_LEGACY);
+          if (legacyId) {
+            const old = await driveRead(token, legacyId);
+            const oldRaw = Array.isArray(old) ? old : (old?.sessions || []);
+            const oldDel = Array.isArray(old?.deletedIds) ? old.deletedIds : [];
+            if (oldDel.length) addTombstones(oldDel);
+            const oldRecs = (Array.isArray(oldRaw) ? oldRaw : []).map(normalizeAny).filter(Boolean);
+            legacyFound = oldRecs.length;
+            incoming = incoming.concat(oldRecs);
+          }
+        } catch (e) { /* 旧ファイルが無い・読めないのは正常 */ }
+
         mergeAll(incoming);
         persistSessions();
         refreshDashboard();
 
         const payload = sessions.concat(legacySessions);
         await driveWrite(token, syncFileId, {
-          appVersion: "v16",
+          appVersion: "v" + APP_VERSION,
           schema: 16,
           exportDate: new Date().toISOString(),
           totalSessions: payload.length,
@@ -2946,7 +2985,8 @@
           deletedIds: [...deletedIds]
         });
         localStorage.setItem("ocLastSync", new Date().toISOString());
-        setDriveStatus("同期しました（" + payload.length + "件・" + new Date().toLocaleTimeString("ja-JP") + "）", "ok");
+        setDriveStatus("同期しました（" + payload.length + "件・" + new Date().toLocaleTimeString("ja-JP") + "）"
+          + (legacyFound ? " ／ 旧版のファイルから" + legacyFound + "件を引き継ぎました" : ""), "ok");
       } catch (e) {
         const msg = String(e?.message || e);
         if (msg.includes("401") || msg.includes("403")) { accessToken = null; tokenExpiry = 0; }
