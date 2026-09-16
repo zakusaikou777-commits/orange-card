@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v16.6 - 残像トレーニング記録</title>
+  <title>Orange Card v16.8 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -335,7 +335,7 @@
       <div class="card">
         <div class="row">
           <label>足場をつくる時間
-            <select id="anchorSec">
+            <select id="anchorSec" onchange="updateExposureNote()">
               <option value="10">10秒</option>
               <option value="15" selected>15秒</option>
               <option value="20">20秒</option>
@@ -351,6 +351,7 @@
           </label>
           <button id="startBtn" onclick="beginSession()">▶ はじめる</button>
         </div>
+        <div class="muted" id="exposureNote" style="margin-top:0.6rem;font-size:0.85rem;"></div>
         <div class="set-indicator" id="setIndicator"></div>
         <p class="muted" style="margin:0.75rem 0 0;line-height:1.8;font-size:0.85rem;">
           色を見る → 足場をつくる → 目を閉じて力を抜く → ただ眺める。合計2分ほどです。<br>
@@ -434,10 +435,10 @@
 
           <p class="muted" style="margin:0.9rem 0 0;font-size:0.85rem;line-height:1.8;">
             <strong style="color:var(--text);">ときどき混ざる回について：</strong>
-            10回に1回ほど、カードを出さない回と、オレンジ以外の色を出す回があります。
+            10回に1回ほど、<strong style="color:var(--text);">カードを出さない回</strong>と、オレンジ以外の色を出す回があります。
+            <strong style="color:var(--text);">カードが出なくても故障ではありません。</strong>画面にもその旨が出ます。
             記録が済んでから、どちらだったかをお知らせします。
             「見えなかった」も大事な記録なので、気にせずいつも通りやってください。
-            くわしくは「分析」タブに書いてあります。
           </p>
         </div>
       </details>
@@ -480,15 +481,15 @@
       <div id="phObserve" class="phase">
         <button class="overlay-cancel" type="button" onclick="abortSession(event)">✕ 中止</button>
         <div class="phase-inner">
-          <div class="phase-step">1 / 4 ── 色を見る</div>
-          <div class="card-stack">
+          <div class="phase-step" id="observeStep">1 / 4 ── 色を見る</div>
+          <div class="card-stack" id="observeStack">
             <div class="orange-card-fullscreen" id="cardObserve"></div>
           </div>
           <div class="phase-title" id="observeCount">15</div>
-          <div class="phase-body">色をよく見てください。まばたきは自由です</div>
+          <div class="phase-body" id="observeBody">色をよく見てください。まばたきは自由です</div>
           <div class="colorword" id="colorWord">みかんより少し赤い／ムラのないベタ塗り</div>
-          <div class="phase-hint">残像のことは、まだ忘れていて大丈夫です</div>
-          <div class="phase-purpose"><span class="lbl">目的</span>あとで脳が使う<b>「絵の具」</b>を用意しています。色を覚えていないと、いざというときに塗る材料がありません。</div>
+          <div class="phase-hint" id="observeHint">残像のことは、まだ忘れていて大丈夫です</div>
+          <div class="phase-purpose" id="observePurpose"><span class="lbl">目的</span>あとで脳が使う<b>「絵の具」</b>を用意しています。色を覚えていないと、いざというときに塗る材料がありません。</div>
         </div>
       </div>
 
@@ -496,14 +497,14 @@
       <div id="phAnchor" class="phase">
         <button class="overlay-cancel" type="button" onclick="abortSession(event)">✕ 中止</button>
         <div class="phase-inner">
-          <div class="phase-step">2 / 4 ── 足場をつくる</div>
-          <div class="card-stack">
+          <div class="phase-step" id="anchorStep">2 / 4 ── 足場をつくる</div>
+          <div class="card-stack" id="anchorStack">
             <div class="orange-card-fullscreen" id="cardAnchor"></div>
             <div class="stare-progress" id="anchorProgress"><div class="stare-progress-fill" id="anchorProgressFill"></div></div>
           </div>
           <div class="phase-body" id="anchorGuide">中心の点のあたりを、ぼんやり眺めてください</div>
-          <div class="phase-hint">ピントは合わせなくて構いません。まばたきも自由です<br>合図が鳴ったら目を閉じてください</div>
-          <div class="phase-purpose"><span class="lbl">目的</span>映像を置く<b>「場所の目印」</b>を作っています。暗闇にゼロから思い浮かべるより、足場があるほうが楽です。</div>
+          <div class="phase-hint" id="anchorHint">ピントは合わせなくて構いません。まばたきも自由です<br>合図が鳴ったら目を閉じてください</div>
+          <div class="phase-purpose" id="anchorPurpose"><span class="lbl">目的</span>映像を置く<b>「場所の目印」</b>を作っています。暗闇にゼロから思い浮かべるより、足場があるほうが楽です。</div>
         </div>
       </div>
 
@@ -790,6 +791,13 @@
           <h4>そして、この考え方には落とし穴があります</h4>
           <p>期待が仕組みなのだとしたら、「オレンジが見えるはずだ」と言われた人が「見えた」と答えるのは当たり前です。<strong>あなたの報告だけでは、本当に見えたのか、そう答えただけなのかを区別できません。</strong></p>
           <p>だからこのアプリは、カードを出さない回と、別の色を出す回を混ぜています。自分で確かめられるようにするためです。</p>
+          <div class="callout">
+            <strong>2つの回は、確かめられることが違います。</strong><br>
+            <b>カードを出さない回</b>は、目を開けていれば出ていないと分かるので、期待効果の検証にはなりません。
+            確かめられるのは<strong>まぶたを通った光や、勝手に浮かぶ像</strong>のほうです。<br>
+            <b>別の色を出す回</b>は、何を出したかを記録画面で伏せているので、こちらが本当の検証です。
+            答えた色が出した色に追随するかどうかを見ます。
+          </div>
         </div>
       </details>
 
@@ -920,7 +928,8 @@
           </ul>
           <h4>正色を記録するときの注意</h4>
           <p>明るい部屋で目を閉じると、まぶたを通った赤橙色の光で、視野はもともとオレンジがかっています。補色（青系）は通りにくいので、暗く沈みます。つまり、明るい部屋では<strong>カードを見なくてもオレンジが見える</strong>可能性があります。</p>
-          <p>このアプリは、ときどきカードを出さない回を混ぜています。そこで「オレンジが見えた」と記録されるなら、それはまぶたを通った光か、「見えるはずだ」という期待によるものです。判断材料として使ってください。</p>
+          <p>このアプリは、ときどきカードを出さない回を混ぜています。そこで「オレンジが見えた」と記録されるなら、それはまぶたを通った光か、勝手に浮かぶ像です。判断材料として使ってください。</p>
+          <p>ただし、カードが出ていないことは目を開けていれば分かります。<strong>この回だけでは「期待によるものか」までは切り分けられません。</strong>そちらは、色を変える回のほうで確かめます。</p>
         </div>
       </details>
 
@@ -1212,6 +1221,7 @@
       step("cardSize", applyCardSize);
       step("dashboard", refreshDashboard);
       step("indicator", updateSetIndicator);
+      step("exposure", updateExposureNote);
       step("global", wireGlobalEvents);
       step("sw", registerServiceWorker);
       step("version", renderVersion);
@@ -1224,9 +1234,20 @@
     // =====================================================================
     // バージョンと更新
     // =====================================================================
-    const APP_VERSION = "16.6";
+    const APP_VERSION = "16.8";
 
     const CHANGELOG = [
+      { v: "16.8", date: "2026-09-16", items: [
+        "カードを出さない回で、カードの枠の空白が残って「表示されない」ように見えていたのを詰めました",
+        "その回の見出しを「色を見る」から「準備」「そのまま待つ」に変えました"
+      ]},
+      { v: "16.7", date: "2026-09-16", items: [
+        "目を閉じた瞬間から記録を始めるようにしました。これまでは脱力の8秒ぶんが記録できず、時刻も8秒ずれていました",
+        "カードを出さない回に、そのことを画面に表示するようにしました（何も出ないので故障に見えていました）",
+        "色を変える回で、オレンジ向けの説明文が出たままだったのを直しました",
+        "カードを見る合計時間（色を見る＋足場）を、開始画面に表示するようにしました",
+        "カードを出さない回で確かめられることを、実態に合わせて書き直しました"
+      ]},
       { v: "16.6", date: "2026-09-06", items: [
         "v16.0〜16.2 の不具合で、この端末の中で行き場を失っていた記録を拾い直すようにしました",
         "拾い直したときは、練習タブでお知らせします"
@@ -1793,6 +1814,13 @@
       drop.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     }
 
+    // 「足場をつくる時間」だけが露出時間だと誤解されないように、合計を出す
+    function updateExposureNote() {
+      const n = el("exposureNote"); if (!n) return;
+      const a = optAnchorSec();
+      n.textContent = `カードを見る時間は合計 ${OBSERVE_SEC + a} 秒です（色を見る ${OBSERVE_SEC}秒 ＋ 足場 ${a}秒）。残像の出方は、この合計で決まります。`;
+    }
+
     function updateSetIndicator() {
       setText("setIndicator", (setTotal > 1 && setIndex > 0) ? `${setIndex} / ${setTotal} 回目` : "");
     }
@@ -1871,9 +1899,25 @@
 
     function startObserve() {
       paintCard("cardObserve");
-      setText("colorWord", optColorWord());
-      // カードなしの回は、色を見る時間も暗いまま
-      el("colorWord").style.display = run.trialKind === "blank" ? "none" : "";
+      const blank = run.trialKind === "blank";
+      // カードを出さない回は、黙って暗いままにすると不具合に見える。何が起きているかを書く。
+      // カードの枠も詰めないと、大きな空白が残って「表示されていない」ように見える
+      el("observeStack").style.display = blank ? "none" : "";
+      setText("observeStep", blank ? "1 / 4 ── 準備" : "1 / 4 ── 色を見る");
+      el("colorWord").style.display = blank ? "none" : "";
+      setText("observeBody", blank
+        ? "この回はカードを出しません"
+        : "色をよく見てください。まばたきは自由です");
+      setText("observeHint", blank
+        ? "故障ではありません。確かめるための回です。このまま目を閉じる準備をしてください"
+        : "残像のことは、まだ忘れていて大丈夫です");
+      el("observePurpose").innerHTML = blank
+        ? '<span class="lbl">目的</span>カードを見なくても「見えた」と記録されるかを確かめます。そうなる場合は、<b>まぶたを通った光</b>を見ている可能性があります。'
+        : '<span class="lbl">目的</span>あとで脳が使う<b>「絵の具」</b>を用意しています。色を覚えていないと、いざというときに塗る材料がありません。';
+      // 色を変える回で、オレンジ向けの言葉を出すと食い違う
+      setText("colorWord", run.cardColor === "orange"
+        ? optColorWord()
+        : "この色をよく見てください（いつもと違う色です）");
       setText("observeCount", OBSERVE_SEC);
       showPhase("phObserve");
       const deadline = Date.now() + OBSERVE_SEC * 1000;
@@ -1891,6 +1935,18 @@
     function startAnchor() {
       const sec = run.anchorSec;
       paintCard("cardAnchor");
+      const blank = run.trialKind === "blank";
+      el("anchorStack").style.display = blank ? "none" : "";
+      setText("anchorStep", blank ? "2 / 4 ── そのまま待つ" : "2 / 4 ── 足場をつくる");
+      setText("anchorGuide", blank
+        ? "このまま、そのあたりをぼんやり眺めていてください"
+        : "中心の点のあたりを、ぼんやり眺めてください");
+      el("anchorHint").innerHTML = blank
+        ? "この回はカードを出していません（確かめるための回です）<br>合図が鳴ったら目を閉じてください"
+        : "ピントは合わせなくて構いません。まばたきも自由です<br>合図が鳴ったら目を閉じてください";
+      el("anchorPurpose").innerHTML = blank
+        ? '<span class="lbl">目的</span>いつもと同じ時間だけ待ちます。<b>刺激だけを抜いた回</b>にすることで、何が刺激によるものかが分かります。'
+        : '<span class="lbl">目的</span>映像を置く<b>「場所の目印」</b>を作っています。暗闇にゼロから思い浮かべるより、足場があるほうが楽です。';
       const disp = optTimerDisplay();
       el("anchorProgress").style.display = (disp === "none") ? "none" : "";
       resetAnchorProgress();
@@ -1901,7 +1957,9 @@
         setTimer("anchorEnd", setTimeout(() => {
           hidePhase("phAnchor", true);
           playCue(880);                       // 目を閉じる合図
-          run.relaxPhase ? startRelax() : startWatch();
+          // 脱力の案内は音だけで行い、記録は目を閉じた瞬間から始める。
+          // 別画面にすると、補色がいちばん強く動く最初の数秒が記録できない
+          startWatch();
         }, sec * 1000));
       }, 260));
     }
@@ -1924,23 +1982,6 @@
       "まぶたの力も、手放します",
       "そのまま、なにもしなくて大丈夫です"
     ];
-
-    function startRelax() {
-      setText("relaxLine", RELAX_LINES[0]);
-      showPhase("phRelax");
-      let i = 0;
-      setTimer("relaxTick", setInterval(() => {
-        i++;
-        if (i < RELAX_LINES.length) setText("relaxLine", RELAX_LINES[i]);
-      }, 2000));
-      // 画面は見えないので、呼気の合図は音と振動で
-      breathCue();
-      setTimer("relaxEnd", setTimeout(() => {
-        clearTimer("relaxTick");
-        hidePhase("phRelax", true);
-        startWatch();
-      }, RELAX_SEC * 1000));
-    }
 
     // 低くやわらかい音を1回。合図音とは別の音色にして、区別できるようにする
     function breathCue() {
@@ -1968,15 +2009,35 @@
 
     let holdTimer = null, lastTapAt = 0;
 
+    const WATCH_NOTE_DEFAULT = "何か変わったら、画面のどこでもいいので触ってください<br>終わったら長めに押し続けます<br><br>補色は追いかけないでください。消えていくのが正しい進行です";
+
     function startWatch() {
       run.taps = [];
-      run.watchStart = Date.now();
+      run.watchStart = Date.now();      // 目を閉じた瞬間が 0 秒
       setText("watchCount", "");
       const w = el("phWatch");
       w.classList.add("show");
       w.onpointerdown = onWatchDown;
       w.onpointerup = onWatchUp;
       w.onpointercancel = onWatchUp;
+
+      if (run.relaxPhase) {
+        // 画面は見えないので、脱力の案内は音で。文字は目を開けた人のためだけに出す
+        el("watchNote").innerHTML = RELAX_LINES[0];
+        breathCue();
+        let i = 0;
+        setTimer("relaxTick", setInterval(() => {
+          i++;
+          if (i < RELAX_LINES.length) el("watchNote").innerHTML = RELAX_LINES[i];
+        }, 2000));
+        setTimer("relaxEnd", setTimeout(() => {
+          clearTimer("relaxTick");
+          el("watchNote").innerHTML = WATCH_NOTE_DEFAULT;
+        }, RELAX_SEC * 1000));
+      } else {
+        el("watchNote").innerHTML = WATCH_NOTE_DEFAULT;
+      }
+
       // 安全網：5分で自動的に終える
       setTimer("watchMax", setTimeout(() => endWatch(), 300000));
     }
@@ -2575,7 +2636,7 @@
         const rate = Math.round(yes / b.length * 100);
         html += `<div class="callout" style="margin-top:0.75rem;">
           カードを出していないのに ${rate}% の回で「出た」と記録されています。
-          まぶたを通った光か、期待によるものの可能性があります。
+          まぶたを通った光か、勝手に浮かぶ像の可能性があります。
           ${bright.length > dark.length ? "明るい部屋での記録が多いので、まず部屋を暗くするかアイマスクを試してみてください。" : "部屋を暗くしても起きているなら、期待によるものの割合が大きいかもしれません。"}<br>
           これは失敗ではありません。<strong>確かめられたということです。</strong></div>`;
       }
@@ -2673,7 +2734,8 @@
       const anc = el("anchorSec"), setc = el("setCount");
       anc.value = localStorage.getItem("ocAnchorSec") || "15";
       if (!anc.value) anc.value = "15";
-      anc.onchange = () => localStorage.setItem("ocAnchorSec", anc.value);
+      updateExposureNote();
+      anc.onchange = () => { localStorage.setItem("ocAnchorSec", anc.value); updateExposureNote(); };
       setc.value = localStorage.getItem("ocSetCount") || "1";
       if (!setc.value) setc.value = "1";
       setc.onchange = () => localStorage.setItem("ocSetCount", setc.value);
