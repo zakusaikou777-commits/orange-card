@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>Orange Card v16.8 - 残像トレーニング記録</title>
+  <title>Orange Card v16.10 - 残像トレーニング記録</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f1115">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -219,7 +219,12 @@
     .colorword { background: rgba(255,152,0,0.1); border: 1px solid var(--line); border-radius: 10px; padding: 0.6rem 0.8rem; font-size: 0.95rem; color: var(--accent); }
 
     /* 傍観フェーズ：画面は真っ黒のまま、どこを触っても記録 */
-    .watch-screen { position: fixed; inset: 0; background: #000; z-index: 99991; visibility: hidden; opacity: 0; }
+    /* touch-action / user-select を指定しないと、iOS では指がわずかに動いただけで
+       ブラウザがスクロール扱いにして pointercancel を飛ばし、長押しが成立しない */
+    .watch-screen { position: fixed; inset: 0; background: #000; z-index: 99991; visibility: hidden; opacity: 0;
+                    touch-action: none; user-select: none; -webkit-user-select: none;
+                    -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+    .watch-screen * { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; pointer-events: none; }
     .watch-screen.show { visibility: visible; opacity: 1; }
     .watch-note { position: absolute; left: 0; right: 0; bottom: 2.2rem; text-align: center; color: #3a3f4a; font-size: 0.85rem; line-height: 1.8; padding: 0 1.5rem; }
     .watch-count { position: absolute; left: 0; right: 0; top: 45%; text-align: center; color: #23262e; font-size: 3.5rem; font-weight: 900; }
@@ -355,6 +360,7 @@
         <div class="set-indicator" id="setIndicator"></div>
         <p class="muted" style="margin:0.75rem 0 0;line-height:1.8;font-size:0.85rem;">
           色を見る → 足場をつくる → 目を閉じて力を抜く → ただ眺める。合計2分ほどです。<br>
+          繰り返しにすると、<strong style="color:var(--accent);">2回目からは準備（まぶたの確認）を飛ばして</strong>「色を見る」から始まります。<br>
           1回に長くやるより、<strong style="color:var(--accent);">短いものを1日に数回</strong>のほうが向いています。
         </p>
       </div>
@@ -371,8 +377,9 @@
             <div class="step">
               <div class="step-n prep">準備<br>5秒</div>
               <div class="step-b">
-                <div class="step-t">まぶたの裏の色を確かめます</div>
-                <p>目を閉じて待ち、赤橙っぽく見えたかどうかを答えます。</p>
+                <div class="step-t">まぶたの裏の色を確かめます <span style="color:var(--accent);font-size:0.8rem;">（1回目だけ）</span></div>
+                <p>目を閉じて待ち、赤橙っぽく見えたかどうかを答えます。
+                   <strong>繰り返しのときは2回目以降は出ません。</strong>同じ部屋のはずなので、1回目の答えをそのまま使います。</p>
                 <p class="why">まぶたは赤い光をよく通します。明るい部屋だと、<strong>カードを見なくてもオレンジが見えてしまいます。</strong>暗い部屋かアイマスクが理想です。</p>
               </div>
             </div>
@@ -420,7 +427,8 @@
             <span class="k">4のときの操作（目を閉じたままできます）</span>
             <ul>
               <li>何か変わったと思ったら、<strong>画面のどこでも軽く触る</strong>。何回でも、0回でも構いません</li>
-              <li>終わったら、<strong>そのまま1秒ほど押し続ける</strong>と終了します</li>
+              <li>終わるときは、<strong>画面を1秒ほど押したまま</strong>にします</li>
+              <li>うまくいかないときは、<strong>2本の指で同時に画面に触れて</strong>ください。こちらでもすぐ終わります</li>
             </ul>
             「いま何が起きたか」を目を閉じたまま判断する必要はありません。
             目を開けてから、押したところに意味をつけます。
@@ -522,8 +530,8 @@
       <div id="phWatch" class="watch-screen">
         <div class="watch-count" id="watchCount"></div>
         <div class="watch-note" id="watchNote">
-          何か変わったら、画面のどこでもいいので触ってください<br>
-          終わったら長めに押し続けます<br><br>
+          何か変わったら、画面のどこでもいいので触ってください<br><br>
+          <b>終わるときは、1秒ほど押したまま</b>（または2本の指で触れる）<br><br>
           補色は追いかけないでください。消えていくのが正しい進行です
         </div>
       </div>
@@ -1234,9 +1242,17 @@
     // =====================================================================
     // バージョンと更新
     // =====================================================================
-    const APP_VERSION = "16.8";
+    const APP_VERSION = "16.10";
 
     const CHANGELOG = [
+      { v: "16.10", date: "2026-09-17", items: [
+        "繰り返しのとき、2回目以降は準備（まぶたの確認）を飛ばすことを画面に明記しました。動作は以前から同じです"
+      ]},
+      { v: "16.9", date: "2026-09-17", items: [
+        "長押ししても終われない不具合を直しました。iPhone では指がわずかに動いただけでブラウザが操作を横取りし、長押しがタップとして数えられていました",
+        "2本の指で画面に触れても終われるようにしました（目を閉じたままでも確実です）",
+        "「1秒ほど押したまま」と、必要な時間を画面に書きました"
+      ]},
       { v: "16.8", date: "2026-09-16", items: [
         "カードを出さない回で、カードの枠の空白が残って「表示されない」ように見えていたのを詰めました",
         "その回の見出しを「色を見る」から「準備」「そのまま待つ」に変えました"
@@ -2007,9 +2023,12 @@
     const HOLD_MS = 900;      // 長押しで終了
     const TAP_MIN_MS = 400;   // 連打よけ
 
-    let holdTimer = null, lastTapAt = 0;
+    let holdTimer = null, lastTapAt = 0, holdDownAt = 0;
+    const activePointers = new Set();
 
-    const WATCH_NOTE_DEFAULT = "何か変わったら、画面のどこでもいいので触ってください<br>終わったら長めに押し続けます<br><br>補色は追いかけないでください。消えていくのが正しい進行です";
+    const WATCH_NOTE_DEFAULT = "何か変わったら、画面のどこでもいいので触ってください<br><br>"
+      + "<b>終わるときは、1秒ほど押したまま</b>（または2本の指で触れる）<br><br>"
+      + "補色は追いかけないでください。消えていくのが正しい進行です";
 
     function startWatch() {
       run.taps = [];
@@ -2017,9 +2036,10 @@
       setText("watchCount", "");
       const w = el("phWatch");
       w.classList.add("show");
+      activePointers.clear();
       w.onpointerdown = onWatchDown;
       w.onpointerup = onWatchUp;
-      w.onpointercancel = onWatchUp;
+      w.onpointercancel = onWatchCancel;
 
       if (run.relaxPhase) {
         // 画面は見えないので、脱力の案内は音で。文字は目を開けた人のためだけに出す
@@ -2045,21 +2065,44 @@
     function onWatchDown(e) {
       if (e) {
         e.preventDefault();
-        // 指がずれても pointerup を必ず受け取る（取りこぼすと長押し扱いで終了してしまう）
         try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        activePointers.add(e.pointerId);
+        // 2本の指で触れたら、その場で終わる。目を閉じたままでも確実にできる
+        if (activePointers.size >= 2) {
+          if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+          endWatch();
+          return;
+        }
       }
+      holdDownAt = Date.now();
       if (holdTimer) clearTimeout(holdTimer);
       holdTimer = setTimeout(() => { holdTimer = null; endWatch(); }, HOLD_MS);
     }
 
     function onWatchUp(e) {
-      if (e) e.preventDefault();
+      if (e) { e.preventDefault(); activePointers.delete(e.pointerId); }
       if (!holdTimer) return;         // すでに長押しで終了している
       clearTimeout(holdTimer); holdTimer = null;
+      registerTap();
+    }
+
+    // iOS では、押したまま指がわずかに動いただけで pointercancel が飛ぶ。
+    // これをタップ扱いにして長押しのタイマーを止めていたため、長押しが一生成立しなかった。
+    function onWatchCancel(e) {
+      if (e) activePointers.delete(e.pointerId);
+      if (!holdTimer) return;
+      if (Date.now() - holdDownAt < 300) {   // ごく短ければ、ただのタップとみなす
+        clearTimeout(holdTimer); holdTimer = null;
+        registerTap();
+      }
+      // それ以上押されていたなら、長押しの判定はそのまま生かす
+    }
+
+    function registerTap() {
       const now = Date.now();
       if (now - lastTapAt < TAP_MIN_MS) return;
       lastTapAt = now;
-      if (run.taps.length >= 20) return;
+      if (!run || run.taps.length >= 20) return;
       run.taps.push({ tMs: now - run.watchStart, label: "unknown" });
       setText("watchCount", run.taps.length);
       if (navigator.vibrate) { try { navigator.vibrate(25); } catch (err) {} }
@@ -2068,6 +2111,7 @@
     function endWatch() {
       clearTimer("watchMax");
       if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      activePointers.clear();
       const w = el("phWatch");
       w.onpointerdown = null; w.onpointerup = null; w.onpointercancel = null;
       w.classList.remove("show");
@@ -2082,6 +2126,7 @@
       if (e) { e.preventDefault(); e.stopPropagation(); }
       clearAllTimers();
       if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      activePointers.clear();
       const w = el("phWatch");
       w.onpointerdown = null; w.onpointerup = null; w.onpointercancel = null;
       hideAllPhases();
