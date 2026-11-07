@@ -76,7 +76,7 @@
     .fullscreen-label { font-size: 1.5rem; color: var(--accent); text-align: center; }
     .fullscreen-instruction { position: absolute; bottom: 2rem; color: var(--muted); font-size: 1rem; text-align: center; opacity: 0.7; }
     .orange-card-fullscreen { width: var(--card-w, 80vw); height: var(--card-h, 60vh); max-width: var(--card-maxw, 600px); max-height: var(--card-maxh, 450px); background: linear-gradient(135deg, #ff9800 0%, #ff8c00 50%, #ff9800 100%); border-radius: 40px; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 100px rgba(255,152,0,1), 0 0 40px rgba(255,100,0,0.8); }
-    .orange-card-fullscreen::before { content: ""; position: absolute; width: var(--circle-d, 200px); height: var(--circle-d, 200px); background: #1e88e5; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 11; }
+    .orange-card-fullscreen::before { content: ""; position: absolute; width: var(--circle-d, 200px); height: var(--circle-d, 200px); background: var(--circle-c, #1e88e5); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 11; }
     .orange-card-fullscreen::after { content: ""; position: absolute; width: var(--dot-d, 20px); height: var(--dot-d, 20px); background: #000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 12; box-shadow: 0 0 10px rgba(0,0,0,0.9); }
 
     /* ===== AFTERIMAGE OVERLAY ===== */
@@ -275,6 +275,16 @@
     .field { text-align: left; margin-bottom: 1.1rem; }
     .field > .lab { color: var(--muted); font-size: 0.88rem; font-weight: 600; margin-bottom: 0.45rem; display: block; }
     .req { color: var(--danger); font-size: 0.78rem; margin-left: 0.3rem; }
+    .field > .sub { color: var(--muted); font-size: 0.8rem; line-height: 1.6; margin: -0.2rem 0 0.5rem; display: block; }
+
+    /* ===== v16.11: 円の外と内の色 ===== */
+    .region-q { margin-bottom: 0.75rem; }
+    .region-head { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+    .region-ico { color: #cfd3da; flex-shrink: 0; }
+    .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 0.4rem; }
+    .color-grid .color-option-compact { padding: 0.45rem 0.3rem; white-space: normal; }
+    .color-grid .color-swatch-small { width: 100%; height: 22px; margin: 0 0 0.3rem; }
+    .region-note { color: var(--muted); font-size: 0.8rem; line-height: 1.7; margin: 0.2rem 0 0; }
 
     /* ===== v16: タップのタイムライン ===== */
     .tapline { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -548,6 +558,7 @@
 
           <div class="field">
             <span class="lab">正色（元の色）は出ましたか<span class="req">必須</span></span>
+            <span class="sub">目を開けて見たカードと同じ配色で見えたかどうかです</span>
             <div class="seg" id="segPositive">
               <button type="button" data-v="yes">はい</button>
               <button type="button" data-v="unsure">自信がない</button>
@@ -557,8 +568,31 @@
 
           <div id="posDetail" style="display:none;">
             <div class="field">
-              <span class="lab">見えたのは何色でしたか<span class="req">必須</span></span>
-              <div style="display:flex;gap:0.5rem;overflow-x:auto;padding-bottom:0.25rem;" id="colorPick"></div>
+              <span class="lab">そのとき、それぞれの場所は何色でしたか<span class="req">必須</span></span>
+              <div class="region-q">
+                <div class="region-head">
+                  <svg class="region-ico" viewBox="0 0 36 26" width="36" height="26" aria-hidden="true">
+                    <rect x="1" y="1" width="34" height="24" rx="2" fill="currentColor" fill-opacity="0.55" stroke="currentColor"/>
+                    <circle cx="18" cy="13" r="6.5" fill="#14171d" stroke="currentColor"/>
+                  </svg>
+                  <span>円の外側</span>
+                </div>
+                <div class="color-grid" id="pickBg"></div>
+              </div>
+              <div class="region-q">
+                <div class="region-head">
+                  <svg class="region-ico" viewBox="0 0 36 26" width="36" height="26" aria-hidden="true">
+                    <rect x="1" y="1" width="34" height="24" rx="2" fill="none" stroke="currentColor"/>
+                    <circle cx="18" cy="13" r="6.5" fill="currentColor" fill-opacity="0.55" stroke="currentColor"/>
+                  </svg>
+                  <span>円の内側</span>
+                </div>
+                <div class="color-grid" id="pickCircle"></div>
+              </div>
+              <p class="region-note">
+                見えたとおりに選んでください。外と内の色が入れ替わって見えたときも、そのまま選んでください
+                （ふつうの補色の残像で、よくあることです）。
+              </p>
             </div>
             <div class="field">
               <span class="lab">どのくらいはっきりしていましたか</span>
@@ -699,11 +733,12 @@
       </div>
 
       <div class="card">
-        <h2>出した刺激 × 見えたと答えた色</h2>
+        <h2>出した刺激 × 答えた配色</h2>
         <div id="xVerify"></div>
         <p class="muted" style="margin:0.75rem 0 0;font-size:0.82rem;line-height:1.7;">
-          対角線に集まれば、出した色に応じて見え方が変わっていることになります。
-          何を出してもオレンジと答えているなら、期待によるものかもしれません。
+          「正色が出た」「自信がない」と答えた回で、円の外と内の色が、出したカードと同じ並びだったかを数えています。
+          確認の色でも「正色の配色」の列に集まれば、答えは出したカードに合わせて変わっています。
+          何を出しても「外オレンジ・内青」と答えているなら、いつもの答え方が出ているのかもしれません。
         </p>
       </div>
 
@@ -938,6 +973,9 @@
           <p>明るい部屋で目を閉じると、まぶたを通った赤橙色の光で、視野はもともとオレンジがかっています。補色（青系）は通りにくいので、暗く沈みます。つまり、明るい部屋では<strong>カードを見なくてもオレンジが見える</strong>可能性があります。</p>
           <p>このアプリは、ときどきカードを出さない回を混ぜています。そこで「オレンジが見えた」と記録されるなら、それはまぶたを通った光か、勝手に浮かぶ像です。判断材料として使ってください。</p>
           <p>ただし、カードが出ていないことは目を開けていれば分かります。<strong>この回だけでは「期待によるものか」までは切り分けられません。</strong>そちらは、色を変える回のほうで確かめます。</p>
+          <h4>円の中のオレンジは、たいてい補色です</h4>
+          <p>カードの円は青です。<strong>青の補色はオレンジ〜黄色</strong>なので、目を閉じると「外が青っぽく、円の中がオレンジ」という、色が入れ替わった像が見えます。これはふつうの補色の残像です。</p>
+          <p>そのため記録では、円の外と内の色を別々に聞いています。出したカードと同じ並び（外がオレンジ、内が青）のときだけ、正色として数えます。</p>
         </div>
       </details>
 
@@ -1242,9 +1280,20 @@
     // =====================================================================
     // バージョンと更新
     // =====================================================================
-    const APP_VERSION = "16.10";
+    const APP_VERSION = "16.11";
+    // 同期ファイルの版。v16.11 で円の外と内の色（seenBg / seenCircle）を足したので 17 に上げた。
+    // v16.10 以前の端末は 16 より大きいファイルを上書きしないので、新しい項目を剥ぎ取られずに済む
+    const FILE_SCHEMA = 17;
 
     const CHANGELOG = [
+      { v: "16.11", date: "2026-11-07", items: [
+        "記録で、見えた色を「円の外側」と「円の内側」に分けて聞くようにしました。青い円の補色はオレンジ〜黄色に見えるため、「オレンジが見えた」だけでは正色と区別できていませんでした",
+        "外と内の色が入れ替わった配色（ふつうの補色の残像）は、正色に数えないようにしました。記録のあとに、どう判定したかを表示します",
+        "確認用の青いカードで、円が地と同じ色になって見えなかった不具合を直しました（円を黄色にしました）",
+        "見えた色の選択肢に「黄」と「見えず」を足しました",
+        "分析の「出した刺激 × 見えた色」を、配色で判定する表に作り直しました。以前の記録は参考として折りたたんで残しています",
+        "同期ファイルの版を上げました。v16.10 以前の端末は、更新するまで同期を控えます（新しい記録を壊さないため）"
+      ]},
       { v: "16.10", date: "2026-09-17", items: [
         "繰り返しのとき、2回目以降は準備（まぶたの確認）を飛ばすことを画面に明記しました。動作は以前から同じです"
       ]},
@@ -1511,15 +1560,18 @@
     }
     function oneOf(v, list, fallback) { return list.includes(v) ? v : fallback; }
 
+    // circle は円の色。青いカードだけは円を黄色にする
+    // （以前は地も円も #1e88e5 で、円が見えなくなっていた）
     const STIM_COLORS = {
-      orange: { css: "linear-gradient(135deg,#ff9800 0%,#ff8c00 50%,#ff9800 100%)", label: "オレンジ" },
-      green:  { css: "linear-gradient(135deg,#43a047 0%,#2e7d32 50%,#43a047 100%)", label: "緑" },
-      blue:   { css: "linear-gradient(135deg,#1e88e5 0%,#1565c0 50%,#1e88e5 100%)", label: "青" },
-      red:    { css: "linear-gradient(135deg,#e53935 0%,#c62828 50%,#e53935 100%)", label: "赤" }
+      orange: { css: "linear-gradient(135deg,#ff9800 0%,#ff8c00 50%,#ff9800 100%)", label: "オレンジ", circle: "#1e88e5", circleKey: "blue" },
+      green:  { css: "linear-gradient(135deg,#43a047 0%,#2e7d32 50%,#43a047 100%)", label: "緑",       circle: "#1e88e5", circleKey: "blue" },
+      blue:   { css: "linear-gradient(135deg,#1e88e5 0%,#1565c0 50%,#1e88e5 100%)", label: "青",       circle: "#fdd835", circleKey: "yellow" },
+      red:    { css: "linear-gradient(135deg,#e53935 0%,#c62828 50%,#e53935 100%)", label: "赤",       circle: "#1e88e5", circleKey: "blue" }
     };
-    // 見えた色の選択肢。出した刺激をここから当てられるかを見る
+    // 見えた色の選択肢。円の外と内それぞれで選ぶ
     const SEEN_COLORS = [
       { v: "orange", label: "オレンジ", sw: "#ff9800" },
+      { v: "yellow", label: "黄",       sw: "#fdd835" },
       { v: "red",    label: "赤",       sw: "#e53935" },
       { v: "green",  label: "緑",       sw: "#43a047" },
       { v: "blue",   label: "青",       sw: "#1e88e5" },
@@ -1527,6 +1579,63 @@
       { v: "white",  label: "白・灰",   sw: "#cfd3da" },
       { v: "other",  label: "その他",   sw: "linear-gradient(90deg,#9370db,#ff8c00)" }
     ];
+    const SEEN_NONE = { v: "none", label: "見えず", sw: "repeating-linear-gradient(45deg,#2a2f3a 0 4px,#14171d 4px 8px)" };
+    const SEEN_VALUES = SEEN_COLORS.map(c => c.v).concat([SEEN_NONE.v]);
+    function seenLabel(v) {
+      if (v === SEEN_NONE.v) return SEEN_NONE.label;
+      return SEEN_COLORS.find(c => c.v === v)?.label ?? "-";
+    }
+
+    // ===== 正色か補色か =====
+    // その場所に出した色に対して、見えた色を「正色（同じ色）」「補色（反対の色）」のどちらとみなすか。
+    // 青い円の補色はオレンジ〜黄色に見えるので、「オレンジが見えた」だけでは正色と区別できない。
+    // 場所ごとに聞いて、配色で判定する。
+    // 確認用の色（赤・緑・青）は、いつものカードの答え（外オレンジ・内青）が正色に入らないよう狭めにとる
+    const HUE_MATCH = {
+      orange: { pos: ["orange", "red", "yellow"], neg: ["blue", "purple", "green"] },
+      red:    { pos: ["red"],                     neg: ["green", "blue"] },
+      green:  { pos: ["green"],                   neg: ["red", "purple"] },
+      blue:   { pos: ["blue", "purple"],          neg: ["yellow", "orange"] },
+      yellow: { pos: ["yellow", "orange"],        neg: ["blue", "purple"] }
+    };
+
+    function regionClass(shownKey, seen) {
+      if (!seen || seen === "none" || seen === "white") return "none";   // 色がない
+      const m = HUE_MATCH[shownKey];
+      if (!m) return "other";
+      if (m.pos.includes(seen)) return "pos";
+      if (m.neg.includes(seen)) return "neg";
+      return "other";
+    }
+
+    function hasLayout(s) { return s.seenBg != null || s.seenCircle != null; }
+
+    // pos：出したカードと同じ配色 / neg：外と内が入れ替わった配色（ふつうの補色の残像）
+    // mixed：正色と補色が混ざって区別できない（全体が同じ色など） / other：出した色と合わない / none：色なし
+    // 配色を聞く前の記録と、カードを出さない回は null
+    function colorPattern(s) {
+      if (!hasLayout(s) || s.trialKind === "blank" || !s.cardColor) return null;
+      const spec = STIM_COLORS[s.cardColor];
+      if (!spec) return null;
+      const a = regionClass(s.cardColor, s.seenBg);
+      const b = regionClass(spec.circleKey, s.seenCircle);
+      if (a === "other" || b === "other") return "other";
+      const pos = a === "pos" || b === "pos", neg = a === "neg" || b === "neg";
+      if (pos && neg) return "mixed";
+      if (pos) return "pos";
+      if (neg) return "neg";
+      return "none";
+    }
+
+    const PATTERN_LABEL = { pos: "正色の配色", neg: "入れ替わり（補色）", mixed: "区別できない", other: "出した色と合わない", none: "色なし" };
+
+    function layoutText(s) {
+      if (hasLayout(s)) return `外 ${seenLabel(s.seenBg)}／内 ${seenLabel(s.seenCircle)}`;
+      if (s.reportedColor) return seenLabel(s.reportedColor);
+      return "-";
+    }
+
+    function sawColor(s, c) { return s.reportedColor === c || s.seenBg === c || s.seenCircle === c; }
 
     // v16 の記録
     function normalizeV16(s) {
@@ -1561,7 +1670,10 @@
         watchSec: clampNum(s.watchSec, 0, 3600, 0),
         // 結果
         positiveSeen: oneOf(s.positiveSeen, ["yes", "no", "unsure"], "no"),
+        // v16.10 までは色を1つだけ聞いていた。v16.11 からは円の外と内を別々に聞く
         reportedColor: s.reportedColor == null ? null : oneOf(s.reportedColor, SEEN_COLORS.map(c => c.v), "other"),
+        seenBg: s.seenBg == null ? null : oneOf(s.seenBg, SEEN_VALUES, "other"),
+        seenCircle: s.seenCircle == null ? null : oneOf(s.seenCircle, SEEN_VALUES, "other"),
         posHoldSec: optionalNum(s.posHoldSec, 0, 3600, 0),
         sharpness: optionalNum(s.sharpness, 1, 3, 2),
         // 状態
@@ -1911,6 +2023,7 @@
       if (run.trialKind === "blank") { c.style.visibility = "hidden"; return; }
       c.style.visibility = "";
       c.style.background = STIM_COLORS[run.cardColor].css;
+      c.style.setProperty("--circle-c", STIM_COLORS[run.cardColor].circle);
     }
 
     function startObserve() {
@@ -2220,7 +2333,7 @@
     let form = null;
 
     function openRecord() {
-      form = { positiveSeen: null, reportedColor: null, sharpness: null, effort: null };
+      form = { positiveSeen: null, seenBg: null, seenCircle: null, sharpness: null, effort: null };
 
       // タップのタイムライン
       const box = el("tapline");
@@ -2250,10 +2363,25 @@
         });
       }
 
-      // 見えた色。並び順を毎回変えて、位置で覚えられないようにする
-      const cp = el("colorPick");
-      cp.innerHTML = "";
-      shuffled(SEEN_COLORS).forEach(c => {
+      // 見えた色を、円の外と内で別々に。並び順を毎回変えて、位置で覚えられないようにする
+      // （1回の記録の中では、外と内で同じ並びにして迷わないようにする）
+      const order = shuffled(SEEN_COLORS).concat([SEEN_NONE]);
+      buildColorPicker("pickBg", "seenBg", order);
+      buildColorPicker("pickCircle", "seenCircle", order);
+
+      ["segPositive", "segSharp", "segEffort"].forEach(id =>
+        el(id).querySelectorAll("button").forEach(b => b.classList.remove("on")));
+      el("posDetail").style.display = "none";
+      el("sessionNote").value = "";
+
+      const o = el("phRecord");
+      o.classList.remove("hidden"); o.classList.add("show");
+    }
+
+    function buildColorPicker(id, key, order) {
+      const box = el(id);
+      box.innerHTML = "";
+      order.forEach(c => {
         const b = document.createElement("button");
         b.type = "button"; b.className = "color-option-compact"; b.dataset.v = c.v;
         const sw = document.createElement("div");
@@ -2263,20 +2391,13 @@
         lb.style.fontSize = "0.75rem"; lb.textContent = c.label;
         b.appendChild(sw); b.appendChild(lb);
         b.onclick = () => {
-          form.reportedColor = c.v;
-          cp.querySelectorAll("button").forEach(x => x.classList.remove("selected"));
+          if (!form) return;
+          form[key] = c.v;
+          box.querySelectorAll("button").forEach(x => x.classList.remove("selected"));
           b.classList.add("selected");
         };
-        cp.appendChild(b);
+        box.appendChild(b);
       });
-
-      ["segPositive", "segSharp", "segEffort"].forEach(id =>
-        el(id).querySelectorAll("button").forEach(b => b.classList.remove("on")));
-      el("posDetail").style.display = "none";
-      el("sessionNote").value = "";
-
-      const o = el("phRecord");
-      o.classList.remove("hidden"); o.classList.add("show");
     }
 
     function shuffled(arr) {
@@ -2301,7 +2422,12 @@
       };
       pick("segPositive", "positiveSeen", v => {
         el("posDetail").style.display = (v === "no") ? "none" : "";
-        if (v === "no") { form.reportedColor = null; form.sharpness = null; }
+        if (v === "no") {
+          form.seenBg = null; form.seenCircle = null; form.sharpness = null;
+          ["pickBg", "pickCircle"].forEach(id =>
+            el(id).querySelectorAll("button").forEach(x => x.classList.remove("selected")));
+          el("segSharp").querySelectorAll("button").forEach(x => x.classList.remove("on"));
+        }
       });
       pick("segSharp", "sharpness");
       pick("segEffort", "effort");
@@ -2321,7 +2447,9 @@
     function saveRecord() {
       if (!run || !form) return;
       if (!form.positiveSeen) { alert("「正色は出ましたか」を選んでください。"); return; }
-      if (form.positiveSeen !== "no" && !form.reportedColor) { alert("見えた色を選んでください。"); return; }
+      if (form.positiveSeen !== "no" && (!form.seenBg || !form.seenCircle)) {
+        alert("円の外側と内側の色を、両方選んでください（見えなかったときは「見えず」）。"); return;
+      }
       if (!form.effort) { alert("「今回、力みましたか」を選んでください。"); return; }
 
       const cond = currentConditions();
@@ -2333,7 +2461,9 @@
         roomLight: run.roomLight, eyeMask: run.eyeMask, envCheckSaw: run.envCheckSaw,
         taps: run.taps, watchSec: run.watchSec,
         positiveSeen: form.positiveSeen,
-        reportedColor: form.positiveSeen === "no" ? null : form.reportedColor,
+        reportedColor: null,
+        seenBg: form.positiveSeen === "no" ? null : form.seenBg,
+        seenCircle: form.positiveSeen === "no" ? null : form.seenCircle,
         posHoldSec: computePosHold(run.taps, run.watchSec),
         sharpness: form.sharpness,
         effort: Number(form.effort),
@@ -2378,11 +2508,9 @@
     function showResult(rec) {
       const posLabel = { yes: "出た", unsure: "自信がない", no: "出なかった" }[rec.positiveSeen];
       const effLabel = { 1: "楽だった", 2: "少し力んだ", 3: "かなり力んだ" }[rec.effort];
-      const colorLabel = rec.reportedColor
-        ? (SEEN_COLORS.find(c => c.v === rec.reportedColor)?.label ?? "-") : "-";
-
       const rows = [
-        ["正色", posLabel + (rec.reportedColor ? `（${colorLabel}）` : "")],
+        ["正色", posLabel],
+        ["見えた配色", rec.positiveSeen === "no" ? "-" : layoutText(rec)],
         ["力み", effLabel],
         ["触った回数", rec.taps.length + "回"]
       ];
@@ -2405,12 +2533,38 @@
         html += `<div class="callout" style="margin-top:0.75rem;"><strong>今回出していたのは「${shown}」でした。</strong><br>
           出した色に応じて見え方が変わっているかどうかは、分析タブの表で確かめられます。</div>`;
       }
+      html += patternFeedback(rec);
       if (rec.effort === 1) {
         html += `<div class="muted" style="margin-top:0.6rem;font-size:0.88rem;">力を抜けた回です。この状態を増やすのが目標です。</div>`;
       }
       el("resultBody").innerHTML = html;
       el("resultCard").style.display = "block";
       el("sessionHint").style.display = "none";
+    }
+
+    // 記録した配色を、正色として数えたかどうか。数えなかったときは理由を書く
+    function patternFeedback(rec) {
+      if (rec.positiveSeen === "no") return "";
+      const p = colorPattern(rec);
+      if (p === null) return "";
+      const note = t => `<div class="callout" style="margin-top:0.75rem;">${t}</div>`;
+      if (p === "pos") {
+        return note(rec.positiveSeen === "yes"
+          ? "記録した配色は、出したカードと同じ並びでした。<strong>正色として数えます。</strong>"
+          : "記録した配色は、出したカードと同じ並びでした。「自信がない」なので、割合には数えていません。");
+      }
+      if (p === "neg") {
+        return note(`<strong>記録した配色は、外と内の色が入れ替わった並びでした。</strong><br>
+          これはふつうの補色の残像と同じ並びなので、正色には数えていません。失敗ではありません。`);
+      }
+      if (p === "mixed") {
+        return note(`外と内が同じ系統の色で、正色か補色かを区別できませんでした。正色には数えていません。
+          ${rec.roomLight === "bright" ? "<br>部屋が明るいと、まぶたを通った光で全体がオレンジがかって見えることがあります。" : ""}`);
+      }
+      if (p === "other") {
+        return note("記録した色が、出したカードの色とも、その補色とも合いませんでした。正色には数えていません。");
+      }
+      return note("色のついた像は記録されませんでした。正色には数えていません。");
     }
 
     // =====================================================================
@@ -2422,8 +2576,16 @@
     const MIN_N_RATE = 10;   // 割合を出すのに必要な件数
     const MIN_N_CELL = 5;    // クロス表の1マスに必要な件数
 
-    // 正色が出たとみなすのは「はい」だけ。「自信がない」は数えない
-    function isPos(s) { return s.positiveSeen === "yes"; }
+    // 正色が出たとみなすのは「はい」だけ。「自信がない」は数えない。
+    // 配色を聞いた記録（v16.11〜）は、配色が出したカードと同じ並びのときだけ数える。
+    // それより前の記録は確かめようがないので、自己申告のまま数える
+    function isPos(s) {
+      if (s.positiveSeen !== "yes") return false;
+      const p = colorPattern(s);
+      return p === null || p === "pos";
+    }
+    // 配色を聞く前の「はい」。正色の数に含まれているが、補色と区別できていない
+    function isUncheckedYes(s) { return s.positiveSeen === "yes" && !hasLayout(s); }
     function isEasy(s) { return s.effort === 1; }
     // 指標に使うのは通常の回だけ。確かめるための回は混ぜない
     function mainTrials(list) { return list.filter(s => s.trialKind === "normal"); }
@@ -2472,8 +2634,11 @@
       setText("trainingDays", st.uniqueDays);
 
       const main = mainTrials(all);
+      const unchecked = main.filter(isUncheckedYes).length;
       el("posRateBox").innerHTML = rateBox(main, isPos,
-        "カードを出した通常の回だけで数えています。確かめるための回は含みません。");
+        "カードを出した通常の回だけで数えています。確かめるための回は含みません。"
+        + "「はい」と答え、円の外と内の配色もカードと同じだった回です。"
+        + (unchecked ? `<br>配色を聞く前（v16.10まで）の「はい」${unchecked}回は、補色と区別できていないまま数えています。` : ""));
       el("effortRateBox").innerHTML = rateBox(all, isEasy,
         "「楽だった」と記録した回の割合です。ここが増えていくのが、いちばん見たい変化です。");
 
@@ -2503,6 +2668,13 @@
       const tb = el("recentTable"); if (!tb) return;
       tb.innerHTML = "";
       const posT = { yes: "出た", unsure: "自信なし", no: "出ず" };
+      // 配色で判定できた回は、入れ替わり（補色）などをそのまま書く
+      const posCell = s => {
+        if (s.positiveSeen === "no") return posT.no;
+        const p = colorPattern(s);
+        if (p === null || p === "pos") return posT[s.positiveSeen] ?? "-";
+        return { neg: "入れ替わり", mixed: "区別不可", other: "合わない", none: "色なし" }[p];
+      };
       const effT = { 1: "楽", 2: "少し", 3: "かなり" };
       const lightT = { dark: "暗い", bright: "明るい" };
       sessions.slice(-12).reverse().forEach(s => {
@@ -2514,8 +2686,8 @@
         tr.appendChild(td(new Date(s.timestamp).toLocaleString("ja-JP",
           { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })));
         tr.appendChild(td(stim));
-        tr.appendChild(td(posT[s.positiveSeen] ?? "-"));
-        tr.appendChild(td(s.reportedColor ? (SEEN_COLORS.find(c => c.v === s.reportedColor)?.label ?? "-") : "-"));
+        tr.appendChild(td(posCell(s)));
+        tr.appendChild(td(s.positiveSeen === "no" ? "-" : layoutText(s)));
         tr.appendChild(td(effT[s.effort] ?? "-"));
         tr.appendChild(td(lightT[s.roomLight] ?? "-"));
         const n = td(s.note || ""); n.style.color = "var(--muted)";
@@ -2618,43 +2790,79 @@
       return html;
     }
 
+    // 出した刺激 × 答えた配色。配色を聞いた回（v16.11〜）だけで数える
     function renderVerify(list) {
-      const trials = list.filter(s => s.trialKind !== "blank" && s.reportedColor);
+      const trials = list.filter(s => s.trialKind !== "blank" && s.positiveSeen !== "no" && hasLayout(s));
       const stim = ["orange", "green", "blue", "red"];
-      const seen = ["orange", "red", "green", "blue", "purple", "white", "other"];
+      const cols = ["pos", "neg", "mixed", "other", "none"];
+      const legacy = list.filter(s => s.trialKind !== "blank" && !hasLayout(s) && s.reportedColor);
+      const legacyHtml = legacy.length ? renderVerifyLegacy(legacy) : "";
+
       if (trials.length < MIN_N_RATE) {
         return `<div class="nodata">まだ判断できません（${trials.length} 件）。
+          「正色が出た」「自信がない」と答えて、円の外と内の色を記録した回で数えます。
           確かめるための回は10回に1回ほどしか出ないので、しばらくかかります。<br>
-          設定タブで「確かめるための回を混ぜる」がオフになっていると、この表は埋まりません。</div>`;
+          設定タブで「確かめるための回を混ぜる」がオフになっていると、この表は埋まりません。</div>` + legacyHtml;
       }
+      const m = {};
+      stim.forEach(a => { m[a] = {}; cols.forEach(b => m[a][b] = 0); });
+      trials.forEach(s => { const p = colorPattern(s); if (m[s.cardColor] && p) m[s.cardColor][p]++; });
+
+      const circleName = a => STIM_COLORS[a].circleKey === "yellow" ? "黄" : "青";
+      let html = '<div class="table-wrapper"><table class="xtab" style="min-width:560px;"><thead><tr><th>出したカード ＼ 答えた配色</th>';
+      cols.forEach(b => html += `<th>${PATTERN_LABEL[b]}</th>`);
+      html += "</tr></thead><tbody>";
+      stim.forEach(a => {
+        const rowN = cols.reduce((t, b) => t + m[a][b], 0);
+        html += `<tr><th>${STIM_COLORS[a].label}・円${circleName(a)}<span style="color:var(--muted);font-weight:400;">（${rowN}）</span></th>`;
+        cols.forEach(b => {
+          const v = m[a][b];
+          html += `<td class="${v && b === "pos" ? "hi" : (v ? "" : "dim")}">${v || "·"}</td>`;
+        });
+        html += "</tr>";
+      });
+      html += "</tbody></table></div>";
+
+      const rate = arr => arr.length ? `${Math.round(arr.filter(s => colorPattern(s) === "pos").length / arr.length * 100)}%（${arr.filter(s => colorPattern(s) === "pos").length}/${arr.length}）` : "—";
+      const normal = trials.filter(s => s.trialKind === "normal");
+      const color = trials.filter(s => s.trialKind === "color");
+      // いつものカードの答え方（外オレンジ・内青）を、ほかの色のカードでもしている回
+      const habit = color.filter(s => s.seenBg === "orange" && ["blue", "purple"].includes(s.seenCircle)).length;
+      html += `<div class="callout" style="margin-top:0.75rem;">
+        出したカードどおりの配色を答えた割合 ── いつものカード：<strong>${rate(normal)}</strong>、
+        確認の色：<strong>${rate(color)}</strong><br>
+        確認の色でも出したカードどおりの配色を答えているなら、答えは出した刺激に合わせて変わっています。<br>
+        確認の色なのに、いつものカードと同じ「外オレンジ・内青」と答えた回：<strong>${habit}</strong>。
+        多いなら、見えたものより、いつもの答え方が出ているのかもしれません
+        （ただし青いカードでは、補色の残像がちょうどこの並びになります）。</div>`;
+      return html + legacyHtml;
+    }
+
+    // v16.10 までの記録（色を1つだけ聞いていた）。参考として残す
+    function renderVerifyLegacy(trials) {
+      const stim = ["orange", "green", "blue", "red"];
+      const seen = ["orange", "red", "green", "blue", "purple", "white", "other"];
       const m = {};
       stim.forEach(a => { m[a] = {}; seen.forEach(b => m[a][b] = 0); });
       trials.forEach(s => { if (m[s.cardColor] && m[s.cardColor][s.reportedColor] != null) m[s.cardColor][s.reportedColor]++; });
-
-      let html = '<div class="table-wrapper"><table class="xtab" style="min-width:520px;"><thead><tr><th>出した色 ＼ 見えた色</th>';
-      seen.forEach(b => html += `<th>${SEEN_COLORS.find(c => c.v === b).label}</th>`);
+      let html = `<details style="margin-top:0.85rem;"><summary class="muted" style="cursor:pointer;font-size:0.85rem;">
+        配色を聞く前の記録（v16.10まで・${trials.length}件）</summary>
+        <div class="table-wrapper" style="margin-top:0.6rem;"><table class="xtab" style="min-width:520px;"><thead><tr><th>出した色 ＼ 見えた色</th>`;
+      seen.forEach(b => html += `<th>${seenLabel(b)}</th>`);
       html += "</tr></thead><tbody>";
       stim.forEach(a => {
         const rowN = seen.reduce((t, b) => t + m[a][b], 0);
         html += `<tr><th>${STIM_COLORS[a].label}<span style="color:var(--muted);font-weight:400;">（${rowN}）</span></th>`;
         seen.forEach(b => {
           const v = m[a][b];
-          const same = (a === b);
-          html += `<td class="${v && same ? "hi" : (v ? "" : "dim")}">${v || "·"}</td>`;
+          html += `<td class="${v && a === b ? "hi" : (v ? "" : "dim")}">${v || "·"}</td>`;
         });
         html += "</tr>";
       });
-      html += "</tbody></table></div>";
-
-      const diag = stim.reduce((t, a) => t + (m[a][a] || 0), 0);
-      const total = stim.reduce((t, a) => t + seen.reduce((u, b) => u + m[a][b], 0), 0);
-      const orangeAlways = stim.filter(a => a !== "orange")
-        .reduce((t, a) => t + (m[a]["orange"] || 0), 0);
-      html += `<div class="callout" style="margin-top:0.75rem;">
-        出した色と同じ色を答えた回：<strong>${diag} / ${total}</strong>。
-        オレンジ以外を出したのに「オレンジ」と答えた回：<strong>${orangeAlways}</strong>。<br>
-        前者が多ければ、出した刺激に応じて見え方が変わっていることになります。
-        後者ばかりなら、期待によるものかもしれません。</div>`;
+      html += `</tbody></table></div>
+        <p class="muted" style="font-size:0.82rem;line-height:1.7;margin:0.5rem 0 0;">
+          この頃は円の外か内かを聞いていなかったので、「オレンジ」には青い円の補色（オレンジ〜黄色に見える）も混ざっています。
+          また当時の青いカードは、円が地と同じ色で見えていませんでした。参考として読んでください。</p></details>`;
       return html;
     }
 
@@ -2665,13 +2873,13 @@
           カードを出さない回は10回に1回ほどです。</div>`;
       }
       const yes = b.filter(isPos).length;
-      const orange = b.filter(s => s.reportedColor === "orange").length;
+      const orange = b.filter(s => sawColor(s, "orange")).length;
       const dark = b.filter(s => s.roomLight === "dark");
       const bright = b.filter(s => s.roomLight === "bright");
       let html = `<table class="xtab"><thead><tr><th></th><th>回数</th></tr></thead><tbody>
         <tr><th>カードを出さなかった回</th><td>${b.length}</td></tr>
         <tr><th>それでも「正色が出た」</th><td>${yes}</td></tr>
-        <tr><th>そのうち「オレンジ」と答えた</th><td>${orange}</td></tr>
+        <tr><th>そのうちオレンジが見えた</th><td>${orange}</td></tr>
       </tbody></table>`;
       if (yes === 0) {
         html += `<div class="callout" style="margin-top:0.75rem;">
@@ -2853,7 +3061,7 @@
     function handleBackupClick() {
       const all = sessions.concat(legacySessions);
       if (!all.length) { alert("⚠ バックアップするデータがありません。"); return; }
-      const data = { appVersion: "v16", schema: 16, exportDate: new Date().toISOString(),
+      const data = { appVersion: "v" + APP_VERSION, schema: FILE_SCHEMA, exportDate: new Date().toISOString(),
                      totalSessions: all.length, sessions: all };
       const filename = `orange-card-backup-${new Date().toISOString().slice(0, 10)}.json`;
       try {
@@ -3082,7 +3290,7 @@
         const remote = await driveRead(token, syncFileId);
 
         // 先の版が書いたファイルなら、こちらの理解できない項目を消してしまうので上書きしない
-        if (remote && Number(remote.schema) > 16) {
+        if (remote && Number(remote.schema) > FILE_SCHEMA) {
           setDriveStatus("このアプリより新しい版で保存された記録があります。上書きを避けました。アプリを更新してください。", "err");
           return;
         }
@@ -3115,7 +3323,7 @@
         const payload = sessions.concat(legacySessions);
         await driveWrite(token, syncFileId, {
           appVersion: "v" + APP_VERSION,
-          schema: 16,
+          schema: FILE_SCHEMA,
           exportDate: new Date().toISOString(),
           totalSessions: payload.length,
           sessions: payload,
